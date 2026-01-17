@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SessionType {
+  TRADING
+  PIRACY
+  SALVAGE
+  MINING
+  BOUNTY
+  OTHER
+}
+
+enum DistributionMode {
+  EQUAL
+  PERCENT
+  ADJUSTABLE
+}
+
+model Session {
+  id               String              @id @default(uuid())
+  name             String
+  type             SessionType
+  currency         String              @default("aUEC")
+  totalRevenue     Int
+  taxEnabled       Boolean             @default(true)
+  taxRate          Decimal             @db.Decimal(5, 4) @default(0.005)
+  distributionMode DistributionMode
+  createdAt        DateTime            @default(now())
+
+  members           Member[]
+  sharedExpenses    SharedExpense[]
+  individualExpense IndividualExpense[]
+  exportTokens      ExportToken[]
+}
+
+model Member {
+  id           String   @id @default(uuid())
+  sessionId    String
+  handle       String
+  role         String?
+  active       Boolean  @default(true)
+
+  revenue      Int      @default(0)
+  investment   Int      @default(0)
+  percentShare Decimal? @db.Decimal(6, 3)
+  fixedBonus   Int?
+  fixedPayout  Int?
+
+  session      Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  individual   IndividualExpense[]
+  shared       SharedExpenseParticipant[]
+}
+
+model SharedExpense {
+  id        String   @id @default(uuid())
+  sessionId String
+  label     String
+  amount    Int
+
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  members   SharedExpenseParticipant[]
+}
+
+model SharedExpenseParticipant {
+  sharedExpenseId String
+  memberId        String
+
+  sharedExpense   SharedExpense @relation(fields: [sharedExpenseId], references: [id], onDelete: Cascade)
+  member          Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@id([sharedExpenseId, memberId])
+}
+
+model IndividualExpense {
+  id        String  @id @default(uuid())
+  sessionId String
+  memberId  String
+  label     String
+  amount    Int
+
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  member    Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model ExportToken {
+  id        String   @id @default(uuid())
+  sessionId String
+  token     String   @unique
+  expiresAt DateTime?
+
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
