@@ -6,7 +6,7 @@ describe('calculatePayslip', () => {
   it('should distribute profit equally among active members in EQUAL mode', () => {
     const input: SessionInput = {
       name: 'Test Session',
-      type: 'SessionType',
+      type: 'TRADING',
       distributionMode: 'EQUAL',
       totalRevenue: 1000,
       taxEnabled: false,
