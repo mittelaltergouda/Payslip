@@ -694,46 +694,162 @@ export function settleBalances(
 }
 
 // ============================================================================
-// PLACEHOLDER FOR MAIN CALCULATION (to be implemented in subsequent subtasks)
+// SHARED EXPENSE ALLOCATION
+// ============================================================================
+
+/**
+ * Calculates shared expense allocation for each member.
+ *
+ * Allocation rules:
+ * - If participantIds is specified and non-empty, only those members share the expense
+ * - Otherwise, all active members share the expense equally
+ *
+ * @param sharedExpenses - Array of shared expense inputs
+ * @param members - Array of normalized members
+ * @returns Map of memberId to their total shared expense allocation
+ */
+function allocateSharedExpenses(
+  sharedExpenses: SharedExpenseInput[],
+  members: NormalizedMember[]
+): Map<string, number> {
+  const allocation = new Map<string, number>();
+
+  // Initialize all members with 0
+  for (const member of members) {
+    allocation.set(member.id, 0);
+  }
+
+  // Get set of active member IDs for default allocation
+  const activeMemberIds = new Set(
+    members.filter((m) => m.active).map((m) => m.id)
+  );
+
+  for (const expense of sharedExpenses) {
+    // Determine participants for this expense
+    let participantIds: string[];
+
+    if (expense.participantIds && expense.participantIds.length > 0) {
+      // Use specified participants (filter to only include valid member IDs)
+      participantIds = expense.participantIds.filter((id) =>
+        members.some((m) => m.id === id)
+      );
+    } else {
+      // Default to all active members
+      participantIds = Array.from(activeMemberIds);
+    }
+
+    // Skip if no valid participants
+    if (participantIds.length === 0) {
+      continue;
+    }
+
+    // Allocate expense equally among participants
+    const sharePerParticipant = expense.amount / participantIds.length;
+
+    for (const participantId of participantIds) {
+      const current = allocation.get(participantId) ?? 0;
+      allocation.set(participantId, current + sharePerParticipant);
+    }
+  }
+
+  return allocation;
+}
+
+/**
+ * Calculates individual expense totals for each member.
+ *
+ * @param individualExpenses - Array of individual expense inputs
+ * @param members - Array of normalized members
+ * @returns Map of memberId to their total individual expenses
+ */
+function allocateIndividualExpenses(
+  individualExpenses: IndividualExpenseInput[],
+  members: NormalizedMember[]
+): Map<string, number> {
+  const allocation = new Map<string, number>();
+
+  // Initialize all members with 0
+  for (const member of members) {
+    allocation.set(member.id, 0);
+  }
+
+  for (const expense of individualExpenses) {
+    const current = allocation.get(expense.memberId) ?? 0;
+    allocation.set(expense.memberId, current + expense.amount);
+  }
+
+  return allocation;
+}
+
+// ============================================================================
+// MAIN CALCULATION ORCHESTRATOR
 // ============================================================================
 
 /**
  * Main entry point for payslip calculation.
  * Validates input, normalizes data, computes distribution, and generates transfers.
  *
+ * Calculation Flow:
+ * 1. Validate raw input (handles, non-negative values, tax rate)
+ * 2. Normalize input (apply defaults to optional fields)
+ * 3. Validate normalized data (active members, percent shares)
+ * 4. Calculate totals (revenue, investments, expenses)
+ * 5. Calculate net profit
+ * 6. Distribute profit using appropriate mode (EQUAL/PERCENT/ADJUSTABLE)
+ * 7. Build member breakdowns with final net amounts
+ * 8. Generate settlement transfers using greedy matching
+ * 9. Apply tax gross-up to transfers if enabled
+ *
  * @param session - The session input with members, expenses, and configuration
  * @returns PayslipResult with member breakdowns and suggested transfers
  * @throws Error if validation fails
- *
- * TODO: Full implementation in subtask-1-5
  */
 export function calculatePayslip(session: SessionInput): PayslipResult {
+  // -------------------------------------------------------------------------
   // Step 1: Validate raw input
+  // -------------------------------------------------------------------------
   validateSessionInput(session);
 
-  // Step 2: Normalize input
+  // -------------------------------------------------------------------------
+  // Step 2: Normalize input (apply defaults)
+  // -------------------------------------------------------------------------
   const normalized = normalizeSessionInput(session);
 
+  // -------------------------------------------------------------------------
   // Step 3: Validate normalized data
+  // -------------------------------------------------------------------------
   validateNormalizedSession(normalized);
 
-  // Placeholder implementation - returns basic structure
-  // Full implementation will be completed in subsequent subtasks
+  // -------------------------------------------------------------------------
+  // Step 4: Calculate totals
+  // -------------------------------------------------------------------------
   const activeMembers = normalized.members.filter((m) => m.active);
 
-  // Calculate total revenue from members or use provided totalRevenue
+  // Total revenue: use provided totalRevenue or sum of member revenues
   const totalRevenue =
     normalized.totalRevenue ??
     normalized.members.reduce((sum, m) => sum + m.revenue, 0);
 
-  // Calculate total investments
+  // Total investments from all members
   const totalInvestments = normalized.members.reduce(
     (sum, m) => sum + m.investment,
     0
   );
 
   // saleRevenue = totalRevenue - totalInvestments
+  // This represents the actual proceeds available for distribution
   const saleRevenue = totalRevenue - totalInvestments;
+
+  // Calculate expense allocations
+  const sharedExpenseAllocation = allocateSharedExpenses(
+    normalized.sharedExpenses,
+    normalized.members
+  );
+
+  const individualExpenseAllocation = allocateIndividualExpenses(
+    normalized.individualExpenses,
+    normalized.members
+  );
 
   // Calculate total expenses
   const totalSharedExpenses = normalized.sharedExpenses.reduce(
@@ -746,27 +862,39 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
   );
   const totalExpenses = totalSharedExpenses + totalIndividualExpenses;
 
-  // Net profit = saleRevenue - expenses
+  // -------------------------------------------------------------------------
+  // Step 5: Calculate net profit
+  // -------------------------------------------------------------------------
+  // Net profit = saleRevenue - total expenses
   const netProfit = saleRevenue - totalExpenses;
 
-  // Placeholder member breakdowns (equal distribution for now)
-  const profitPerMember =
-    activeMembers.length > 0 ? netProfit / activeMembers.length : 0;
+  // -------------------------------------------------------------------------
+  // Step 6: Distribute profit using appropriate mode
+  // -------------------------------------------------------------------------
+  const profitDistribution = distributeProfit(
+    netProfit,
+    activeMembers,
+    normalized.distributionMode
+  );
 
+  // -------------------------------------------------------------------------
+  // Step 7: Build member breakdowns
+  // -------------------------------------------------------------------------
   const memberBreakdowns: MemberBreakdown[] = normalized.members.map((m) => {
-    // Calculate this member's share of shared expenses
-    const memberSharedExpenses =
-      m.active && activeMembers.length > 0
-        ? totalSharedExpenses / activeMembers.length
-        : 0;
+    // Get this member's allocated shared expenses
+    const memberSharedExpenses = sharedExpenseAllocation.get(m.id) ?? 0;
 
-    // Calculate this member's individual expenses
-    const memberIndividualExpenses = normalized.individualExpenses
-      .filter((e) => e.memberId === m.id)
-      .reduce((sum, e) => sum + e.amount, 0);
+    // Get this member's individual expenses
+    const memberIndividualExpenses =
+      individualExpenseAllocation.get(m.id) ?? 0;
 
+    // Total expenses for this member
     const memberTotalExpenses = memberSharedExpenses + memberIndividualExpenses;
-    const profitShare = m.active ? profitPerMember : 0;
+
+    // Get profit share (0 for inactive members)
+    const profitShare = profitDistribution.get(m.id) ?? 0;
+
+    // Final net = investment returned + profit share - expenses
     const finalNet = m.investment + profitShare - memberTotalExpenses;
 
     return {
@@ -783,11 +911,26 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
     };
   });
 
+  // -------------------------------------------------------------------------
+  // Step 8: Generate settlement transfers
+  // -------------------------------------------------------------------------
+  // Determine the tax rate to apply to transfers
+  const taxRateForTransfers = normalized.taxEnabled ? normalized.taxRate : 0;
+
+  // Use greedy matching algorithm to minimize number of transfers
+  const suggestedTransfers = settleBalances(
+    memberBreakdowns,
+    taxRateForTransfers
+  );
+
+  // -------------------------------------------------------------------------
+  // Step 9: Return the complete payslip result
+  // -------------------------------------------------------------------------
   return {
     saleRevenue,
     netProfit,
-    taxRateApplied: normalized.taxEnabled ? normalized.taxRate : 0,
+    taxRateApplied: taxRateForTransfers,
     members: memberBreakdowns,
-    suggestedTransfers: [], // To be implemented in subtask-1-3
+    suggestedTransfers,
   };
 }
