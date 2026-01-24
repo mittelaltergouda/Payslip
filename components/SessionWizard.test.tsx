@@ -499,3 +499,487 @@ describe('SessionWizard - Integration Scenarios', () => {
     expect(screen.queryByText('Mitglieder')).not.toBeInTheDocument();
   });
 });
+
+describe('SessionWizard - Error Handling and Edge Cases', () => {
+  describe('Invalid Input Handling', () => {
+    it('should not crash when attempting negative revenue input', () => {
+      render(<SessionWizard />);
+
+      const numberInputs = screen.getAllByRole('spinbutton');
+      const revenueInput = numberInputs[0] as HTMLInputElement;
+
+      fireEvent.change(revenueInput, { target: { value: '-1000' } });
+
+      expect(revenueInput).toBeInTheDocument();
+    });
+
+    it('should not crash when attempting negative investment input', () => {
+      render(<SessionWizard />);
+
+      const numberInputs = screen.getAllByRole('spinbutton');
+      const investmentInput = numberInputs[1] as HTMLInputElement;
+
+      fireEvent.change(investmentInput, { target: { value: '-500' } });
+
+      expect(investmentInput).toBeInTheDocument();
+    });
+
+    it('should not crash when attempting negative expense amount', () => {
+      render(<SessionWizard />);
+
+      const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
+      fireEvent.click(addExpenseButtons[0]);
+
+      const allInputs = screen.getAllByRole('spinbutton');
+      const expenseAmountInputs = allInputs.filter(input => {
+        const parent = input.closest('td');
+        return parent?.textContent?.includes('🗑');
+      });
+
+      if (expenseAmountInputs.length > 0) {
+        const expenseAmountInput = expenseAmountInputs[0] as HTMLInputElement;
+        fireEvent.change(expenseAmountInput, { target: { value: '-100' } });
+
+        expect(expenseAmountInput).toBeInTheDocument();
+      }
+
+      expect(screen.queryByText('Payout')).toBeInTheDocument();
+    });
+
+    it('should handle zero revenue input', () => {
+      render(<SessionWizard />);
+
+      const numberInputs = screen.getAllByRole('spinbutton');
+      const revenueInput = numberInputs[0] as HTMLInputElement;
+
+      fireEvent.change(revenueInput, { target: { value: '0' } });
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+      expect(screen.getByText('Keine Transfers nötig.')).toBeInTheDocument();
+    });
+
+    it('should handle very large numbers without crashing', () => {
+      render(<SessionWizard />);
+
+      const numberInputs = screen.getAllByRole('spinbutton');
+      const revenueInput = numberInputs[0] as HTMLInputElement;
+
+      fireEvent.change(revenueInput, { target: { value: '999999999' } });
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    });
+
+    it('should handle empty string input for revenue', () => {
+      render(<SessionWizard />);
+
+      const numberInputs = screen.getAllByRole('spinbutton');
+      const revenueInput = numberInputs[0] as HTMLInputElement;
+
+      fireEvent.change(revenueInput, { target: { value: '' } });
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    });
+
+    it('should not crash with empty member handle', () => {
+      render(<SessionWizard />);
+
+      const handleInputs = screen.getAllByDisplayValue('Pilot');
+      const pilotInput = handleInputs[0] as HTMLInputElement;
+
+      fireEvent.change(pilotInput, { target: { value: '' } });
+
+      expect(pilotInput).toBeInTheDocument();
+    });
+
+    it('should not crash with whitespace-only member handle', () => {
+      render(<SessionWizard />);
+
+      const handleInputs = screen.getAllByDisplayValue('Pilot');
+      const pilotInput = handleInputs[0] as HTMLInputElement;
+
+      fireEvent.change(pilotInput, { target: { value: '   ' } });
+
+      expect(pilotInput).toBeInTheDocument();
+    });
+  });
+
+  describe('Edge Cases - Member States', () => {
+    it('should handle all members being inactive', () => {
+      render(<SessionWizard />);
+
+      const checkboxes = screen.getAllByRole('checkbox').filter(checkbox => {
+        const label = (checkbox as HTMLInputElement).getAttribute('aria-label');
+        return !label || (!label.includes('Transfer Tax') && !label.includes('Rollen'));
+      });
+
+      checkboxes.forEach(checkbox => {
+        if ((checkbox as HTMLInputElement).checked) {
+          fireEvent.click(checkbox);
+        }
+      });
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    });
+
+    it('should handle removing all members except one', () => {
+      render(<SessionWizard />);
+
+      const deleteButtons = screen.getAllByTitle('Entfernen');
+      const memberDeleteButtons = deleteButtons.slice(0, 2);
+
+      fireEvent.click(memberDeleteButtons[1]);
+
+      const remainingMembers = screen.getAllByDisplayValue(/Pilot|Escort|Crew/);
+      expect(remainingMembers.length).toBeGreaterThan(0);
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    });
+
+    it('should handle adding maximum number of members', () => {
+      render(<SessionWizard />);
+
+      const addButton = screen.getByRole('button', { name: '+ Mitglied' });
+
+      for (let i = 0; i < 10; i++) {
+        fireEvent.click(addButton);
+      }
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    });
+
+    it('should handle single member with zero revenue', () => {
+      render(<SessionWizard />);
+
+      const deleteButtons = screen.getAllByTitle('Entfernen');
+      const memberDeleteButtons = deleteButtons.slice(0, 2);
+      fireEvent.click(memberDeleteButtons[1]);
+
+      const numberInputs = screen.getAllByRole('spinbutton');
+      const revenueInput = numberInputs[0] as HTMLInputElement;
+      fireEvent.change(revenueInput, { target: { value: '0' } });
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+      expect(screen.getByText('Keine Transfers nötig.')).toBeInTheDocument();
+    });
+  });
+
+  describe('Edge Cases - Financial Calculations', () => {
+    it('should handle investment greater than revenue', () => {
+      render(<SessionWizard />);
+
+      const numberInputs = screen.getAllByRole('spinbutton');
+      const revenueInput = numberInputs[0] as HTMLInputElement;
+      const investmentInput = numberInputs[1] as HTMLInputElement;
+
+      fireEvent.change(revenueInput, { target: { value: '100' } });
+      fireEvent.change(investmentInput, { target: { value: '500' } });
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    });
+
+    it('should handle expenses exceeding revenue', () => {
+      render(<SessionWizard />);
+
+      const numberInputs = screen.getAllByRole('spinbutton');
+      const revenueInput = numberInputs[0] as HTMLInputElement;
+      fireEvent.change(revenueInput, { target: { value: '100' } });
+
+      const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
+      fireEvent.click(addExpenseButtons[0]);
+
+      const allInputs = screen.getAllByRole('spinbutton');
+      const expenseAmountInputs = allInputs.filter(input => {
+        const parent = input.closest('td');
+        return parent?.textContent?.includes('🗑');
+      });
+
+      if (expenseAmountInputs.length > 0) {
+        const expenseAmountInput = expenseAmountInputs[0] as HTMLInputElement;
+        fireEvent.change(expenseAmountInput, { target: { value: '500' } });
+      }
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    });
+
+    it('should handle zero revenue with non-zero investment', () => {
+      render(<SessionWizard />);
+
+      const numberInputs = screen.getAllByRole('spinbutton');
+      const revenueInput = numberInputs[0] as HTMLInputElement;
+      const investmentInput = numberInputs[1] as HTMLInputElement;
+
+      fireEvent.change(revenueInput, { target: { value: '0' } });
+      fireEvent.change(investmentInput, { target: { value: '1000' } });
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    });
+
+    it('should handle multiple expenses exceeding total revenue', () => {
+      render(<SessionWizard />);
+
+      const numberInputs = screen.getAllByRole('spinbutton');
+      const revenueInput = numberInputs[0] as HTMLInputElement;
+      fireEvent.change(revenueInput, { target: { value: '100' } });
+
+      const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
+
+      for (let i = 0; i < 3; i++) {
+        fireEvent.click(addExpenseButtons[0]);
+      }
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    });
+
+    it('should handle decimal values in revenue input', () => {
+      render(<SessionWizard />);
+
+      const numberInputs = screen.getAllByRole('spinbutton');
+      const revenueInput = numberInputs[0] as HTMLInputElement;
+
+      fireEvent.change(revenueInput, { target: { value: '1000.50' } });
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    });
+  });
+
+  describe('Edge Cases - Distribution Modes', () => {
+    it('should handle PERCENT mode with invalid total percentage', () => {
+      render(<SessionWizard />);
+
+      const select = screen.getByRole('combobox');
+      fireEvent.change(select, { target: { value: 'PERCENT' } });
+
+      const allInputs = screen.getAllByRole('spinbutton');
+      const percentInputs = allInputs.filter(input => {
+        const value = (input as HTMLInputElement).value;
+        return value === '50' || value === '0';
+      });
+
+      if (percentInputs.length >= 2) {
+        fireEvent.change(percentInputs[0], { target: { value: '60' } });
+        fireEvent.change(percentInputs[1], { target: { value: '50' } });
+      }
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    });
+
+    it('should not crash with PERCENT mode and zero total percentage', () => {
+      render(<SessionWizard />);
+
+      const select = screen.getByRole('combobox');
+      fireEvent.change(select, { target: { value: 'PERCENT' } });
+
+      const allInputs = screen.getAllByRole('spinbutton');
+      const percentInputs = allInputs.filter(input => {
+        const value = (input as HTMLInputElement).value;
+        return value === '50' || value === '0';
+      });
+
+      percentInputs.forEach(input => {
+        if (input) {
+          fireEvent.change(input, { target: { value: '0' } });
+        }
+      });
+
+      expect(select).toHaveValue('PERCENT');
+    });
+
+    it('should handle ADJUSTABLE mode with very high fixed payout', () => {
+      render(<SessionWizard />);
+
+      const select = screen.getByRole('combobox');
+      fireEvent.change(select, { target: { value: 'ADJUSTABLE' } });
+
+      const allInputs = screen.getAllByRole('spinbutton');
+      const revenueInput = allInputs[0] as HTMLInputElement;
+      fireEvent.change(revenueInput, { target: { value: '1000' } });
+
+      const fixedPayoutInputs = allInputs.slice(-2);
+      fixedPayoutInputs.forEach(input => {
+        fireEvent.change(input, { target: { value: '5000' } });
+      });
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    });
+
+    it('should handle switching between modes multiple times', () => {
+      render(<SessionWizard />);
+
+      const select = screen.getByRole('combobox');
+
+      fireEvent.change(select, { target: { value: 'PERCENT' } });
+      expect(select).toHaveValue('PERCENT');
+
+      fireEvent.change(select, { target: { value: 'ADJUSTABLE' } });
+      expect(select).toHaveValue('ADJUSTABLE');
+
+      fireEvent.change(select, { target: { value: 'EQUAL' } });
+      expect(select).toHaveValue('EQUAL');
+
+      fireEvent.change(select, { target: { value: 'PERCENT' } });
+      expect(select).toHaveValue('PERCENT');
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    });
+  });
+
+  describe('Edge Cases - UI State Management', () => {
+    it('should maintain state after rapid member additions and removals', () => {
+      render(<SessionWizard />);
+
+      const addButton = screen.getByRole('button', { name: '+ Mitglied' });
+
+      fireEvent.click(addButton);
+      fireEvent.click(addButton);
+
+      const deleteButtons = screen.getAllByTitle('Entfernen');
+      if (deleteButtons.length > 0) {
+        fireEvent.click(deleteButtons[deleteButtons.length - 1]);
+      }
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    });
+
+    it('should maintain calculations after rapid expense additions and removals', () => {
+      render(<SessionWizard />);
+
+      const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
+      fireEvent.click(addExpenseButtons[0]);
+      fireEvent.click(addExpenseButtons[0]);
+
+      const deleteButtons = screen.getAllByTitle('Entfernen');
+      const expenseDeleteButton = deleteButtons.find(btn => {
+        const parent = btn.closest('td');
+        return parent?.querySelector('input[value="Kosten"]');
+      });
+
+      if (expenseDeleteButton) {
+        fireEvent.click(expenseDeleteButton);
+      }
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    });
+
+    it('should handle toggling tax multiple times', () => {
+      render(<SessionWizard />);
+
+      const taxCheckbox = screen.getByRole('checkbox', {
+        name: /Transfer Tax berücksichtigen/i
+      });
+
+      for (let i = 0; i < 5; i++) {
+        fireEvent.click(taxCheckbox);
+      }
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    });
+
+    it('should handle rapid language switching', () => {
+      render(<SessionWizard />);
+
+      const enButton = screen.getByRole('button', { name: 'EN' });
+      const deButton = screen.getByRole('button', { name: 'DE' });
+
+      fireEvent.click(enButton);
+      fireEvent.click(deButton);
+      fireEvent.click(enButton);
+      fireEvent.click(deButton);
+
+      const mitgliederTexts = screen.getAllByText('Mitglieder');
+      expect(mitgliederTexts.length).toBeGreaterThan(0);
+    });
+
+    it('should preserve member data after toggling role visibility', () => {
+      render(<SessionWizard />);
+
+      const handleInputs = screen.getAllByDisplayValue('Pilot');
+      const pilotInput = handleInputs[0] as HTMLInputElement;
+      fireEvent.change(pilotInput, { target: { value: 'Captain' } });
+
+      const roleCheckbox = screen.getByRole('checkbox', {
+        name: /Rollen anzeigen/i
+      });
+      fireEvent.click(roleCheckbox);
+      fireEvent.click(roleCheckbox);
+
+      const updatedInputs = screen.getAllByDisplayValue('Captain');
+      expect(updatedInputs.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Edge Cases - Complex Scenarios', () => {
+    it('should handle scenario with all zero values', () => {
+      render(<SessionWizard />);
+
+      const numberInputs = screen.getAllByRole('spinbutton');
+      numberInputs.forEach(input => {
+        fireEvent.change(input, { target: { value: '0' } });
+      });
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+      expect(screen.getByText('Keine Transfers nötig.')).toBeInTheDocument();
+    });
+
+    it('should handle member with only investment and no revenue', () => {
+      render(<SessionWizard />);
+
+      const numberInputs = screen.getAllByRole('spinbutton');
+      const revenueInput = numberInputs[0] as HTMLInputElement;
+      const investmentInput = numberInputs[1] as HTMLInputElement;
+
+      fireEvent.change(revenueInput, { target: { value: '0' } });
+      fireEvent.change(investmentInput, { target: { value: '1000' } });
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    });
+
+    it('should handle member with only expenses and no revenue', () => {
+      render(<SessionWizard />);
+
+      const numberInputs = screen.getAllByRole('spinbutton');
+      const revenueInput = numberInputs[0] as HTMLInputElement;
+      fireEvent.change(revenueInput, { target: { value: '0' } });
+
+      const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
+      fireEvent.click(addExpenseButtons[0]);
+
+      const allInputs = screen.getAllByRole('spinbutton');
+      const expenseAmountInputs = allInputs.filter(input => {
+        const parent = input.closest('td');
+        return parent?.textContent?.includes('🗑');
+      });
+
+      if (expenseAmountInputs.length > 0) {
+        const expenseAmountInput = expenseAmountInputs[0] as HTMLInputElement;
+        fireEvent.change(expenseAmountInput, { target: { value: '100' } });
+      }
+
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    });
+
+    it('should handle reset after complex modifications', () => {
+      render(<SessionWizard />);
+
+      const addButton = screen.getByRole('button', { name: '+ Mitglied' });
+      fireEvent.click(addButton);
+
+      const numberInputs = screen.getAllByRole('spinbutton');
+      fireEvent.change(numberInputs[0], { target: { value: '5000' } });
+
+      const select = screen.getByRole('combobox');
+      fireEvent.change(select, { target: { value: 'PERCENT' } });
+
+      const taxCheckbox = screen.getByRole('checkbox', {
+        name: /Transfer Tax berücksichtigen/i
+      });
+      fireEvent.click(taxCheckbox);
+
+      const resetButton = screen.getByRole('button', { name: 'Reset' });
+      fireEvent.click(resetButton);
+
+      expect(select).toHaveValue('EQUAL');
+      expect(taxCheckbox).toBeChecked();
+      const pilotInputs = screen.getAllByDisplayValue('Pilot');
+      expect(pilotInputs.length).toBeGreaterThan(0);
+    });
+  });
+});
