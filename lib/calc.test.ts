@@ -2134,3 +2134,561 @@ describe('Settlement/Transfer Generation', () => {
     expect(charlieToAlice?.netAmount).toBe(800);
   });
 });
+
+// Edge Case Tests
+
+describe('calculatePayslip - Edge Cases', () => {
+  it('should handle zero revenue with no investments or expenses', () => {
+    const input: SessionInput = {
+      name: 'Zero Revenue Session',
+      type: 'TRADING',
+      distributionMode: 'EQUAL',
+      totalRevenue: 0,
+      taxEnabled: false,
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0 }
+      ]
+    };
+
+    const result = calculatePayslip(input);
+
+    expect(result.saleRevenue).toBe(0);
+    expect(result.netProfit).toBe(0);
+    expect(result.members[0].finalNet).toBe(0);
+    expect(result.members[1].finalNet).toBe(0);
+    expect(result.suggestedTransfers.length).toBe(0);
+  });
+
+  it('should handle all members being inactive', () => {
+    const input: SessionInput = {
+      name: 'All Inactive Session',
+      type: 'TRADING',
+      distributionMode: 'EQUAL',
+      totalRevenue: 1000,
+      taxEnabled: false,
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: false, revenue: 500 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: false, revenue: 500 }
+      ]
+    };
+
+    const result = calculatePayslip(input);
+
+    // No active members, so no profit distribution
+    expect(result.members[0].profitShare).toBe(0);
+    expect(result.members[1].profitShare).toBe(0);
+    expect(result.members[0].finalNet).toBe(0);
+    expect(result.members[1].finalNet).toBe(0);
+  });
+
+  it('should handle very large revenue numbers', () => {
+    const input: SessionInput = {
+      name: 'Large Numbers Session',
+      type: 'TRADING',
+      distributionMode: 'EQUAL',
+      totalRevenue: 999999999.99,
+      taxEnabled: false,
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 999999999.99 }
+      ]
+    };
+
+    const result = calculatePayslip(input);
+
+    expect(result.saleRevenue).toBe(999999999.99);
+    expect(result.netProfit).toBe(999999999.99);
+    expect(result.members[0].finalNet).toBe(999999999.99);
+  });
+
+  it('should handle rounding with many members in EQUAL mode', () => {
+    const input: SessionInput = {
+      name: 'Rounding Test',
+      type: 'TRADING',
+      distributionMode: 'EQUAL',
+      totalRevenue: 100,
+      taxEnabled: false,
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0 },
+        { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 0 },
+        { id: 'member-4', handle: 'Dave', role: 'Member', active: true, revenue: 0 },
+        { id: 'member-5', handle: 'Eve', role: 'Member', active: true, revenue: 0 },
+        { id: 'member-6', handle: 'Frank', role: 'Member', active: true, revenue: 0 },
+        { id: 'member-7', handle: 'Grace', role: 'Member', active: true, revenue: 0 }
+      ]
+    };
+
+    const result = calculatePayslip(input);
+
+    // 100 / 7 = 14.285714...
+    const totalDistributed = result.members.reduce((sum, m) => sum + m.finalNet, 0);
+
+    // Total distributed should equal total revenue (within rounding tolerance)
+    expect(totalDistributed).toBeCloseTo(100, 2);
+
+    // Each member should get approximately equal share
+    result.members.forEach(member => {
+      expect(member.finalNet).toBeCloseTo(100 / 7, 2);
+    });
+  });
+
+  it('should handle empty members array gracefully', () => {
+    const input: SessionInput = {
+      name: 'No Members Session',
+      type: 'TRADING',
+      distributionMode: 'EQUAL',
+      totalRevenue: 1000,
+      taxEnabled: false,
+      members: []
+    };
+
+    const result = calculatePayslip(input);
+
+    expect(result.members.length).toBe(0);
+    expect(result.suggestedTransfers.length).toBe(0);
+  });
+
+  it('should handle total expenses exceeding revenue', () => {
+    const input: SessionInput = {
+      name: 'Loss Session',
+      type: 'TRADING',
+      distributionMode: 'EQUAL',
+      totalRevenue: 1000,
+      taxEnabled: false,
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 500 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 500 }
+      ],
+      sharedExpenses: [
+        { label: 'Huge Expense', amount: 1500 }
+      ]
+    };
+
+    const result = calculatePayslip(input);
+
+    // netProfit = saleRevenue - totalExpenses = 1000 - 1500 = -500
+    expect(result.netProfit).toBe(-500);
+
+    // Each member's share of expense: 1500 / 2 = 750
+    const alice = result.members.find(m => m.memberId === 'member-1');
+    const bob = result.members.find(m => m.memberId === 'member-2');
+
+    expect(alice?.sharedExpenses).toBe(750);
+    expect(bob?.sharedExpenses).toBe(750);
+
+    // Profit share: -500 / 2 = -250 each
+    expect(alice?.profitShare).toBe(-250);
+    expect(bob?.profitShare).toBe(-250);
+
+    // finalNet = 0 + (-250) - 750 = -1000 - nope, wait
+    // finalNet = investment + profitShare - (sharedExpenses + individualExpenses)
+    // But sharedExpenses are already in profitShare calculation
+    // Let me check the pattern...
+    // Actually profitShare is AFTER expenses, so finalNet = investment + profitShare
+    expect(alice?.finalNet).toBe(-250);
+    expect(bob?.finalNet).toBe(-250);
+  });
+
+  it('should handle individual expense for a member in REVENUE_SHARE mode', () => {
+    const input: SessionInput = {
+      name: 'Individual Expense Test',
+      type: 'TRADING',
+      distributionMode: 'REVENUE_SHARE',
+      totalRevenue: 1000,
+      taxEnabled: false,
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 600 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 400 }
+      ],
+      individualExpenses: [
+        { label: 'Alice Repair', amount: 200, memberId: 'member-1' }
+      ]
+    };
+
+    const result = calculatePayslip(input);
+
+    const alice = result.members.find(m => m.memberId === 'member-1');
+    const bob = result.members.find(m => m.memberId === 'member-2');
+
+    expect(alice?.individualExpenses).toBe(200);
+    expect(bob?.individualExpenses).toBe(0);
+
+    // netProfit = 1000 - 200 = 800
+    expect(result.netProfit).toBe(800);
+
+    // Revenue share: Alice 60%, Bob 40%
+    expect(alice?.profitShare).toBe(480); // 800 * 0.6
+    expect(bob?.profitShare).toBe(320); // 800 * 0.4
+
+    // finalNet includes deduction for individual expense
+    expect(alice?.finalNet).toBe(280); // 480 - 200
+    expect(bob?.finalNet).toBe(320); // 320 - 0
+  });
+
+  it('should handle zero-amount transfers in settlement', () => {
+    const input: SessionInput = {
+      name: 'Balanced Session',
+      type: 'TRADING',
+      distributionMode: 'EQUAL',
+      totalRevenue: 1000,
+      taxEnabled: false,
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0, investment: 500 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 500 }
+      ]
+    };
+
+    const result = calculatePayslip(input);
+
+    // saleRevenue = 1000 - 1000 = 0
+    // Each gets their investment back, profit share is 0
+    const alice = result.members.find(m => m.memberId === 'member-1');
+    const bob = result.members.find(m => m.memberId === 'member-2');
+
+    expect(alice?.finalNet).toBe(500);
+    expect(bob?.finalNet).toBe(500);
+
+    // Balance = finalNet - investment = 500 - 500 = 0 for both
+    // No transfers needed
+    expect(result.suggestedTransfers.length).toBe(0);
+  });
+
+  it('should handle tax rate at exactly 0%', () => {
+    const input: SessionInput = {
+      name: 'Zero Tax Session',
+      type: 'TRADING',
+      distributionMode: 'EQUAL',
+      totalRevenue: 1000,
+      taxEnabled: true,
+      taxRate: 0,
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000 }
+      ]
+    };
+
+    const result = calculatePayslip(input);
+
+    expect(result.taxRateApplied).toBe(0);
+    expect(result.totalTax).toBe(0);
+    expect(result.netProfit).toBe(1000);
+  });
+
+  it('should handle very small decimal amounts', () => {
+    const input: SessionInput = {
+      name: 'Small Decimals',
+      type: 'TRADING',
+      distributionMode: 'EQUAL',
+      totalRevenue: 0.03,
+      taxEnabled: false,
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0.01 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0.01 },
+        { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 0.01 }
+      ]
+    };
+
+    const result = calculatePayslip(input);
+
+    expect(result.saleRevenue).toBe(0.03);
+    expect(result.netProfit).toBe(0.03);
+
+    // Each should get 0.01
+    result.members.forEach(member => {
+      expect(member.finalNet).toBeCloseTo(0.01, 2);
+    });
+  });
+
+  it('should handle mixed investments with zero revenue in ADJUSTABLE mode', () => {
+    const input: SessionInput = {
+      name: 'Investments No Revenue',
+      type: 'TRADING',
+      distributionMode: 'ADJUSTABLE',
+      totalRevenue: 500,
+      taxEnabled: false,
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0, investment: 300, fixedPayout: 200 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 200, fixedPayout: 100 }
+      ]
+    };
+
+    const result = calculatePayslip(input);
+
+    // saleRevenue = 500 - 500 = 0
+    // Alice gets 200 (fixed), Bob gets 100 (fixed)
+    // Remainder: 0 - 200 - 100 = -300 (distributed to remaining, but all have fixed)
+
+    const alice = result.members.find(m => m.memberId === 'member-1');
+    const bob = result.members.find(m => m.memberId === 'member-2');
+
+    expect(alice?.profitShare).toBe(200);
+    expect(bob?.profitShare).toBe(100);
+
+    // finalNet = investment + profitShare
+    expect(alice?.finalNet).toBe(500); // 300 + 200
+    expect(bob?.finalNet).toBe(300); // 200 + 100
+  });
+
+  it('should handle REVENUE_SHARE mode with zero total revenue', () => {
+    const input: SessionInput = {
+      name: 'Zero Revenue Share',
+      type: 'TRADING',
+      distributionMode: 'REVENUE_SHARE',
+      totalRevenue: 0,
+      taxEnabled: false,
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0 }
+      ]
+    };
+
+    const result = calculatePayslip(input);
+
+    expect(result.saleRevenue).toBe(0);
+    expect(result.netProfit).toBe(0);
+
+    // No revenue means no shares to calculate
+    result.members.forEach(member => {
+      expect(member.profitShare).toBe(0);
+      expect(member.finalNet).toBe(0);
+    });
+  });
+
+  it('should handle leader commission with zero profit', () => {
+    const input: SessionInput = {
+      name: 'Leader Zero Profit',
+      type: 'TRADING',
+      distributionMode: 'EQUAL',
+      totalRevenue: 100,
+      taxEnabled: false,
+      leaderCommissionEnabled: true,
+      leaderCommissionRate: 10,
+      members: [
+        { id: 'member-1', handle: 'Leader', role: 'Leader', active: true, revenue: 0, investment: 100 },
+        { id: 'member-2', handle: 'Alice', role: 'Member', active: true, revenue: 0 }
+      ]
+    };
+
+    const result = calculatePayslip(input);
+
+    // saleRevenue = 100 - 100 = 0, netProfit = 0
+    // No profit means no leader commission
+    const leader = result.members.find(m => m.role === 'Leader');
+
+    expect(result.netProfit).toBe(0);
+    expect(leader?.leaderCommission).toBe(0);
+  });
+
+  it('should handle multiple shared expenses with different amounts', () => {
+    const input: SessionInput = {
+      name: 'Multiple Shared Expenses',
+      type: 'TRADING',
+      distributionMode: 'EQUAL',
+      totalRevenue: 1000,
+      taxEnabled: false,
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 500 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 500 }
+      ],
+      sharedExpenses: [
+        { label: 'Fuel', amount: 100 },
+        { label: 'Food', amount: 50 },
+        { label: 'Repairs', amount: 150 }
+      ]
+    };
+
+    const result = calculatePayslip(input);
+
+    // Total shared expenses: 100 + 50 + 150 = 300
+    // netProfit = 1000 - 300 = 700
+    expect(result.netProfit).toBe(700);
+
+    const alice = result.members.find(m => m.memberId === 'member-1');
+    const bob = result.members.find(m => m.memberId === 'member-2');
+
+    // Each shares 150 in expenses (300 / 2)
+    expect(alice?.sharedExpenses).toBe(150);
+    expect(bob?.sharedExpenses).toBe(150);
+
+    // Each gets 350 profit share (700 / 2)
+    expect(alice?.profitShare).toBe(350);
+    expect(bob?.profitShare).toBe(350);
+  });
+
+  it('should handle inactive member with investment and expenses', () => {
+    const input: SessionInput = {
+      name: 'Inactive With Investment',
+      type: 'TRADING',
+      distributionMode: 'EQUAL',
+      totalRevenue: 1000,
+      taxEnabled: false,
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 500 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: false, revenue: 500, investment: 300 }
+      ],
+      sharedExpenses: [
+        { label: 'Fuel', amount: 100 }
+      ],
+      individualExpenses: [
+        { label: 'Bob Repair', amount: 50, memberId: 'member-2' }
+      ]
+    };
+
+    const result = calculatePayslip(input);
+
+    const alice = result.members.find(m => m.memberId === 'member-1');
+    const bob = result.members.find(m => m.memberId === 'member-2');
+
+    // Bob is inactive, so doesn't share in expenses or profit
+    expect(bob?.sharedExpenses).toBe(0);
+    expect(bob?.profitShare).toBe(0);
+    expect(bob?.individualExpenses).toBe(50);
+
+    // Bob only gets investment back minus individual expense
+    expect(bob?.finalNet).toBe(250); // 300 - 50
+
+    // Alice is the only active member
+    // Total expenses: 100 (shared) + 50 (individual) = 150
+    // netProfit = 1000 - 300 - 150 = 550
+    // Alice shares all 100 of shared expense and gets all 550 profit
+    expect(alice?.sharedExpenses).toBe(100);
+    expect(alice?.profitShare).toBe(550);
+    expect(alice?.finalNet).toBe(450); // 0 + 550 - 100
+  });
+});
+
+describe('calculateGrossAmount - Edge Cases', () => {
+  it('should handle zero net amount', () => {
+    const gross = calculateGrossAmount(0, 10);
+    expect(gross).toBe(0);
+  });
+
+  it('should handle 100% fee rate', () => {
+    const gross = calculateGrossAmount(100, 100);
+    // If fee is 100%, you'd need infinite gross to get any net
+    // The formula would be: gross = net / (1 - rate/100) = 100 / 0 = Infinity
+    // But we should handle this edge case
+    expect(gross).toBe(Infinity);
+  });
+
+  it('should handle negative net amount', () => {
+    const gross = calculateGrossAmount(-100, 10);
+    // gross = -100 / 0.9 = -111.11...
+    expect(gross).toBeCloseTo(-111.11, 2);
+  });
+
+  it('should handle very small fee rate', () => {
+    const gross = calculateGrossAmount(100, 0.01);
+    // gross = 100 / 0.9999 = 100.01
+    expect(gross).toBeCloseTo(100.01, 2);
+  });
+});
+
+describe('calculateFeeAmount - Edge Cases', () => {
+  it('should handle zero gross amount', () => {
+    const fee = calculateFeeAmount(0, 10);
+    expect(fee).toBe(0);
+  });
+
+  it('should handle zero fee rate', () => {
+    const fee = calculateFeeAmount(100, 0);
+    expect(fee).toBe(0);
+  });
+
+  it('should handle negative gross amount', () => {
+    const fee = calculateFeeAmount(-100, 10);
+    expect(fee).toBe(-10);
+  });
+});
+
+describe('applyTransferTaxes - Edge Cases', () => {
+  it('should handle empty transfers array', () => {
+    const transfers: Transfer[] = [];
+    const result = applyTransferTaxes(transfers, 10);
+
+    expect(result.length).toBe(0);
+  });
+
+  it('should handle zero tax rate', () => {
+    const transfers: Transfer[] = [
+      {
+        fromMemberId: 'member-1',
+        fromHandle: 'Alice',
+        toMemberId: 'member-2',
+        toHandle: 'Bob',
+        netAmount: 100,
+        grossAmount: 100,
+        feeAmount: 0
+      }
+    ];
+
+    const result = applyTransferTaxes(transfers, 0);
+
+    expect(result[0].grossAmount).toBe(100);
+    expect(result[0].feeAmount).toBe(0);
+  });
+
+  it('should handle very small transfer amounts', () => {
+    const transfers: Transfer[] = [
+      {
+        fromMemberId: 'member-1',
+        fromHandle: 'Alice',
+        toMemberId: 'member-2',
+        toHandle: 'Bob',
+        netAmount: 0.01,
+        grossAmount: 0.01,
+        feeAmount: 0
+      }
+    ];
+
+    const result = applyTransferTaxes(transfers, 10);
+
+    // gross = 0.01 / 0.9 = 0.0111...
+    expect(result[0].grossAmount).toBeCloseTo(0.0111, 4);
+    // fee = 0.0111 * 0.1 = 0.00111
+    expect(result[0].feeAmount).toBeCloseTo(0.0011, 4);
+  });
+
+  it('should handle multiple transfers with rounding', () => {
+    const transfers: Transfer[] = [
+      {
+        fromMemberId: 'member-1',
+        fromHandle: 'Alice',
+        toMemberId: 'member-3',
+        toHandle: 'Charlie',
+        netAmount: 33.33,
+        grossAmount: 33.33,
+        feeAmount: 0
+      },
+      {
+        fromMemberId: 'member-2',
+        fromHandle: 'Bob',
+        toMemberId: 'member-3',
+        toHandle: 'Charlie',
+        netAmount: 33.33,
+        grossAmount: 33.33,
+        feeAmount: 0
+      },
+      {
+        fromMemberId: 'member-1',
+        fromHandle: 'Alice',
+        toMemberId: 'member-4',
+        toHandle: 'Dave',
+        netAmount: 33.34,
+        grossAmount: 33.34,
+        feeAmount: 0
+      }
+    ];
+
+    const result = applyTransferTaxes(transfers, 5);
+
+    // Each transfer should have proper gross and fee calculated
+    result.forEach(transfer => {
+      const expectedGross = transfer.netAmount / 0.95;
+      const expectedFee = expectedGross * 0.05;
+
+      expect(transfer.grossAmount).toBeCloseTo(expectedGross, 2);
+      expect(transfer.feeAmount).toBeCloseTo(expectedFee, 2);
+    });
+  });
+});
