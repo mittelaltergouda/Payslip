@@ -2290,16 +2290,16 @@ describe('calculatePayslip - Edge Cases', () => {
     expect(bob?.finalNet).toBe(-250);
   });
 
-  it('should handle individual expense for a member in REVENUE_SHARE mode', () => {
+  it('should handle individual expense for a member in PERCENT mode', () => {
     const input: SessionInput = {
       name: 'Individual Expense Test',
       type: 'TRADING',
-      distributionMode: 'REVENUE_SHARE',
+      distributionMode: 'PERCENT',
       totalRevenue: 1000,
       taxEnabled: false,
       members: [
-        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 600 },
-        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 400 }
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 600, percentShare: 60 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 400, percentShare: 40 }
       ],
       individualExpenses: [
         { label: 'Alice Repair', amount: 200, memberId: 'member-1' }
@@ -2370,7 +2370,6 @@ describe('calculatePayslip - Edge Cases', () => {
     const result = calculatePayslip(input);
 
     expect(result.taxRateApplied).toBe(0);
-    expect(result.totalTax).toBe(0);
     expect(result.netProfit).toBe(1000);
   });
 
@@ -2429,11 +2428,11 @@ describe('calculatePayslip - Edge Cases', () => {
     expect(bob?.finalNet).toBe(300); // 200 + 100
   });
 
-  it('should handle REVENUE_SHARE mode with zero total revenue', () => {
+  it('should handle zero total revenue correctly', () => {
     const input: SessionInput = {
-      name: 'Zero Revenue Share',
+      name: 'Zero Revenue',
       type: 'TRADING',
-      distributionMode: 'REVENUE_SHARE',
+      distributionMode: 'EQUAL',
       totalRevenue: 0,
       taxEnabled: false,
       members: [
@@ -2454,15 +2453,13 @@ describe('calculatePayslip - Edge Cases', () => {
     });
   });
 
-  it('should handle leader commission with zero profit', () => {
+  it('should handle zero profit scenario correctly', () => {
     const input: SessionInput = {
-      name: 'Leader Zero Profit',
+      name: 'Zero Profit',
       type: 'TRADING',
       distributionMode: 'EQUAL',
       totalRevenue: 100,
       taxEnabled: false,
-      leaderCommissionEnabled: true,
-      leaderCommissionRate: 10,
       members: [
         { id: 'member-1', handle: 'Leader', role: 'Leader', active: true, revenue: 0, investment: 100 },
         { id: 'member-2', handle: 'Alice', role: 'Member', active: true, revenue: 0 }
@@ -2472,11 +2469,10 @@ describe('calculatePayslip - Edge Cases', () => {
     const result = calculatePayslip(input);
 
     // saleRevenue = 100 - 100 = 0, netProfit = 0
-    // No profit means no leader commission
     const leader = result.members.find(m => m.role === 'Leader');
 
     expect(result.netProfit).toBe(0);
-    expect(leader?.leaderCommission).toBe(0);
+    expect(leader?.profitShare).toBe(0);
   });
 
   it('should handle multiple shared expenses with different amounts', () => {
@@ -2613,9 +2609,7 @@ describe('applyTransferTaxes - Edge Cases', () => {
     const transfers: Transfer[] = [
       {
         fromMemberId: 'member-1',
-        fromHandle: 'Alice',
         toMemberId: 'member-2',
-        toHandle: 'Bob',
         netAmount: 100,
         grossAmount: 100,
         feeAmount: 0
@@ -2632,9 +2626,7 @@ describe('applyTransferTaxes - Edge Cases', () => {
     const transfers: Transfer[] = [
       {
         fromMemberId: 'member-1',
-        fromHandle: 'Alice',
         toMemberId: 'member-2',
-        toHandle: 'Bob',
         netAmount: 0.01,
         grossAmount: 0.01,
         feeAmount: 0
@@ -2653,27 +2645,21 @@ describe('applyTransferTaxes - Edge Cases', () => {
     const transfers: Transfer[] = [
       {
         fromMemberId: 'member-1',
-        fromHandle: 'Alice',
         toMemberId: 'member-3',
-        toHandle: 'Charlie',
         netAmount: 33.33,
         grossAmount: 33.33,
         feeAmount: 0
       },
       {
         fromMemberId: 'member-2',
-        fromHandle: 'Bob',
         toMemberId: 'member-3',
-        toHandle: 'Charlie',
         netAmount: 33.33,
         grossAmount: 33.33,
         feeAmount: 0
       },
       {
         fromMemberId: 'member-1',
-        fromHandle: 'Alice',
         toMemberId: 'member-4',
-        toHandle: 'Dave',
         netAmount: 33.34,
         grossAmount: 33.34,
         feeAmount: 0
