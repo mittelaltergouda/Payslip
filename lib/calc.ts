@@ -55,6 +55,8 @@ export type NormalizedSessionInput = {
 
 /**
  * Validates that the session has at least one active member.
+ *
+ * @param members - Array of normalized members to validate
  * @throws Error if no active members are present
  */
 export function validateHasActiveMembers(members: NormalizedMember[]): void {
@@ -69,6 +71,9 @@ export function validateHasActiveMembers(members: NormalizedMember[]): void {
 /**
  * Validates that percent shares sum to exactly 100% in PERCENT mode.
  * Only validates active members with non-null percentShare values.
+ *
+ * @param members - Array of normalized members to validate
+ * @param mode - Distribution mode to check if validation is needed
  * @throws Error if percentShares don't sum to 100% (within tolerance)
  */
 export function validatePercentShares(
@@ -93,6 +98,8 @@ export function validatePercentShares(
 
 /**
  * Validates that all members have non-empty handles.
+ *
+ * @param members - Array of member inputs to validate
  * @throws Error if any member has empty or whitespace-only handle
  */
 export function validateMemberHandles(members: MemberInput[]): void {
@@ -108,6 +115,8 @@ export function validateMemberHandles(members: MemberInput[]): void {
 
 /**
  * Validates that numeric values are not negative where they shouldn't be.
+ *
+ * @param session - The session input to validate
  * @throws Error if revenue, investment, or expense amounts are negative
  */
 export function validateNonNegativeValues(session: SessionInput): void {
@@ -150,6 +159,8 @@ export function validateNonNegativeValues(session: SessionInput): void {
 
 /**
  * Validates tax rate is within valid bounds (0 to 1 inclusive).
+ *
+ * @param taxRate - The tax rate to validate (0-1 representing 0-100%)
  * @throws Error if tax rate is outside valid bounds
  */
 export function validateTaxRate(taxRate: number | undefined): void {
@@ -168,6 +179,9 @@ export function validateTaxRate(taxRate: number | undefined): void {
 /**
  * Generates a unique ID for a member if one is not provided.
  * Uses a simple incremental strategy with prefix.
+ *
+ * @param index - Zero-based index of the member in the input array
+ * @returns Generated member ID in format "member-N" where N = index + 1
  */
 function generateMemberId(index: number): string {
   return `member-${index + 1}`;
@@ -185,6 +199,10 @@ function generateMemberId(index: number): string {
  * - percentShare: null
  * - fixedBonus: null
  * - fixedPayout: null
+ *
+ * @param member - The member input to normalize
+ * @param index - Zero-based index for generating member ID if not provided
+ * @returns Normalized member with all fields guaranteed to have values
  */
 export function normalizeMember(
   member: MemberInput,
@@ -225,6 +243,9 @@ export function normalizeMembers(members: MemberInput[]): NormalizedMember[] {
  * - taxRate: 0
  * - sharedExpenses: empty array
  * - individualExpenses: empty array
+ *
+ * @param session - The session input to normalize
+ * @returns Normalized session with all optional fields resolved to defaults
  */
 export function normalizeSessionInput(
   session: SessionInput
@@ -252,6 +273,7 @@ export function normalizeSessionInput(
  * Validates the entire session input before calculation.
  * Runs all validation checks and throws descriptive errors.
  *
+ * @param session - The session input to validate
  * @throws Error with descriptive message if validation fails
  */
 export function validateSessionInput(session: SessionInput): void {
@@ -268,6 +290,7 @@ export function validateSessionInput(session: SessionInput): void {
 /**
  * Validates normalized session data (post-normalization checks).
  *
+ * @param session - The normalized session to validate
  * @throws Error with descriptive message if validation fails
  */
 export function validateNormalizedSession(
@@ -308,6 +331,7 @@ function distributeEqual(
     return [];
   }
 
+  // Divide total profit equally among all active members
   const sharePerMember = netProfit / activeMembers.length;
 
   return activeMembers.map((member) => ({
@@ -335,6 +359,7 @@ function distributePercent(
 
   return activeMembers.map((member) => {
     const percentShare = member.percentShare ?? 0;
+    // Convert percentage (0-100) to decimal and multiply by total profit
     const profitShare = (netProfit * percentShare) / 100;
 
     return {
@@ -367,7 +392,9 @@ function distributeAdjustable(
   const results: ProfitDistribution[] = [];
   let remainingProfit = netProfit;
 
-  // Separate members into fixed payout and pool participants
+  // Separate members into two categories:
+  // - fixedPayoutMembers: receive exact amount, excluded from profit pool
+  // - poolMembers: share remaining profit after fixed payouts
   const fixedPayoutMembers = activeMembers.filter(
     (m) => m.fixedPayout !== null
   );
@@ -384,7 +411,9 @@ function distributeAdjustable(
   }
 
   // Step 2: Subtract fixed bonuses from remaining pool
-  // (bonuses are added to members' shares but reduce the pool for others)
+  // Fixed bonuses are amounts added on top of the base share.
+  // We deduct them from the pool first, then distribute the remainder.
+  // This ensures bonuses don't dilute the base distribution for other members.
   const totalBonuses = poolMembers.reduce(
     (sum, m) => sum + (m.fixedBonus ?? 0),
     0
@@ -394,11 +423,13 @@ function distributeAdjustable(
   // Step 3: Distribute remaining profit to pool members
   if (poolMembers.length > 0) {
     // Check if any pool member has a percentShare set
+    // If so, use percentage-based distribution; otherwise use equal distribution
     const hasPercentShares = poolMembers.some((m) => m.percentShare !== null);
 
     if (hasPercentShares) {
       // Distribute by percentShare (for members without percentShare, treat as 0)
-      // Calculate total percent among pool members
+      // Note: In ADJUSTABLE mode, percentShares don't need to sum to 100%
+      // Calculate total percent among pool members for proportional distribution
       const totalPercent = poolMembers.reduce(
         (sum, m) => sum + (m.percentShare ?? 0),
         0
@@ -409,12 +440,13 @@ function distributeAdjustable(
         const fixedBonus = member.fixedBonus ?? 0;
 
         // Calculate base share from percentages
+        // Use proportional distribution based on each member's share of totalPercent
         let baseShare = 0;
         if (totalPercent > 0) {
           baseShare = (poolAfterBonuses * percentShare) / totalPercent;
         }
 
-        // Add fixed bonus on top
+        // Add fixed bonus on top of base share
         const profitShare = baseShare + fixedBonus;
 
         results.push({
@@ -423,11 +455,12 @@ function distributeAdjustable(
         });
       }
     } else {
-      // Distribute equally among pool members
+      // No percentShares set - distribute equally among pool members
       const equalShare = poolAfterBonuses / poolMembers.length;
 
       for (const member of poolMembers) {
         const fixedBonus = member.fixedBonus ?? 0;
+        // Each member gets equal share plus their fixed bonus
         const profitShare = equalShare + fixedBonus;
 
         results.push({
@@ -461,6 +494,7 @@ export function distributeProfit(
 ): Map<string, number> {
   let distributions: ProfitDistribution[];
 
+  // Route to the appropriate distribution strategy based on mode
   switch (mode) {
     case 'EQUAL':
       distributions = distributeEqual(netProfit, activeMembers);
@@ -472,7 +506,7 @@ export function distributeProfit(
       distributions = distributeAdjustable(netProfit, activeMembers);
       break;
     default:
-      // TypeScript exhaustiveness check
+      // TypeScript exhaustiveness check - ensures all enum values are handled
       const _exhaustive: never = mode;
       throw new Error(`Unknown distribution mode: ${_exhaustive}`);
   }
@@ -542,8 +576,9 @@ export function applyTransferTaxes(
 
   return transfers.map((transfer) => {
     // Gross-up formula: gross = ceil(net / (1 - taxRate))
-    // Using Math.ceil ensures the sender covers the full tax amount
-    // This may result in slight overpayment, which is preferable to underpayment
+    // Using Math.ceil ensures the sender covers the full tax amount.
+    // This may result in slight overpayment (rounding up), which is preferable
+    // to underpayment (receiver would get less than expected).
     const grossAmount = Math.ceil(transfer.netAmount / (1 - taxRate));
     const feeAmount = grossAmount - transfer.netAmount;
 
@@ -703,8 +738,9 @@ export function settleBalances(
  * Allocation rules:
  * - If participantIds is specified and non-empty, only those members share the expense
  * - Otherwise, all active members share the expense equally
+ * - Each expense is divided equally among its participants
  *
- * @param sharedExpenses - Array of shared expense inputs
+ * @param sharedExpenses - Array of shared expense inputs with amounts and optional participants
  * @param members - Array of normalized members
  * @returns Map of memberId to their total shared expense allocation
  */
@@ -730,20 +766,21 @@ function allocateSharedExpenses(
 
     if (expense.participantIds && expense.participantIds.length > 0) {
       // Use specified participants (filter to only include valid member IDs)
+      // This allows expenses to be shared among a subset of members
       participantIds = expense.participantIds.filter((id) =>
         members.some((m) => m.id === id)
       );
     } else {
-      // Default to all active members
+      // Default to all active members if no participants specified
       participantIds = Array.from(activeMemberIds);
     }
 
-    // Skip if no valid participants
+    // Skip if no valid participants (e.g., all specified IDs were invalid)
     if (participantIds.length === 0) {
       continue;
     }
 
-    // Allocate expense equally among participants
+    // Allocate expense equally among all participants
     const sharePerParticipant = expense.amount / participantIds.length;
 
     for (const participantId of participantIds) {
@@ -757,8 +794,9 @@ function allocateSharedExpenses(
 
 /**
  * Calculates individual expense totals for each member.
+ * Each expense is assigned to a specific member via memberId.
  *
- * @param individualExpenses - Array of individual expense inputs
+ * @param individualExpenses - Array of individual expense inputs with memberId and amount
  * @param members - Array of normalized members
  * @returns Map of memberId to their total individual expenses
  */
@@ -773,6 +811,7 @@ function allocateIndividualExpenses(
     allocation.set(member.id, 0);
   }
 
+  // Sum up all individual expenses per member
   for (const expense of individualExpenses) {
     const current = allocation.get(expense.memberId) ?? 0;
     allocation.set(expense.memberId, current + expense.amount);
@@ -826,11 +865,12 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
   const activeMembers = normalized.members.filter((m) => m.active);
 
   // Total revenue: use provided totalRevenue or sum of member revenues
+  // If totalRevenue is explicitly set, it overrides individual member revenues
   const totalRevenue =
     normalized.totalRevenue ??
     normalized.members.reduce((sum, m) => sum + m.revenue, 0);
 
-  // Total investments from all members
+  // Total investments from all members (both active and inactive)
   const totalInvestments = normalized.members.reduce(
     (sum, m) => sum + m.investment,
     0
@@ -838,6 +878,7 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
 
   // saleRevenue = totalRevenue - totalInvestments
   // This represents the actual proceeds available for distribution
+  // (i.e., what's left after returning initial investments)
   const saleRevenue = totalRevenue - totalInvestments;
 
   // Calculate expense allocations
@@ -888,13 +929,16 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
     const memberIndividualExpenses =
       individualExpenseAllocation.get(m.id) ?? 0;
 
-    // Total expenses for this member
+    // Total expenses for this member (combination of shared and individual)
     const memberTotalExpenses = memberSharedExpenses + memberIndividualExpenses;
 
-    // Get profit share (0 for inactive members)
+    // Get profit share (0 for inactive members since they're excluded from distribution)
     const profitShare = profitDistribution.get(m.id) ?? 0;
 
-    // Final net = investment returned + profit share - expenses
+    // Final net calculation:
+    // - Start with investment (what they put in gets returned)
+    // - Add profit share (their portion of the distributed profit)
+    // - Subtract expenses (costs allocated to them)
     const finalNet = m.investment + profitShare - memberTotalExpenses;
 
     return {
@@ -915,9 +959,12 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
   // Step 8: Generate settlement transfers
   // -------------------------------------------------------------------------
   // Determine the tax rate to apply to transfers
+  // Only apply tax if explicitly enabled, otherwise use 0
   const taxRateForTransfers = normalized.taxEnabled ? normalized.taxRate : 0;
 
   // Use greedy matching algorithm to minimize number of transfers
+  // This algorithm pairs largest debtors with largest creditors to minimize
+  // the total number of transactions needed to settle all balances
   const suggestedTransfers = settleBalances(
     memberBreakdowns,
     taxRateForTransfers
