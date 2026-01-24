@@ -1,0 +1,24 @@
+
+> sc-payout-split@0.1.0 test
+> vitest --run --coverage
+
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90mC:/Users/3r4sa/Desktop/Payslip/.auto-claude/worktrees/tasks/003-you-ve-hit-your-limit-resets-2am-europe-berlin[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+ [32m✓[39m lib/calc.test.ts [2m([22m[2m84 tests[22m[2m | [22m[33m11 skipped[39m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m components/SessionWizard.test.tsx [2m([22m[2m70 tests[22m[2m)[22m[33m 1832[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m143 passed[39m[22m[2m | [22m[33m11 skipped[39m[90m (154)[39m
+[2m   Start at [22m 19:49:17
+[2m   Duration [22m 2.89s[2m (transform 128ms, setup 189ms, import 298ms, tests 1.84s, environment 1.10s)[22m
+
+[34m % [39m[2mCoverage report from [22m[33mv8[39m
+----------|---------|----------|---------|---------|----------------------------
+File      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s          
+----------|---------|----------|---------|---------|----------------------------
+All files |   95.09 |    83.21 |   98.07 |    94.7 |                            
+ calc.ts  |   95.09 |    83.21 |   98.07 |    94.7 | ...331,357,389,510-511,780 
+ types.ts |       0 |        0 |       0 |       0 |                            
+----------|---------|----------|---------|---------|----------------------------
