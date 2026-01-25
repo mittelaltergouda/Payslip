@@ -9,3 +9,6 @@ coverage
 playwright-report
 test-results
 package-lock.json
+
+# Auto Claude data directory
+.auto-claude/
