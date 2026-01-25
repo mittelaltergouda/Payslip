@@ -17,8 +17,7 @@ export default defineConfig({
       reporter: ["text", "html", "json", "json-summary"],
       include: ["lib/**/*.ts"],
       exclude: ["**/*.test.ts", "**/*.test.tsx"],
-      reportsDirectory: "./coverage",
-      all: false
+      reportsDirectory: "./coverage"
     }
   }
 });

@@ -2784,8 +2784,8 @@ describe('Performance Tests', () => {
     // Create shared expenses
     const sharedExpenses = Array.from({ length: 20 }, (_, i) => ({
       id: `expense-${i}`,
-      description: `Shared Expense ${i}`,
-      totalAmount: Math.floor(Math.random() * 5000) + 100
+      label: `Shared Expense ${i}`,
+      amount: Math.floor(Math.random() * 5000) + 100
     }));
 
     // Create individual expenses (2 per member)
@@ -2793,13 +2793,13 @@ describe('Performance Tests', () => {
       {
         id: `ind-expense-${i}-1`,
         memberId: member.id,
-        description: `Individual Expense ${i}-1`,
+        label: `Individual Expense ${i}-1`,
         amount: Math.floor(Math.random() * 500) + 10
       },
       {
         id: `ind-expense-${i}-2`,
         memberId: member.id,
-        description: `Individual Expense ${i}-2`,
+        label: `Individual Expense ${i}-2`,
         amount: Math.floor(Math.random() * 500) + 10
       }
     ]);
