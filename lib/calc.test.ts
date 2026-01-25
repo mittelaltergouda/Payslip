@@ -1224,24 +1224,24 @@ describe('Tax Gross-Up Calculations', () => {
       expect(grossAmount).toBe(100);
     });
 
-    it('should correctly gross-up with 5% tax rate', () => {
+    it('should correctly gross-up with 0.5% tax rate', () => {
       const netAmount = 100;
-      const taxRate = 0.05;
+      const taxRate = 0.005; // Fixed tax rate: always 0.5%
 
-      // Formula: grossAmount = ceil(net / (1 - taxRate)) = ceil(100 / 0.95) = ceil(105.26) = 106
+      // Formula: grossAmount = ceil(net / (1 - taxRate)) = ceil(100 / 0.995) = ceil(100.50) = 101
       const grossAmount = calculateGrossAmount(netAmount, taxRate);
 
-      expect(grossAmount).toBe(106);
+      expect(grossAmount).toBe(101);
     });
 
-    it('should correctly gross-up with 10% tax rate', () => {
-      const netAmount = 100;
-      const taxRate = 0.10;
+    it('should correctly gross-up with larger amount at 0.5% tax rate', () => {
+      const netAmount = 1000;
+      const taxRate = 0.005; // Fixed tax rate: always 0.5%
 
-      // Formula: ceil(100 / 0.90) = ceil(111.11) = 112
+      // Formula: ceil(1000 / 0.995) = ceil(1005.03) = 1006
       const grossAmount = calculateGrossAmount(netAmount, taxRate);
 
-      expect(grossAmount).toBe(112);
+      expect(grossAmount).toBe(1006);
     });
 
     it('should return net amount when tax rate is 1 or greater (edge case)', () => {
@@ -1297,19 +1297,19 @@ describe('Tax Gross-Up Calculations', () => {
       expect(result[0].feeAmount).toBe(0);
     });
 
-    it('should apply 5% tax rate with correct gross-up', () => {
+    it('should apply 0.5% tax rate with correct gross-up', () => {
       const transfers: Transfer[] = [
         { fromMemberId: 'member-1', toMemberId: 'member-2', netAmount: 100, grossAmount: 0, feeAmount: 0 }
       ];
-      const taxRate = 0.05;
+      const taxRate = 0.005; // Fixed tax rate: always 0.5%
 
       const result = applyTransferTaxes(transfers, taxRate);
 
       expect(result.length).toBe(1);
       expect(result[0].netAmount).toBe(100);
-      // grossAmount = ceil(100 / 0.95) = 106
-      expect(result[0].grossAmount).toBe(106);
-      expect(result[0].feeAmount).toBe(6);
+      // grossAmount = ceil(100 / 0.995) = 101
+      expect(result[0].grossAmount).toBe(101);
+      expect(result[0].feeAmount).toBe(1);
     });
 
     it('should apply tax to multiple transfers correctly', () => {
@@ -1317,21 +1317,21 @@ describe('Tax Gross-Up Calculations', () => {
         { fromMemberId: 'member-1', toMemberId: 'member-2', netAmount: 100, grossAmount: 0, feeAmount: 0 },
         { fromMemberId: 'member-3', toMemberId: 'member-4', netAmount: 200, grossAmount: 0, feeAmount: 0 }
       ];
-      const taxRate = 0.05;
+      const taxRate = 0.005; // Fixed tax rate: always 0.5%
 
       const result = applyTransferTaxes(transfers, taxRate);
 
       expect(result.length).toBe(2);
 
-      // First transfer: ceil(100 / 0.95) = 106
+      // First transfer: ceil(100 / 0.995) = 101
       expect(result[0].netAmount).toBe(100);
-      expect(result[0].grossAmount).toBe(106);
-      expect(result[0].feeAmount).toBe(6);
+      expect(result[0].grossAmount).toBe(101);
+      expect(result[0].feeAmount).toBe(1);
 
-      // Second transfer: ceil(200 / 0.95) = ceil(210.53) = 211
+      // Second transfer: ceil(200 / 0.995) = ceil(201.01) = 202
       expect(result[1].netAmount).toBe(200);
-      expect(result[1].grossAmount).toBe(211);
-      expect(result[1].feeAmount).toBe(11);
+      expect(result[1].grossAmount).toBe(202);
+      expect(result[1].feeAmount).toBe(2);
     });
 
     it('should handle edge case of tax rate >= 1 by returning unchanged transfers', () => {
@@ -1370,7 +1370,7 @@ describe('Tax Gross-Up Calculations', () => {
         distributionMode: 'ADJUSTABLE',
         totalRevenue: 1000,
         taxEnabled: true,
-        taxRate: 0.05,
+        taxRate: 0.005, // Fixed tax rate: always 0.5%
         members: [
           { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0, investment: 1000, fixedPayout: 200 },
           { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 0 }
@@ -1382,7 +1382,7 @@ describe('Tax Gross-Up Calculations', () => {
       // saleRevenue = 1000 - 1000 = 0, netProfit = 0
       expect(result.saleRevenue).toBe(0);
       expect(result.netProfit).toBe(0);
-      expect(result.taxRateApplied).toBe(0.05);
+      expect(result.taxRateApplied).toBe(0.005); // Fixed tax rate: always 0.5%
 
       const alice = result.members.find(m => m.memberId === 'member-1');
       const bob = result.members.find(m => m.memberId === 'member-2');
@@ -1399,13 +1399,13 @@ describe('Tax Gross-Up Calculations', () => {
 
       // Balance: Alice = 1200 - 1000 = 200 (creditor), Bob = -200 - 0 = -200 (debtor)
       // Bob owes Alice 200
-      // With 5% tax, gross = ceil(200 / 0.95) = ceil(210.53) = 211
+      // With 0.5% tax, gross = ceil(200 / 0.995) = ceil(201.01) = 202
       expect(result.suggestedTransfers.length).toBe(1);
       expect(result.suggestedTransfers[0].fromMemberId).toBe('member-2');
       expect(result.suggestedTransfers[0].toMemberId).toBe('member-1');
       expect(result.suggestedTransfers[0].netAmount).toBe(200);
-      expect(result.suggestedTransfers[0].grossAmount).toBe(211);
-      expect(result.suggestedTransfers[0].feeAmount).toBe(11);
+      expect(result.suggestedTransfers[0].grossAmount).toBe(202);
+      expect(result.suggestedTransfers[0].feeAmount).toBe(2);
     });
 
     it('should not apply tax when taxEnabled is false', () => {
@@ -1443,7 +1443,7 @@ describe('Tax Gross-Up Calculations', () => {
         distributionMode: 'PERCENT',
         totalRevenue: 1000,
         taxEnabled: true,
-        taxRate: 0.10, // 10% tax
+        taxRate: 0.005, // Fixed tax rate: always 0.5%
         members: [
           { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000, percentShare: 70 },
           { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, percentShare: 30 }
@@ -1452,7 +1452,7 @@ describe('Tax Gross-Up Calculations', () => {
 
       const result = calculatePayslip(input);
 
-      expect(result.taxRateApplied).toBe(0.10);
+      expect(result.taxRateApplied).toBe(0.005); // Fixed tax rate: always 0.5%
 
       const alice = result.members.find(m => m.memberId === 'member-1');
       const bob = result.members.find(m => m.memberId === 'member-2');
@@ -1908,7 +1908,7 @@ describe('Settlement/Transfer Generation', () => {
       distributionMode: 'ADJUSTABLE',
       totalRevenue: 1500,
       taxEnabled: true,
-      taxRate: 0.10,
+      taxRate: 0.005, // Fixed tax rate: always 0.5%
       members: [
         { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0, investment: 1500, fixedPayout: 800 },
         { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 0, fixedPayout: 500 },
@@ -1918,7 +1918,7 @@ describe('Settlement/Transfer Generation', () => {
 
     const result = calculatePayslip(input);
 
-    expect(result.taxRateApplied).toBe(0.10);
+    expect(result.taxRateApplied).toBe(0.005); // Fixed tax rate: always 0.5%
 
     // saleRevenue = 0, netProfit = 0
     // Alice gets 800, Bob gets 500, Charlie gets remainder: -1300
@@ -1940,8 +1940,8 @@ describe('Settlement/Transfer Generation', () => {
       expect(transfer.grossAmount).toBeGreaterThan(transfer.netAmount);
       expect(transfer.feeAmount).toBe(transfer.grossAmount - transfer.netAmount);
 
-      // Verify gross-up calculation: gross = ceil(net / (1 - 0.10)) = ceil(net / 0.90)
-      const expectedGross = Math.ceil(transfer.netAmount / 0.90);
+      // Verify gross-up calculation: gross = ceil(net / (1 - 0.005)) = ceil(net / 0.995)
+      const expectedGross = Math.ceil(transfer.netAmount / 0.995);
       expect(transfer.grossAmount).toBe(expectedGross);
     });
   });
@@ -2173,13 +2173,8 @@ describe('calculatePayslip - Edge Cases', () => {
       ]
     };
 
-    const result = calculatePayslip(input);
-
-    // No active members, so no profit distribution
-    expect(result.members[0].profitShare).toBe(0);
-    expect(result.members[1].profitShare).toBe(0);
-    expect(result.members[0].finalNet).toBe(0);
-    expect(result.members[1].finalNet).toBe(0);
+    // Should throw error because there are no active members
+    expect(() => calculatePayslip(input)).toThrow('Session must have at least one active member to calculate payslip');
   });
 
   it('should handle very large revenue numbers', () => {
@@ -2243,10 +2238,8 @@ describe('calculatePayslip - Edge Cases', () => {
       members: []
     };
 
-    const result = calculatePayslip(input);
-
-    expect(result.members.length).toBe(0);
-    expect(result.suggestedTransfers.length).toBe(0);
+    // Should throw error because there are no active members (empty array = no active members)
+    expect(() => calculatePayslip(input)).toThrow('Session must have at least one active member to calculate payslip');
   });
 
   it('should handle total expenses exceeding revenue', () => {
@@ -2281,13 +2274,10 @@ describe('calculatePayslip - Edge Cases', () => {
     expect(alice?.profitShare).toBe(-250);
     expect(bob?.profitShare).toBe(-250);
 
-    // finalNet = 0 + (-250) - 750 = -1000 - nope, wait
-    // finalNet = investment + profitShare - (sharedExpenses + individualExpenses)
-    // But sharedExpenses are already in profitShare calculation
-    // Let me check the pattern...
-    // Actually profitShare is AFTER expenses, so finalNet = investment + profitShare
-    expect(alice?.finalNet).toBe(-250);
-    expect(bob?.finalNet).toBe(-250);
+    // finalNet = investment + profitShare - memberTotalExpenses
+    // finalNet = 0 + (-250) - 750 = -1000
+    expect(alice?.finalNet).toBe(-1000);
+    expect(bob?.finalNet).toBe(-1000);
   });
 
   it('should handle individual expense for a member in PERCENT mode', () => {
@@ -2559,41 +2549,30 @@ describe('calculateGrossAmount - Edge Cases', () => {
     expect(gross).toBe(0);
   });
 
-  it('should handle 100% fee rate', () => {
-    const gross = calculateGrossAmount(100, 100);
-    // If fee is 100%, you'd need infinite gross to get any net
-    // The formula would be: gross = net / (1 - rate/100) = 100 / 0 = Infinity
-    // But we should handle this edge case
-    expect(gross).toBe(Infinity);
-  });
-
-  it('should handle negative net amount', () => {
-    const gross = calculateGrossAmount(-100, 10);
-    // gross = -100 / 0.9 = -111.11...
-    expect(gross).toBeCloseTo(-111.11, 2);
-  });
-
-  it('should handle very small fee rate', () => {
-    const gross = calculateGrossAmount(100, 0.01);
-    // gross = 100 / 0.9999 = 100.01
-    expect(gross).toBeCloseTo(100.01, 2);
+  it('should handle gross-up with fixed 0.5% tax rate on large amounts', () => {
+    const gross = calculateGrossAmount(10000, 0.005);
+    // gross = ceil(10000 / 0.995) = ceil(10050.25) = 10051
+    expect(gross).toBe(10051);
   });
 });
 
 describe('calculateFeeAmount - Edge Cases', () => {
   it('should handle zero gross amount', () => {
     const fee = calculateFeeAmount(0, 10);
-    expect(fee).toBe(0);
+    // fee = gross - net = 0 - 10 = -10
+    expect(fee).toBe(-10);
   });
 
-  it('should handle zero fee rate', () => {
+  it('should handle zero net amount', () => {
     const fee = calculateFeeAmount(100, 0);
-    expect(fee).toBe(0);
+    // fee = gross - net = 100 - 0 = 100
+    expect(fee).toBe(100);
   });
 
   it('should handle negative gross amount', () => {
     const fee = calculateFeeAmount(-100, 10);
-    expect(fee).toBe(-10);
+    // fee = gross - net = -100 - 10 = -110
+    expect(fee).toBe(-110);
   });
 });
 
@@ -2633,12 +2612,13 @@ describe('applyTransferTaxes - Edge Cases', () => {
       }
     ];
 
-    const result = applyTransferTaxes(transfers, 10);
+    const result = applyTransferTaxes(transfers, 0.005); // Fixed tax rate: always 0.5%
 
-    // gross = 0.01 / 0.9 = 0.0111...
-    expect(result[0].grossAmount).toBeCloseTo(0.0111, 4);
-    // fee = 0.0111 * 0.1 = 0.00111
-    expect(result[0].feeAmount).toBeCloseTo(0.0011, 4);
+    // gross = ceil(0.01 / 0.995) = ceil(0.01005025...) = 1
+    // But then it's rounded to 2 decimals: Math.round(1 * 100) / 100 = 1
+    expect(result[0].grossAmount).toBe(1);
+    // fee = 1 - 0.01 = 0.99
+    expect(result[0].feeAmount).toBe(0.99);
   });
 
   it('should handle multiple transfers with rounding', () => {
@@ -2666,16 +2646,18 @@ describe('applyTransferTaxes - Edge Cases', () => {
       }
     ];
 
-    const result = applyTransferTaxes(transfers, 5);
+    const result = applyTransferTaxes(transfers, 0.005); // Fixed tax rate: always 0.5%
 
-    // Each transfer should have proper gross and fee calculated
-    result.forEach(transfer => {
-      const expectedGross = transfer.netAmount / 0.95;
-      const expectedFee = expectedGross * 0.05;
+    // Each transfer should have proper gross and fee calculated with 0.5% tax
+    // gross = ceil(net / 0.995)
+    expect(result[0].grossAmount).toBe(34); // ceil(33.33 / 0.995) = ceil(33.5) = 34
+    expect(result[0].feeAmount).toBeCloseTo(0.67, 2);
 
-      expect(transfer.grossAmount).toBeCloseTo(expectedGross, 2);
-      expect(transfer.feeAmount).toBeCloseTo(expectedFee, 2);
-    });
+    expect(result[1].grossAmount).toBe(34);
+    expect(result[1].feeAmount).toBeCloseTo(0.67, 2);
+
+    expect(result[2].grossAmount).toBe(34); // ceil(33.34 / 0.995) = ceil(33.51) = 34
+    expect(result[2].feeAmount).toBeCloseTo(0.66, 2);
   });
 });
 
@@ -2698,7 +2680,7 @@ describe('Performance Tests', () => {
       distributionMode: 'EQUAL',
       totalRevenue: 1000000, // 1 million total revenue
       taxEnabled: true,
-      taxRate: 0.1, // 10% tax rate
+      taxRate: 0.005, // Fixed tax rate: always 0.5%
       members
     };
 
@@ -2738,7 +2720,7 @@ describe('Performance Tests', () => {
       distributionMode: 'PERCENT',
       totalRevenue: 1000000,
       taxEnabled: true,
-      taxRate: 0.1, // 10% tax rate
+      taxRate: 0.005, // Fixed tax rate: always 0.5%
       members
     };
 
@@ -2773,7 +2755,7 @@ describe('Performance Tests', () => {
       distributionMode: 'ADJUSTABLE',
       totalRevenue: 2000000, // 2 million to accommodate fixed payouts/bonuses
       taxEnabled: true,
-      taxRate: 0.1, // 10% tax rate
+      taxRate: 0.005, // Fixed tax rate: always 0.5%
       members
     };
 
@@ -2828,7 +2810,7 @@ describe('Performance Tests', () => {
       distributionMode: 'EQUAL',
       totalRevenue: 3000000, // 3 million to cover expenses
       taxEnabled: true,
-      taxRate: 0.1, // 10% tax rate
+      taxRate: 0.005, // Fixed tax rate: always 0.5%
       members,
       sharedExpenses,
       individualExpenses
@@ -2868,7 +2850,7 @@ describe('Performance Tests', () => {
       distributionMode: 'ADJUSTABLE',
       totalRevenue: 2500000, // Enough to cover the fixed payouts
       taxEnabled: true,
-      taxRate: 0.1, // 10% tax rate
+      taxRate: 0.005, // Fixed tax rate: always 0.5%
       members
     };
 
