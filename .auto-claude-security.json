@@ -179,6 +179,7 @@
       "typescript",
       "php"
     ],
+    "package_managers": [],
     "package_managers": [
       "npm"
     ],
@@ -216,8 +217,7 @@
     "cargo_aliases": [],
     "shell_scripts": []
   },
-  "project_dir": "C:\\Users\\3r4sa\\Desktop\\Payslip",
-  "created_at": "2026-01-18T02:46:38.703038",
-  "project_hash": "b5e419c95e0f3bba090046ab1eddbd38",
-  "inherited_from": "C:\\Users\\3r4sa\\Desktop\\Payslip"
+  "project_dir": "C:\\Users\\3r4sa\\Desktop\\Payslip\\.auto-claude\\worktrees\\tasks\\009-enhanced-calculation-test-coverage",
+  "created_at": "2026-01-25T03:40:25.560025",
+  "project_hash": "9293c5f753f0ab6d28b91566ead00a3a"
 }
