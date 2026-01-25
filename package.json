@@ -2,6 +2,9 @@
   "name": "sc-payout-split",
   "version": "0.1.0",
   "private": true,
+  "overrides": {
+    "glob": "^10.4.5"
+  },
   "scripts": {
     "dev": "next dev",
     "check": "echo 'Check completed'",
@@ -31,9 +34,10 @@
     "@types/node": "^20.12.12",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
+    "@vitest/coverage-v8": "^4.0.18",
     "autoprefixer": "^10.4.17",
-    "eslint": "^9.0.0",
-    "eslint-config-next": "^16.1.2",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.35",
     "jsdom": "^27.4.0",
     "postcss": "^8.4.35",
     "prisma": "^5.18.0",

@@ -1,0 +1,100 @@
+[41m[1m FAIL [22m[49m lib/calc.test.ts[2m > [22mcalculateGrossAmount - Edge Cases[2m > [22mshould handle very small fee rate
+[31m[1mAssertionError[22m: expected 102 to be close to 100.01, received difference is 1.9899999999999949, but expected 0.005[39m
+[36m [2m❯[22m lib/calc.test.ts:[2m2579:19[22m[39m
+    [90m2577| [39m    const gross = calculateGrossAmount(100, 0.01);
+    [90m2578| [39m    // gross = 100 / 0.9999 = 100.01
+    [90m2579| [39m    expect(gross).toBeCloseTo(100.01, 2);
+    [90m   | [39m                  [31m^[39m
+    [90m2580| [39m  });
+    [90m2581| [39m});
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/11]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m lib/calc.test.ts[2m > [22mcalculateFeeAmount - Edge Cases[2m > [22mshould handle zero gross amount
+[31m[1mAssertionError[22m: expected -10 to be +0 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 0[39m
+[31m+ -10[39m
+
+[36m [2m❯[22m lib/calc.test.ts:[2m2586:17[22m[39m
+    [90m2584| [39m  it('should handle zero gross amount', () => {
+    [90m2585| [39m    const fee = calculateFeeAmount(0, 10);
+    [90m2586| [39m    expect(fee).toBe(0);
+    [90m   | [39m                [31m^[39m
+    [90m2587| [39m  });
+    [90m2588| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/11]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m lib/calc.test.ts[2m > [22mcalculateFeeAmount - Edge Cases[2m > [22mshould handle zero fee rate
+[31m[1mAssertionError[22m: expected 100 to be +0 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 0[39m
+[31m+ 100[39m
+
+[36m [2m❯[22m lib/calc.test.ts:[2m2591:17[22m[39m
+    [90m2589| [39m  it('should handle zero fee rate', () => {
+    [90m2590| [39m    const fee = calculateFeeAmount(100, 0);
+    [90m2591| [39m    expect(fee).toBe(0);
+    [90m   | [39m                [31m^[39m
+    [90m2592| [39m  });
+    [90m2593| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/11]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m lib/calc.test.ts[2m > [22mcalculateFeeAmount - Edge Cases[2m > [22mshould handle negative gross amount
+[31m[1mAssertionError[22m: expected -110 to be -10 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- -10[39m
+[31m+ -110[39m
+
+[36m [2m❯[22m lib/calc.test.ts:[2m2596:17[22m[39m
+    [90m2594| [39m  it('should handle negative gross amount', () => {
+    [90m2595| [39m    const fee = calculateFeeAmount(-100, 10);
+    [90m2596| [39m    expect(fee).toBe(-10);
+    [90m   | [39m                [31m^[39m
+    [90m2597| [39m  });
+    [90m2598| [39m});
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/11]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m lib/calc.test.ts[2m > [22mapplyTransferTaxes - Edge Cases[2m > [22mshould handle very small transfer amounts
+[31m[1mAssertionError[22m: expected 0.01 to be close to 0.0111, received difference is 0.0011000000000000003, but expected 0.00005[39m
+[36m [2m❯[22m lib/calc.test.ts:[2m2639:35[22m[39m
+    [90m2637| [39m
+    [90m2638| [39m    // gross = 0.01 / 0.9 = 0.0111...
+    [90m2639| [39m    expect(result[0].grossAmount).toBeCloseTo(0.0111, 4);
+    [90m   | [39m                                  [31m^[39m
+    [90m2640| [39m    // fee = 0.0111 * 0.1 = 0.00111
+    [90m2641| [39m    expect(result[0].feeAmount).toBeCloseTo(0.0011, 4);
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/11]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m lib/calc.test.ts[2m > [22mapplyTransferTaxes - Edge Cases[2m > [22mshould handle multiple transfers with rounding
+[31m[1mAssertionError[22m: expected 33.33 to be close to 35.084210526315786, received difference is 1.7542105263157879, but expected 0.005[39m
+[36m [2m❯[22m lib/calc.test.ts:[2m2676:36[22m[39m
+    [90m2674| [39m      const expectedFee = expectedGross * 0.05;
+    [90m2675| [39m
+    [90m2676| [39m      expect(transfer.grossAmount).toBeCloseTo(expectedGross, 2);
+    [90m   | [39m                                   [31m^[39m
+    [90m2677| [39m      expect(transfer.feeAmount).toBeCloseTo(expectedFee, 2);
+    [90m2678| [39m    });
+[90m [2m❯[22m lib/calc.test.ts:[2m2672:12[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/11]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m11 failed[39m[22m[2m | [22m[1m[32m143 passed[39m[22m[90m (154)[39m
+[2m   Start at [22m 19:47:51
+[2m   Duration [22m 2.86s[2m (transform 123ms, setup 193ms, import 284ms, tests 1.84s, environment 1.09s)[22m
+
