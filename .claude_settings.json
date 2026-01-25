@@ -1,0 +1,39 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
+  },
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Read(./**)",
+      "Write(./**)",
+      "Edit(./**)",
+      "Glob(./**)",
+      "Grep(./**)",
+      "Read(C:\\Users\\3r4sa\\Desktop\\Payslip\\.auto-claude\\worktrees\\tasks\\009-enhanced-calculation-test-coverage/**)",
+      "Write(C:\\Users\\3r4sa\\Desktop\\Payslip\\.auto-claude\\worktrees\\tasks\\009-enhanced-calculation-test-coverage/**)",
+      "Edit(C:\\Users\\3r4sa\\Desktop\\Payslip\\.auto-claude\\worktrees\\tasks\\009-enhanced-calculation-test-coverage/**)",
+      "Glob(C:\\Users\\3r4sa\\Desktop\\Payslip\\.auto-claude\\worktrees\\tasks\\009-enhanced-calculation-test-coverage/**)",
+      "Grep(C:\\Users\\3r4sa\\Desktop\\Payslip\\.auto-claude\\worktrees\\tasks\\009-enhanced-calculation-test-coverage/**)",
+      "Read(C:\\Users\\3r4sa\\Desktop\\Payslip\\.auto-claude\\worktrees\\tasks\\009-enhanced-calculation-test-coverage\\.auto-claude\\specs\\009-enhanced-calculation-test-coverage/**)",
+      "Write(C:\\Users\\3r4sa\\Desktop\\Payslip\\.auto-claude\\worktrees\\tasks\\009-enhanced-calculation-test-coverage\\.auto-claude\\specs\\009-enhanced-calculation-test-coverage/**)",
+      "Edit(C:\\Users\\3r4sa\\Desktop\\Payslip\\.auto-claude\\worktrees\\tasks\\009-enhanced-calculation-test-coverage\\.auto-claude\\specs\\009-enhanced-calculation-test-coverage/**)",
+      "Read(C:\\Users\\3r4sa\\Desktop\\Payslip\\.auto-claude/**)",
+      "Write(C:\\Users\\3r4sa\\Desktop\\Payslip\\.auto-claude/**)",
+      "Edit(C:\\Users\\3r4sa\\Desktop\\Payslip\\.auto-claude/**)",
+      "Glob(C:\\Users\\3r4sa\\Desktop\\Payslip\\.auto-claude/**)",
+      "Grep(C:\\Users\\3r4sa\\Desktop\\Payslip\\.auto-claude/**)",
+      "Bash(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "mcp__context7__resolve-library-id(*)",
+      "mcp__context7__get-library-docs(*)",
+      "mcp__graphiti-memory__search_nodes(*)",
+      "mcp__graphiti-memory__search_facts(*)",
+      "mcp__graphiti-memory__add_episode(*)",
+      "mcp__graphiti-memory__get_episodes(*)",
+      "mcp__graphiti-memory__get_entity_edge(*)"
+    ]
+  }
+}
