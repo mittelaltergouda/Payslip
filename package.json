@@ -2,6 +2,9 @@
   "name": "sc-payout-split",
   "version": "0.1.0",
   "private": true,
+  "overrides": {
+    "glob": "^10.4.5"
+  },
   "scripts": {
     "dev": "next dev",
     "check": "echo 'Check completed'",
