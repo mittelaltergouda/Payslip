@@ -180,6 +180,9 @@
       "php"
     ],
     "package_managers": [],
+    "package_managers": [
+      "npm"
+    ],
     "frameworks": [
       "nextjs",
       "react",
