@@ -20,104 +20,46 @@
 
 ## Core Capabilities
 
-✅ **Multi-Member Revenue Tracking** – Support for unlimited crew members with individual revenue and investment tracking
-
-✅ **Three Distribution Modes** – EQUAL (split evenly), PERCENT (by percentage share), or ADJUSTABLE (fixed payouts + bonuses)
-
-✅ **Expense Management** – Track both shared and individual expenses; shared costs are allocated fairly across participants
-
-✅ **Tax Gross-Up Calculation** – Automatically calculates transfer amounts accounting for transaction fees, ensuring members receive their correct net payout
-
-✅ **Payslip Generation** – Format results as detailed payslip receipts with profit breakdown, transfers, and settlement details
-
-✅ **Share & Export** – Generate read-only shareable links for transparency, export calculations as JSON
-
-✅ **Validation** – Schema validation ensures data integrity throughout calculations
+✅ Multi-member revenue & expense tracking
+✅ Three distribution modes: EQUAL, PERCENT, ADJUSTABLE
+✅ Tax gross-up calculations for transfers
+✅ Payslip generation & detailed breakdown
+✅ Shareable read-only session links
+✅ Schema validation for data integrity
 
 ## Quick Start
 
-### Installation & Setup
-
 ```bash
-# Install dependencies
-npm install
-
-# Start development server (runs on http://localhost:3000)
-npm run dev
-
-# Build for production
-npm run build
+npm install && npm run dev
 ```
 
-### Run Tests
+Build for production: `npm run build`
 
-```bash
-# Unit tests (Vitest)
-npm test
-
-# E2E tests (Playwright)
-npm run test:e2e
-
-# Watch mode for development
-npm run test:watch
-```
-
-### Live Demo
-
-Visit the deployed application: [TBD – GitHub Pages link coming soon]
+**Demo**: [TBD – GitHub Pages]
 
 ## Operational Info
 
-### Development Process
-
-- **Code Review**: Pull requests are reviewed with GitHub Copilot assistance ([copilot-instructions.md](./.github/copilot-instructions.md))
-- **Security Checks**: Automated CodeQL scanning on all PRs
-- **Linting**: TypeScript + ESLint validation before commits
-
-### Deployment
-
-- **Hosting**: GitHub Pages (deployment workflow pending)
+- **Code Review**: GitHub Copilot assistance
+- **CI/CD**: CodeQL scanning + GitHub Pages deployment
 - **Database**: PostgreSQL via Prisma ORM
-- **Automatic Updates**: Dependabot monitors dependencies and proposes security updates
+- **Dependency Monitoring**: Dependabot integration
 
-### Verify Your Setup
+Verify setup: `npm run check`
 
-```bash
-# Run the full verification suite
-npm run check
-```
+## Contributing
 
-## Community & Contributing
-
-### Get Involved
-
-- **Want to contribute?** See [CONTRIBUTING.md](./CONTRIBUTING.md) (coming soon) for guidelines
-- **Found a security issue?** Please report it privately via [SECURITY.md](./SECURITY.md)
-- **Have questions?** Check [ARCHITECTURE.md](./ARCHITECTURE.md) for technical deep-dive
-
-### Code of Conduct
-
-This project adheres to the [Contributor Covenant Code of Conduct](./CODE_OF_CONDUCT.md). By participating, you agree to uphold this code.
-
-### Support Channels
-
-- **Issues & Bugs**: Use GitHub Issues for bug reports and feature requests
-- **Discussions**: GitHub Discussions for questions and ideas (coming soon)
-- **Security**: See [SECURITY.md](./SECURITY.md) for vulnerability disclosure
+- **Security**: [SECURITY.md](./SECURITY.md) • [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
+- **Architecture**: [ARCHITECTURE.md](./ARCHITECTURE.md)
+- **Report Issues**: Use GitHub Issues for bugs and features
 
 ## Trust Signals
 
-✅ **Automated Security Scanning** – CodeQL runs on every pull request to catch vulnerabilities
-
-✅ **Dependency Monitoring** – Dependabot tracks and updates dependencies, proposing security patches automatically
-
-✅ **Push Protection** – Secret scanning enabled to prevent credentials in repository history
-
-✅ **Type Safety** – Full TypeScript codebase with strict type checking
-
-✅ **Comprehensive Testing** – Unit tests (Vitest) + E2E tests (Playwright) ensure reliability
-
-✅ **Open Source** – MIT License, code transparency, community-driven
+✅ CodeQL automated security scanning
+✅ Dependabot dependency monitoring
+✅ Secret push protection
+✅ TypeScript with strict checking
+✅ Vitest + Playwright testing
+✅ MIT License
 
 ---
 
