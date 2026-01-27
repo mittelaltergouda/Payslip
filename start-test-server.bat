@@ -5,13 +5,15 @@ REM ========================================================
 echo Starting Next.js development server...
 echo.
 
-REM Start npm dev server
-start npm run dev
+REM Open http://localhost:3000 in default browser (in background)
+start "" http://localhost:3000
 
-REM Wait 4 seconds for server initialization
-timeout /t 4 /nobreak
+REM Wait 1 second for browser to open
+timeout /t 1 /nobreak
 
-REM Open http://localhost:3000 in default browser
-start http://localhost:3000
+echo.
+echo Server is running. Close this window to stop the server.
+echo.
 
-echo Browser should open shortly. Press Ctrl+C in this window to stop the server.
+REM Start npm dev server (blocking - this ties the process to the batch window)
+npm run dev
