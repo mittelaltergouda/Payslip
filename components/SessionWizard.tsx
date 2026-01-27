@@ -3,6 +3,9 @@
 import { useMemo, useState } from "react";
 import { calculatePayslip } from "@/lib/calc";
 import { DistributionMode, IndividualExpenseInput, MemberInput, SessionInput, Transfer } from "@/lib/types";
+import { useSessionHistory } from "@/hooks/useSessionHistory";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { UndoRedoControls } from "./UndoRedoControls";
 
 type Lang = "de" | "en";
 
@@ -124,9 +127,16 @@ type Props = { initialLang?: Lang };
 export function SessionWizard({ initialLang = "de" }: Props) {
   const [lang, setLang] = useState<Lang>(initialLang);
   const t = tmap[lang];
-  const [session, setSession] = useState<SessionInput>(buildInitialSession);
+  const { session, updateSession, undo, redo, canUndo, canRedo } = useSessionHistory(buildInitialSession());
   const [error, setError] = useState<string | null>(null);
   const [showRole, setShowRole] = useState(false);
+
+  // Set up keyboard shortcuts for undo/redo
+  useKeyboardShortcuts({
+    onUndo: undo,
+    onRedo: redo,
+    enabled: true,
+  });
 
   const result = useMemo(() => {
     try {
@@ -151,60 +161,60 @@ export function SessionWizard({ initialLang = "de" }: Props) {
   const netAfterTax = (result?.netProfit ?? 0) - totalFees;
 
   const updateMember = (id: string, patch: Partial<MemberInput>) => {
-    setSession((prev) => ({
-      ...prev,
-      members: prev.members.map((m) => (m.id === id ? { ...m, ...patch } : m))
-    }));
+    updateSession({
+      ...session,
+      members: session.members.map((m) => (m.id === id ? { ...m, ...patch } : m))
+    });
   };
 
   const addMember = () => {
-    setSession((prev) => ({
-      ...prev,
+    updateSession({
+      ...session,
       members: [
-        ...prev.members,
+        ...session.members,
         { id: rndId(), handle: "Crew", role: showRole ? "" : undefined, revenue: 0, investment: 0, active: true }
       ]
-    }));
+    });
   };
 
   const addIndividualExpense = (memberId: string) => {
-    setSession((prev) => ({
-      ...prev,
+    updateSession({
+      ...session,
       individualExpenses: [
-        ...(prev.individualExpenses ?? []),
+        ...(session.individualExpenses ?? []),
         { id: rndId(), memberId, label: t.expenses, amount: 0 }
       ]
-    }));
+    });
   };
 
   const updateIndividualExpense = (id: string, patch: Partial<IndividualExpenseInput>) => {
-    setSession((prev) => ({
-      ...prev,
-      individualExpenses: (prev.individualExpenses ?? []).map((exp) =>
+    updateSession({
+      ...session,
+      individualExpenses: (session.individualExpenses ?? []).map((exp) =>
         exp.id === id ? { ...exp, ...patch } : exp
       )
-    }));
+    });
   };
 
   const removeMember = (id: string) => {
-    setSession((prev) => ({
-      ...prev,
-      members: prev.members.filter((m) => m.id !== id),
-      individualExpenses: (prev.individualExpenses ?? []).filter((exp) => exp.memberId !== id)
-    }));
+    updateSession({
+      ...session,
+      members: session.members.filter((m) => m.id !== id),
+      individualExpenses: (session.individualExpenses ?? []).filter((exp) => exp.memberId !== id)
+    });
   };
 
   const onDistributionChange = (mode: DistributionMode) => {
     if (mode === "PERCENT") {
       const active = session.members.filter((m) => m.active !== false);
       const share = active.length ? 100 / active.length : 0;
-      setSession((prev) => ({
-        ...prev,
+      updateSession({
+        ...session,
         distributionMode: mode,
-        members: prev.members.map((m) => (m.active === false ? m : { ...m, percentShare: share }))
-      }));
+        members: session.members.map((m) => (m.active === false ? m : { ...m, percentShare: share }))
+      });
     } else {
-      setSession((prev) => ({ ...prev, distributionMode: mode }));
+      updateSession({ ...session, distributionMode: mode });
     }
   };
 
@@ -235,7 +245,13 @@ export function SessionWizard({ initialLang = "de" }: Props) {
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h2 className="text-xl font-display">{t.sessionSettings}</h2>
           <div className="flex gap-2">
-            <button className="btn" onClick={() => setSession(buildInitialSession())}>
+            <UndoRedoControls
+              onUndo={undo}
+              onRedo={redo}
+              canUndo={canUndo}
+              canRedo={canRedo}
+            />
+            <button className="btn" onClick={() => updateSession(buildInitialSession())}>
               {t.reset}
             </button>
           </div>
@@ -265,7 +281,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
             <input
               type="checkbox"
               checked={session.taxEnabled ?? true}
-              onChange={(e) => setSession({ ...session, taxEnabled: e.target.checked, taxRate: taxFixed })}
+              onChange={(e) => updateSession({ ...session, taxEnabled: e.target.checked, taxRate: taxFixed })}
             />
             <span className="text-sm text-white/80">{t.taxToggle}</span>
           </label>
@@ -362,12 +378,12 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                             <button
                               className="text-red-400 text-xl leading-none"
                               onClick={() =>
-                                setSession((prev) => ({
-                                  ...prev,
-                                  individualExpenses: (prev.individualExpenses ?? []).filter(
+                                updateSession({
+                                  ...session,
+                                  individualExpenses: (session.individualExpenses ?? []).filter(
                                     (ie) => ie.id !== e.id
                                   )
-                                }))
+                                })
                               }
                               title={t.remove}
                             >
