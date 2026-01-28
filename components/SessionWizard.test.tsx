@@ -8,14 +8,14 @@ describe('SessionWizard - Initial Rendering', () => {
   it('should render the component with default German language', () => {
     render(<SessionWizard />);
 
-    expect(screen.getByText('SC Payout Split')).toBeInTheDocument();
+    expect(screen.getByText('SC Payslip')).toBeInTheDocument();
     expect(screen.getByText(/Profite und Kosten crew-weise erfassen/i)).toBeInTheDocument();
   });
 
   it('should render with English language when initialLang is en', () => {
     render(<SessionWizard initialLang="en" />);
 
-    expect(screen.getByText('SC Payout Split')).toBeInTheDocument();
+    expect(screen.getByText('SC Payslip')).toBeInTheDocument();
     expect(screen.getByText(/Track profits and costs per crew/i)).toBeInTheDocument();
   });
 
