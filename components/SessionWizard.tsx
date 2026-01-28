@@ -3,9 +3,6 @@
 import { useMemo, useState } from "react";
 import { calculatePayslip } from "@/lib/calc";
 import { DistributionMode, IndividualExpenseInput, MemberInput, SessionInput, Transfer } from "@/lib/types";
-import { useSessionHistory } from "@/hooks/useSessionHistory";
-import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { UndoRedoControls } from "./UndoRedoControls";
 
 type Lang = "de" | "en";
 
@@ -127,16 +124,10 @@ type Props = { initialLang?: Lang };
 export function SessionWizard({ initialLang = "de" }: Props) {
   const [lang, setLang] = useState<Lang>(initialLang);
   const t = tmap[lang];
-  const { session, updateSession, undo, redo, canUndo, canRedo } = useSessionHistory(buildInitialSession());
+  const [session, setSession] = useState<SessionInput>(buildInitialSession());
+  const updateSession = setSession;
   const [error, setError] = useState<string | null>(null);
   const [showRole, setShowRole] = useState(false);
-
-  // Set up keyboard shortcuts for undo/redo
-  useKeyboardShortcuts({
-    onUndo: undo,
-    onRedo: redo,
-    enabled: true,
-  });
 
   const result = useMemo(() => {
     try {
@@ -244,17 +235,9 @@ export function SessionWizard({ initialLang = "de" }: Props) {
       <div className="glass p-6 space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h2 className="text-xl font-display">{t.sessionSettings}</h2>
-          <div className="flex gap-2">
-            <UndoRedoControls
-              onUndo={undo}
-              onRedo={redo}
-              canUndo={canUndo}
-              canRedo={canRedo}
-            />
-            <button className="btn" onClick={() => updateSession(buildInitialSession())}>
-              {t.reset}
-            </button>
-          </div>
+          <button className="btn" onClick={() => updateSession(buildInitialSession())}>
+            {t.reset}
+          </button>
         </div>
         <div className="grid gap-4 md:grid-cols-4">
           <label className="flex flex-col gap-1">
