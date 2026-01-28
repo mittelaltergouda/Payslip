@@ -135,6 +135,92 @@ test.describe('Undo/Redo Basic Operations', () => {
   });
 });
 
+test.describe('Undo/Redo for Expense Operations', () => {
+  let consoleErrors: string[] = [];
+
+  test.beforeEach(async ({ page }) => {
+    consoleErrors = [];
+
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
+
+    page.on('pageerror', (error) => {
+      consoleErrors.push(error.message);
+    });
+
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+  });
+
+  test('Add expense → Undo → Expense removed', async ({ page }) => {
+    await page.waitForSelector('text=SC Payout Split');
+
+    // Find the first "+ Expense" button (for first member)
+    const addExpenseButton = page.locator('button', { hasText: /\+ (Expense|Kosten)/i }).first();
+    const undoButton = page.getByRole('button', { name: /Undo last change/i });
+
+    // Click to add an expense
+    await addExpenseButton.click();
+    await page.waitForTimeout(500);
+
+    // Verify expense input field appears
+    const expenseInputs = page.locator('input[type="number"]').filter({ hasText: '' });
+    const initialExpenseCount = await expenseInputs.count();
+    expect(initialExpenseCount).toBeGreaterThan(0);
+
+    // Undo the expense addition
+    await expect(undoButton).toBeEnabled();
+    await undoButton.click();
+    await page.waitForTimeout(500);
+
+    // Verify expense is removed (fewer inputs than before)
+    const afterUndoCount = await expenseInputs.count();
+    expect(afterUndoCount).toBeLessThan(initialExpenseCount);
+
+    expect(consoleErrors).toHaveLength(0);
+  });
+
+  test('Undo/redo expense with full cycle', async ({ page }) => {
+    await page.waitForSelector('text=SC Payout Split');
+
+    const addExpenseButton = page.locator('button', { hasText: /\+ (Expense|Kosten)/i }).first();
+    const undoButton = page.getByRole('button', { name: /Undo last change/i });
+    const redoButton = page.getByRole('button', { name: /Redo last undone change/i });
+
+    // Verify undo is disabled initially (or just from starting state)
+    const initialUndoState = await undoButton.isDisabled();
+
+    // Add expense
+    await addExpenseButton.click();
+    await page.waitForTimeout(500);
+
+    // Undo should now be enabled
+    await expect(undoButton).toBeEnabled();
+
+    // Undo the expense
+    await undoButton.click();
+    await page.waitForTimeout(500);
+
+    // Redo should now be enabled
+    await expect(redoButton).toBeEnabled();
+
+    // Redo the expense
+    await redoButton.click();
+    await page.waitForTimeout(500);
+
+    // Undo should be enabled again
+    await expect(undoButton).toBeEnabled();
+
+    // Redo should be disabled (at the end of the stack)
+    await expect(redoButton).toBeDisabled();
+
+    expect(consoleErrors).toHaveLength(0);
+  });
+});
+
 test.describe('Undo/Redo for Settings Changes', () => {
   let consoleErrors: string[] = [];
 
