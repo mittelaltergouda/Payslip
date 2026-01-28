@@ -302,20 +302,20 @@ export function SessionWizard({ initialLang = "de" }: Props) {
           <button className="btn" onClick={addMember}>{t.addMember}</button>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
+          <table className="min-w-full text-base">
             <thead className="text-white/60 border-b border-white/10">
               <tr className="whitespace-nowrap">
-                <th className="py-2 px-2 text-left">{t.handle}</th>
-                {showRole && <th className="py-2 px-2 text-left">{t.role}</th>}
-                <th className="py-2 px-2 text-left">{t.revenueLabel}</th>
-                <th className="py-2 px-2 text-left">{t.investmentLabel}</th>
-                <th className="py-2 px-2 text-left">{t.expensesLabel}</th>
-                <th className="py-2 px-2 text-left">{t.taxesLabel}</th>
-                <th className="py-2 px-2 text-left">{t.profitShareCol}</th>
-                <th className="py-2 px-2 text-left">{t.netAfterFeesCol}</th>
-                <th className="py-2 px-2 text-left">{t.percentShare}</th>
-                <th className="py-2 px-2 text-left">{t.fixedBonus}</th>
-                <th className="py-2 px-2 text-left">{t.fixedPayout}</th>
+                <th className="py-3 px-3 text-left">{t.handle}</th>
+                {showRole && <th className="py-3 px-3 text-left">{t.role}</th>}
+                <th className="py-3 px-3 text-left">{t.revenueLabel}</th>
+                <th className="py-3 px-3 text-left">{t.investmentLabel}</th>
+                <th className="py-3 px-3 text-left">{t.expensesLabel}</th>
+                <th className="py-3 px-3 text-left">{t.taxesLabel}</th>
+                <th className="py-3 px-3 text-left">{t.profitShareCol}</th>
+                <th className="py-3 px-3 text-left">{t.netAfterFeesCol}</th>
+                <th className="py-3 px-3 text-left">{t.percentShare}</th>
+                <th className="py-3 px-3 text-left">{t.fixedBonus}</th>
+                <th className="py-3 px-3 text-left">{t.fixedPayout}</th>
                 <th />
               </tr>
             </thead>
@@ -328,7 +328,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                   (feeByPayer[m.id!] ?? 0);
                 return (
                   <tr key={m.id} className="align-top">
-                    <td className="py-2 px-2">
+                    <td className="py-3 px-3">
                       <input
                         className="input w-36"
                         value={m.handle}
@@ -336,7 +336,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                       />
                     </td>
                     {showRole && (
-                      <td className="py-2 px-2">
+                      <td className="py-3 px-3">
                         <input
                           className="input w-32"
                           value={m.role ?? ""}
@@ -344,7 +344,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         />
                       </td>
                     )}
-                    <td className="py-2 px-2 w-[300px]">
+                    <td className="py-3 px-3 w-[300px]">
                       <input
                         type="number"
                         className="input w-full"
@@ -352,7 +352,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         onChange={(e) => updateMember(m.id!, { revenue: Number(e.target.value) })}
                       />
                     </td>
-                    <td className="py-2 px-2 w-[300px]">
+                    <td className="py-3 px-3 w-[300px]">
                       <input
                         type="number"
                         className="input w-full"
@@ -360,7 +360,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         onChange={(e) => updateMember(m.id!, { investment: Number(e.target.value) })}
                       />
                     </td>
-                    <td className="py-2 px-2">
+                    <td className="py-3 px-3">
                       <div className="flex flex-col gap-1 min-w-[220px]">
                         {exp.map((e) => (
                           <div key={e.id} className="flex gap-2 items-center">
@@ -397,18 +397,18 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         <div className="text-xs text-white/60">Σ {format(expSum, lang)}</div>
                       </div>
                     </td>
-                    <td className="py-2 px-2">
+                    <td className="py-3 px-3">
                       {format(feeByPayer[m.id!] ?? 0, lang)}
                     </td>
-                    <td className="py-2 px-2">
+                    <td className="py-3 px-3">
                       {format(result?.members.find((x) => x.memberId === m.id)?.profitShare ?? 0, lang)}
                     </td>
-                    <td className="py-2 px-2 font-semibold">
+                    <td className="py-3 px-3 font-semibold">
                       <span className={netAfterFees >= 0 ? "text-neon" : "text-red-400"}>
                         {format(netAfterFees, lang)}
                       </span>
                     </td>
-                    <td className="py-2 px-2 w-[160px]">
+                    <td className="py-3 px-3 w-[160px]">
                       <input
                         type="number"
                         className="input w-full"
@@ -419,7 +419,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         }
                       />
                     </td>
-                    <td className="py-2 px-2 w-[240px]">
+                    <td className="py-3 px-3 w-[240px]">
                       <input
                         type="number"
                         className="input w-full"
@@ -430,7 +430,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         }
                       />
                     </td>
-                    <td className="py-2 px-2 w-[240px]">
+                    <td className="py-3 px-3 w-[240px]">
                       <input
                         type="number"
                         className="input w-full"
@@ -441,7 +441,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         }
                       />
                     </td>
-                    <td className="py-2 px-2 text-right">
+                    <td className="py-3 px-3 text-right">
                       <button
                         className="text-red-400 text-xl leading-none"
                         onClick={() => removeMember(m.id!)}
@@ -488,16 +488,16 @@ export function SessionWizard({ initialLang = "de" }: Props) {
               <div className="space-y-2 mt-4">
                 <h4 className="font-semibold text-white/80">{t.members}</h4>
                 <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm">
+                  <table className="min-w-full text-base">
                     <thead className="text-white/60 border-b border-white/10">
                       <tr className="whitespace-nowrap">
-                        <th className="py-2 px-2 text-left">{t.handle}</th>
-                        <th className="py-2 px-2 text-left">{t.revenueLabel}</th>
-                        <th className="py-2 px-2 text-left">{t.investmentLabel}</th>
-                        <th className="py-2 px-2 text-left">{t.expensesLabel}</th>
-                        <th className="py-2 px-2 text-left">{t.taxesLabel}</th>
-                        <th className="py-2 px-2 text-left">{t.profitShareCol}</th>
-                        <th className="py-2 px-2 text-left">{t.netAfterFeesCol}</th>
+                        <th className="py-3 px-3 text-left">{t.handle}</th>
+                        <th className="py-3 px-3 text-left">{t.revenueLabel}</th>
+                        <th className="py-3 px-3 text-left">{t.investmentLabel}</th>
+                        <th className="py-3 px-3 text-left">{t.expensesLabel}</th>
+                        <th className="py-3 px-3 text-left">{t.taxesLabel}</th>
+                        <th className="py-3 px-3 text-left">{t.profitShareCol}</th>
+                        <th className="py-3 px-3 text-left">{t.netAfterFeesCol}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/10">
@@ -511,16 +511,16 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                             .join(" • ") || "-";
                         return (
                           <tr key={m.memberId}>
-                            <td className="py-2 px-2">{m.handle}</td>
-                            <td className="py-2 px-2">{format(m.revenue, lang)}</td>
-                            <td className="py-2 px-2">{format(m.investment, lang)}</td>
-                            <td className="py-2 px-2">
+                            <td className="py-3 px-3">{m.handle}</td>
+                            <td className="py-3 px-3">{format(m.revenue, lang)}</td>
+                            <td className="py-3 px-3">{format(m.investment, lang)}</td>
+                            <td className="py-3 px-3">
                               {format(m.expenses, lang)}
                               <div className="text-xs text-white/60">{memberExp}</div>
                             </td>
-                            <td className="py-2 px-2">{format(taxes, lang)}</td>
-                            <td className="py-2 px-2">{format(m.profitShare, lang)}</td>
-                            <td className="py-2 px-2 font-semibold">
+                            <td className="py-3 px-3">{format(taxes, lang)}</td>
+                            <td className="py-3 px-3">{format(m.profitShare, lang)}</td>
+                            <td className="py-3 px-3 font-semibold">
                               <span className={net >= 0 ? "text-neon" : "text-red-400"}>
                                 {format(net, lang)}
                               </span>
