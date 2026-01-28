@@ -11,7 +11,7 @@ type Lang = "de" | "en";
 
 const tmap: Record<Lang, Record<string, string>> = {
   de: {
-    appName: "SC Payout Split",
+    appName: "SC Payslip",
     heroSubtitle: "Profite und Kosten crew-weise erfassen, fair verteilen und SC-Transfergebühren berücksichtigen.",
     sessionSettings: "Session Einstellungen",
     distribution: "Verteilungsmodus",
@@ -52,7 +52,7 @@ const tmap: Record<Lang, Record<string, string>> = {
     netProfitLabel: "Gewinn (Netto)"
   },
   en: {
-    appName: "SC Payout Split",
+    appName: "SC Payslip",
     heroSubtitle: "Track profits and costs per crew, split fairly, and account for SC transfer fees.",
     sessionSettings: "Session Settings",
     distribution: "Distribution Mode",
