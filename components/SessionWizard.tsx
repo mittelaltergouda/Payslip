@@ -302,7 +302,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
           <button className="btn" onClick={addMember}>{t.addMember}</button>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm w-[1200px]">
+          <table className="min-w-full text-sm">
             <thead className="text-white/60 border-b border-white/10">
               <tr className="whitespace-nowrap">
                 <th className="py-2 px-2 text-left">{t.handle}</th>
