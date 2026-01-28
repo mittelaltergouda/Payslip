@@ -19,7 +19,7 @@ const tmap: Record<Lang, Record<string, string>> = {
     percent: "Prozent (Gewichte müssen 100% ergeben)",
     adjustable: "Anpassbar (Fix-Auszahlungen/Bonusse zuerst, Rest gleich oder prozentual)",
     taxToggle: "Transfer Tax berücksichtigen (0,5%)",
-    members: "Mitglieder",
+    members: "Eingabe",
     addMember: "+ Mitglied",
     handle: "Handle",
     role: "Rolle",
