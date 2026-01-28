@@ -344,7 +344,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         />
                       </td>
                     )}
-                    <td className="py-2 px-2 w-[180px]">
+                    <td className="py-2 px-2 w-[300px]">
                       <input
                         type="number"
                         className="input w-full"
@@ -352,7 +352,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         onChange={(e) => updateMember(m.id!, { revenue: Number(e.target.value) })}
                       />
                     </td>
-                    <td className="py-2 px-2 w-[180px]">
+                    <td className="py-2 px-2 w-[300px]">
                       <input
                         type="number"
                         className="input w-full"
@@ -408,7 +408,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         {format(netAfterFees, lang)}
                       </span>
                     </td>
-                    <td className="py-2 px-2 w-[140px]">
+                    <td className="py-2 px-2 w-[160px]">
                       <input
                         type="number"
                         className="input w-full"
@@ -419,7 +419,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         }
                       />
                     </td>
-                    <td className="py-2 px-2 w-[140px]">
+                    <td className="py-2 px-2 w-[240px]">
                       <input
                         type="number"
                         className="input w-full"
@@ -430,7 +430,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         }
                       />
                     </td>
-                    <td className="py-2 px-2 w-[140px]">
+                    <td className="py-2 px-2 w-[240px]">
                       <input
                         type="number"
                         className="input w-full"
