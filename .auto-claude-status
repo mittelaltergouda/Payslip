@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "009-add-undo-redo-functionality-for-session-edits-usin",
+  "spec": "012-rename-the-tool-to-sc-payslip-everywhere-in-the-co",
   "state": "building",
   "subtasks": {
-    "completed": 3,
-    "total": 9,
+    "completed": 10,
+    "total": 14,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "React Hooks Integration",
+    "current": "Build & Verification",
     "id": null,
-    "total": 2
+    "total": 3
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 4,
-    "started_at": "2026-01-27T22:30:25.147499"
+    "number": 11,
+    "started_at": "2026-01-28T11:28:21.090943"
   },
-  "last_update": "2026-01-27T22:40:49.939554"
+  "last_update": "2026-01-28T11:35:56.428457"
 }
