@@ -49,7 +49,15 @@ const tmap: Record<Lang, Record<string, string>> = {
     investmentLabel: "Investment",
     expensesLabel: "Kosten",
     taxesLabel: "Steuern (Fees)",
-    netProfitLabel: "Gewinn (Netto)"
+    netProfitLabel: "Gewinn (Netto)",
+    statistics: "Statistiken",
+    minPayout: "Min. Auszahlung",
+    maxPayout: "Max. Auszahlung",
+    avgPayout: "Durchschn. Auszahlung",
+    transferCount: "Anzahl Transfers",
+    largestTransfer: "Größter Transfer",
+    highestEarner: "Höchster Verdienst",
+    lowestEarner: "Niedrigster Verdienst"
   },
   en: {
     appName: "SC Payout Split",
@@ -90,7 +98,15 @@ const tmap: Record<Lang, Record<string, string>> = {
     investmentLabel: "Investment",
     expensesLabel: "Expenses",
     taxesLabel: "Taxes (fees)",
-    netProfitLabel: "Profit (Net)"
+    netProfitLabel: "Profit (Net)",
+    statistics: "Statistics",
+    minPayout: "Min. Payout",
+    maxPayout: "Max. Payout",
+    avgPayout: "Avg. Payout",
+    transferCount: "Transfer Count",
+    largestTransfer: "Largest Transfer",
+    highestEarner: "Highest Earner",
+    lowestEarner: "Lowest Earner"
   }
 };
 
@@ -159,6 +175,47 @@ export function SessionWizard({ initialLang = "de" }: Props) {
   const totalExpenses = result?.members.reduce((sum, m) => sum + m.expenses, 0) ?? 0;
   const totalFees = result?.suggestedTransfers.reduce((sum, tr) => sum + tr.feeAmount, 0) ?? 0;
   const netAfterTax = (result?.netProfit ?? 0) - totalFees;
+
+  // Calculate summary statistics
+  const statistics = useMemo(() => {
+    if (!result || result.members.length === 0) {
+      return null;
+    }
+
+    // Calculate net payouts (after fees)
+    const netPayouts = result.members.map((m) => {
+      const fees = feeByPayer[m.memberId] ?? 0;
+      return {
+        memberId: m.memberId,
+        handle: m.handle,
+        netPayout: m.finalNet - fees
+      };
+    });
+
+    const payoutAmounts = netPayouts.map((p) => p.netPayout);
+    const minPayout = Math.min(...payoutAmounts);
+    const maxPayout = Math.max(...payoutAmounts);
+    const avgPayout = payoutAmounts.reduce((sum, p) => sum + p, 0) / payoutAmounts.length;
+
+    const transferCount = result.suggestedTransfers.length;
+    const largestTransfer =
+      transferCount > 0
+        ? Math.max(...result.suggestedTransfers.map((tr) => tr.netAmount))
+        : 0;
+
+    const highestEarner = netPayouts.find((p) => p.netPayout === maxPayout);
+    const lowestEarner = netPayouts.find((p) => p.netPayout === minPayout);
+
+    return {
+      minPayout,
+      maxPayout,
+      avgPayout,
+      transferCount,
+      largestTransfer,
+      highestEarner: highestEarner?.handle ?? "-",
+      lowestEarner: lowestEarner?.handle ?? "-"
+    };
+  }, [result, feeByPayer]);
 
   const updateMember = (id: string, patch: Partial<MemberInput>) => {
     updateSession({
@@ -485,6 +542,27 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                   {format(netAfterTax, lang)} aUEC
                 </span>
               </div>
+              {statistics && (
+                <div className="space-y-2 mt-4">
+                  <h4 className="font-semibold text-white/80">{t.statistics}</h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <span className="text-white/70">{t.minPayout}</span>
+                    <span>{format(statistics.minPayout, lang)} aUEC</span>
+                    <span className="text-white/70">{t.maxPayout}</span>
+                    <span>{format(statistics.maxPayout, lang)} aUEC</span>
+                    <span className="text-white/70">{t.avgPayout}</span>
+                    <span>{format(statistics.avgPayout, lang)} aUEC</span>
+                    <span className="text-white/70">{t.transferCount}</span>
+                    <span>{statistics.transferCount}</span>
+                    <span className="text-white/70">{t.largestTransfer}</span>
+                    <span>{format(statistics.largestTransfer, lang)} aUEC</span>
+                    <span className="text-white/70">{t.highestEarner}</span>
+                    <span>{statistics.highestEarner}</span>
+                    <span className="text-white/70">{t.lowestEarner}</span>
+                    <span>{statistics.lowestEarner}</span>
+                  </div>
+                </div>
+              )}
               <div className="space-y-2 mt-4">
                 <h4 className="font-semibold text-white/80">{t.members}</h4>
                 <div className="overflow-x-auto">
