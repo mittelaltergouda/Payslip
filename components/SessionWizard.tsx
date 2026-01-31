@@ -176,47 +176,6 @@ export function SessionWizard({ initialLang = "de" }: Props) {
   const totalFees = result?.suggestedTransfers.reduce((sum, tr) => sum + tr.feeAmount, 0) ?? 0;
   const netAfterTax = (result?.netProfit ?? 0) - totalFees;
 
-  // Calculate summary statistics
-  const statistics = useMemo(() => {
-    if (!result || result.members.length === 0) {
-      return null;
-    }
-
-    // Calculate net payouts (after fees)
-    const netPayouts = result.members.map((m) => {
-      const fees = feeByPayer[m.memberId] ?? 0;
-      return {
-        memberId: m.memberId,
-        handle: m.handle,
-        netPayout: m.finalNet - fees
-      };
-    });
-
-    const payoutAmounts = netPayouts.map((p) => p.netPayout);
-    const minPayout = Math.min(...payoutAmounts);
-    const maxPayout = Math.max(...payoutAmounts);
-    const avgPayout = payoutAmounts.reduce((sum, p) => sum + p, 0) / payoutAmounts.length;
-
-    const transferCount = result.suggestedTransfers.length;
-    const largestTransfer =
-      transferCount > 0
-        ? Math.max(...result.suggestedTransfers.map((tr) => tr.netAmount))
-        : 0;
-
-    const highestEarner = netPayouts.find((p) => p.netPayout === maxPayout);
-    const lowestEarner = netPayouts.find((p) => p.netPayout === minPayout);
-
-    return {
-      minPayout,
-      maxPayout,
-      avgPayout,
-      transferCount,
-      largestTransfer,
-      highestEarner: highestEarner?.handle ?? "-",
-      lowestEarner: lowestEarner?.handle ?? "-"
-    };
-  }, [result, feeByPayer]);
-
   const updateMember = (id: string, patch: Partial<MemberInput>) => {
     updateSession({
       ...session,
@@ -542,24 +501,24 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                   {format(netAfterTax, lang)} aUEC
                 </span>
               </div>
-              {statistics && (
+              {result.summaryStatistics && (
                 <div className="space-y-2 mt-4">
                   <h4 className="font-semibold text-white/80">{t.statistics}</h4>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <span className="text-white/70">{t.minPayout}</span>
-                    <span>{format(statistics.minPayout, lang)} aUEC</span>
+                    <span>{format(result.summaryStatistics.minPayout, lang)} aUEC</span>
                     <span className="text-white/70">{t.maxPayout}</span>
-                    <span>{format(statistics.maxPayout, lang)} aUEC</span>
+                    <span>{format(result.summaryStatistics.maxPayout, lang)} aUEC</span>
                     <span className="text-white/70">{t.avgPayout}</span>
-                    <span>{format(statistics.avgPayout, lang)} aUEC</span>
+                    <span>{format(result.summaryStatistics.averagePayout, lang)} aUEC</span>
                     <span className="text-white/70">{t.transferCount}</span>
-                    <span>{statistics.transferCount}</span>
+                    <span>{result.summaryStatistics.totalTransfers}</span>
                     <span className="text-white/70">{t.largestTransfer}</span>
-                    <span>{format(statistics.largestTransfer, lang)} aUEC</span>
+                    <span>{format(result.summaryStatistics.largestTransfer, lang)} aUEC</span>
                     <span className="text-white/70">{t.highestEarner}</span>
-                    <span>{statistics.highestEarner}</span>
+                    <span>{result.summaryStatistics.highestEarner}</span>
                     <span className="text-white/70">{t.lowestEarner}</span>
-                    <span>{statistics.lowestEarner}</span>
+                    <span>{result.summaryStatistics.lowestEarner}</span>
                   </div>
                 </div>
               )}
