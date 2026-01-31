@@ -1,17 +1,17 @@
 {
   "active": true,
-  "spec": "009-add-undo-redo-functionality-for-session-edits-usin",
-  "state": "building",
+  "spec": "007-add-session-summary-statistics",
+  "state": "planning",
   "subtasks": {
-    "completed": 8,
-    "total": 9,
+    "completed": 0,
+    "total": 0,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Integration & E2E Testing",
+    "current": "Type Definitions",
     "id": null,
-    "total": 2
+    "total": 1
   },
   "workers": {
     "active": 0,
@@ -19,7 +19,7 @@
   },
   "session": {
     "number": 2,
-    "started_at": "2026-01-28T11:02:17.804809"
+    "started_at": "2026-02-01T00:03:08.270590"
   },
-  "last_update": "2026-01-28T11:14:53.554231"
+  "last_update": "2026-02-01T00:07:12.243617"
 }
