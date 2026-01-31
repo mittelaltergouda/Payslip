@@ -1035,7 +1035,15 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
   );
 
   // -------------------------------------------------------------------------
-  // Step 9: Return the complete payslip result
+  // Step 9: Calculate summary statistics
+  // -------------------------------------------------------------------------
+  const summaryStatistics = calculateSummaryStatistics(
+    memberBreakdowns,
+    suggestedTransfers
+  );
+
+  // -------------------------------------------------------------------------
+  // Step 10: Return the complete payslip result
   // -------------------------------------------------------------------------
   return {
     saleRevenue,
@@ -1043,5 +1051,6 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
     taxRateApplied: taxRateForTransfers,
     members: memberBreakdowns,
     suggestedTransfers,
+    summaryStatistics,
   };
 }
