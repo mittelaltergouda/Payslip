@@ -8,7 +8,7 @@ type Lang = "de" | "en";
 
 const tmap: Record<Lang, Record<string, string>> = {
   de: {
-    appName: "SC Payout Split",
+    appName: "SC Payslip",
     heroSubtitle: "Profite und Kosten crew-weise erfassen, fair verteilen und SC-Transfergebühren berücksichtigen.",
     sessionSettings: "Session Einstellungen",
     distribution: "Verteilungsmodus",
@@ -49,7 +49,7 @@ const tmap: Record<Lang, Record<string, string>> = {
     netProfitLabel: "Gewinn (Netto)"
   },
   en: {
-    appName: "SC Payout Split",
+    appName: "SC Payslip",
     heroSubtitle: "Track profits and costs per crew, split fairly, and account for SC transfer fees.",
     sessionSettings: "Session Settings",
     distribution: "Distribution Mode",
@@ -124,7 +124,8 @@ type Props = { initialLang?: Lang };
 export function SessionWizard({ initialLang = "de" }: Props) {
   const [lang, setLang] = useState<Lang>(initialLang);
   const t = tmap[lang];
-  const [session, setSession] = useState<SessionInput>(buildInitialSession);
+  const [session, setSession] = useState<SessionInput>(buildInitialSession());
+  const updateSession = setSession;
   const [error, setError] = useState<string | null>(null);
   const [showRole, setShowRole] = useState(false);
 
@@ -236,11 +237,9 @@ export function SessionWizard({ initialLang = "de" }: Props) {
       <div className="glass p-6 space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h2 className="text-xl font-display">{t.sessionSettings}</h2>
-          <div className="flex gap-2">
-            <button className="btn" onClick={() => setSession(buildInitialSession())}>
-              {t.reset}
-            </button>
-          </div>
+          <button className="btn" onClick={() => updateSession(buildInitialSession())}>
+            {t.reset}
+          </button>
         </div>
         <div className="grid gap-4 md:grid-cols-4">
           <label className="flex flex-col gap-1">

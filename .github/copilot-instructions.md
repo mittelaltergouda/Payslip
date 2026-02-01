@@ -1,7 +1,7 @@
-﻿# Copilot Instructions for SC Payout Split
+﻿# Copilot Instructions for SC Payslip
 
 ## Project Overview
-**SC Payout Split** is a Next.js 14 + TypeScript payout calculator for crew-based revenue splitting in Star Citizen. It calculates fair profit distribution, settlement transfers, and applies transfer taxes (fee gross-up). The app combines a client-side calculation engine with Prisma ORM persistence and read-only share links.
+**SC Payslip** is a Next.js 14 + TypeScript payout calculator for crew-based revenue splitting in Star Citizen. It calculates fair profit distribution, settlement transfers, and applies transfer taxes (fee gross-up). The app combines a client-side calculation engine with Prisma ORM persistence and read-only share links.
 
 **Stack**: Next.js 14 (App Router), TypeScript, TailwindCSS, Prisma (PostgreSQL), Zod validation, Vitest.
 

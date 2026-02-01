@@ -1,10 +1,10 @@
-# SC Payout Split
+# SC Payslip
 
 > Fair profit distribution and settlement transfers for Star Citizen crew operations
 
 ## Product Positioning
 
-**SC Payout Split** is a calculator for crew-based revenue splitting in Star Citizen. It helps crews fairly distribute profits from shared operations, calculate individual payouts, and facilitate settlement transfers with accurate tax gross-up handling.
+**SC Payslip** is a calculator for crew-based revenue splitting in Star Citizen. It helps crews fairly distribute profits from shared operations, calculate individual payouts, and facilitate settlement transfers with accurate tax gross-up handling.
 
 **What it does:**
 - Calculates fair profit distribution across crew members

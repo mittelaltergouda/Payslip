@@ -2,7 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "SC Payout Split",
+  title: "SC Payslip",
   description: "Teilt Profite, Kosten und Steuern fair auf — Star Citizen ready."
 };
 
