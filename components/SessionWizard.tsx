@@ -3,8 +3,7 @@
 import { useMemo, useState } from "react";
 import { calculatePayslip } from "@/lib/calc";
 import { DistributionMode, IndividualExpenseInput, MemberInput, SessionInput, Transfer } from "@/lib/types";
-
-type Lang = "de" | "en";
+import { format, type Lang } from "@/lib/format";
 
 const tmap: Record<Lang, Record<string, string>> = {
   de: {
@@ -97,10 +96,6 @@ const rndId = () =>
     : `id-${Math.random().toString(16).slice(2)}`;
 
 const taxFixed = 0.005;
-
-function format(amount: number, lang: Lang) {
-  return Math.round(amount).toLocaleString(lang === "de" ? "de-DE" : "en-US");
-}
 
 function buildInitialSession(): SessionInput {
   return {
