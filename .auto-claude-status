@@ -1,15 +1,15 @@
 {
   "active": true,
-  "spec": "012-rename-the-tool-to-sc-payslip-everywhere-in-the-co",
+  "spec": "014-style-disabled-inputs-distinctly",
   "state": "building",
   "subtasks": {
-    "completed": 12,
-    "total": 14,
+    "completed": 3,
+    "total": 4,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Build & Verification",
+    "current": "Verification",
     "id": null,
     "total": 3
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 13,
-    "started_at": "2026-01-28T11:28:21.090943"
+    "number": 5,
+    "started_at": "2026-02-01T21:22:35.874999"
   },
-  "last_update": "2026-01-28T11:38:56.825921"
+  "last_update": "2026-02-01T22:29:20.642915"
 }

@@ -69,10 +69,21 @@ export type Transfer = {
   feeAmount: number;
 };
 
+export type SummaryStatistics = {
+  minPayout: number;
+  maxPayout: number;
+  averagePayout: number;
+  totalTransfers: number;
+  largestTransfer: number;
+  highestEarner: string; // member handle
+  lowestEarner: string; // member handle
+};
+
 export type PayslipResult = {
   saleRevenue: number;
   netProfit: number;
   taxRateApplied: number;
   members: MemberBreakdown[];
   suggestedTransfers: Transfer[];
+  summaryStatistics?: SummaryStatistics;
 };
