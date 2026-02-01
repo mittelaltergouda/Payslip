@@ -128,25 +128,37 @@
     "zsh"
   ],
   "stack_commands": [
+    "composer",
     "createdb",
     "createuser",
     "dropdb",
     "dropuser",
     "eslint",
     "initdb",
+    "ipython",
+    "jupyter",
     "next",
     "node",
+    "notebook",
     "npm",
     "npx",
+    "pdb",
     "pg_ctl",
     "pg_dump",
     "pg_dumpall",
     "pg_isready",
     "pg_restore",
+    "php",
+    "pip",
+    "pip3",
+    "pipx",
     "playwright",
     "postgres",
     "prisma",
     "psql",
+    "pudb",
+    "python",
+    "python3",
     "react-scripts",
     "ts-node",
     "tsc",
@@ -162,8 +174,10 @@
   "custom_commands": [],
   "detected_stack": {
     "languages": [
+      "python",
       "javascript",
-      "typescript"
+      "typescript",
+      "php"
     ],
     "package_managers": [
       "npm"
@@ -202,8 +216,8 @@
     "cargo_aliases": [],
     "shell_scripts": []
   },
-  "project_dir": "C:\\Users\\3r4sa\\Payslip",
-  "created_at": "2026-01-27T16:22:50.010433",
-  "project_hash": "e4b03b242680cbb18f59290a39285381",
+  "project_dir": "C:\\Users\\3r4sa\\Desktop\\Payslip\\.auto-claude\\worktrees\\tasks\\009-enhanced-calculation-test-coverage",
+  "created_at": "2026-01-25T03:40:25.560025",
+  "project_hash": "9293c5f753f0ab6d28b91566ead00a3a",
   "inherited_from": "C:\\Users\\3r4sa\\Payslip"
 }
