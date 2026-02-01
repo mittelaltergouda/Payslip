@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "014-style-disabled-inputs-distinctly",
+  "spec": "021-replace-math-random-fallback-with-cryptographicall",
   "state": "building",
   "subtasks": {
-    "completed": 3,
+    "completed": 1,
     "total": 4,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Verification",
+    "current": "Security Fix Implementation",
     "id": null,
-    "total": 3
+    "total": 4
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 5,
-    "started_at": "2026-02-01T21:22:35.874999"
+    "number": 3,
+    "started_at": "2026-02-02T00:17:43.246896"
   },
-  "last_update": "2026-02-01T22:29:20.642915"
+  "last_update": "2026-02-02T00:28:55.593234"
 }
