@@ -1,0 +1,283 @@
+import { format, formatCurrency, formatPercent, formatCompact, Lang } from './format';
+
+// Test cases for format() - Basic number formatting with thousand separators
+
+describe('format', () => {
+  it('should format numbers with English thousand separators', () => {
+    expect(format(1234567, 'en')).toBe('1,234,567');
+    expect(format(1000, 'en')).toBe('1,000');
+    expect(format(999, 'en')).toBe('999');
+  });
+
+  it('should format numbers with German thousand separators', () => {
+    expect(format(1234567, 'de')).toBe('1.234.567');
+    expect(format(1000, 'de')).toBe('1.000');
+    expect(format(999, 'de')).toBe('999');
+  });
+
+  it('should round decimal numbers to nearest integer before formatting', () => {
+    expect(format(42.7, 'en')).toBe('43');
+    expect(format(42.4, 'en')).toBe('42');
+    expect(format(42.5, 'en')).toBe('43');
+    expect(format(1234.6, 'de')).toBe('1.235');
+  });
+
+  it('should handle zero', () => {
+    expect(format(0, 'en')).toBe('0');
+    expect(format(0, 'de')).toBe('0');
+  });
+
+  it('should handle negative numbers', () => {
+    expect(format(-1234567, 'en')).toBe('-1,234,567');
+    expect(format(-1234567, 'de')).toBe('-1.234.567');
+    expect(format(-42.7, 'en')).toBe('-43');
+  });
+
+  it('should handle very large numbers', () => {
+    expect(format(999999999, 'en')).toBe('999,999,999');
+    expect(format(1000000000, 'en')).toBe('1,000,000,000');
+  });
+});
+
+// Test cases for formatCurrency() - Currency formatting with symbols
+
+describe('formatCurrency', () => {
+  describe('aUEC (Star Citizen currency)', () => {
+    it('should format aUEC with English thousand separators', () => {
+      expect(formatCurrency(1234567, 'aUEC', 'en')).toBe('1,234,567 aUEC');
+      expect(formatCurrency(1000, 'aUEC', 'en')).toBe('1,000 aUEC');
+    });
+
+    it('should format aUEC with German thousand separators', () => {
+      expect(formatCurrency(1234567, 'aUEC', 'de')).toBe('1.234.567 aUEC');
+      expect(formatCurrency(1000, 'aUEC', 'de')).toBe('1.000 aUEC');
+    });
+
+    it('should round aUEC amounts to nearest integer', () => {
+      expect(formatCurrency(1234.56, 'aUEC', 'en')).toBe('1,235 aUEC');
+      expect(formatCurrency(1234.4, 'aUEC', 'en')).toBe('1,234 aUEC');
+    });
+
+    it('should handle zero and negative aUEC amounts', () => {
+      expect(formatCurrency(0, 'aUEC', 'en')).toBe('0 aUEC');
+      expect(formatCurrency(-500, 'aUEC', 'en')).toBe('-500 aUEC');
+    });
+  });
+
+  describe('USD (US Dollar)', () => {
+    it('should format USD with proper symbol and decimals in English', () => {
+      expect(formatCurrency(1234.56, 'USD', 'en')).toBe('$1,234.56');
+      expect(formatCurrency(1000, 'USD', 'en')).toBe('$1,000.00');
+    });
+
+    it('should format USD in German locale', () => {
+      const result = formatCurrency(1234.56, 'USD', 'de');
+      // German locale formats USD as "1.234,56 $"
+      expect(result).toContain('1.234,56');
+      expect(result).toContain('$');
+    });
+
+    it('should handle zero and negative USD amounts', () => {
+      expect(formatCurrency(0, 'USD', 'en')).toBe('$0.00');
+      const negative = formatCurrency(-100.50, 'USD', 'en');
+      expect(negative).toContain('100.50');
+    });
+  });
+
+  describe('EUR (Euro)', () => {
+    it('should format EUR with proper symbol and decimals in English', () => {
+      const result = formatCurrency(1234.56, 'EUR', 'en');
+      expect(result).toContain('1,234.56');
+      expect(result).toContain('€');
+    });
+
+    it('should format EUR in German locale', () => {
+      const result = formatCurrency(1234.56, 'EUR', 'de');
+      // German locale formats EUR as "1.234,56 €"
+      expect(result).toContain('1.234,56');
+      expect(result).toContain('€');
+    });
+  });
+
+  describe('GBP (British Pound)', () => {
+    it('should format GBP with proper symbol and decimals in English', () => {
+      expect(formatCurrency(1234.56, 'GBP', 'en')).toBe('£1,234.56');
+    });
+
+    it('should format GBP in German locale', () => {
+      const result = formatCurrency(1234.56, 'GBP', 'de');
+      expect(result).toContain('1.234,56');
+      expect(result).toContain('£');
+    });
+  });
+});
+
+// Test cases for formatPercent() - Percentage formatting
+
+describe('formatPercent', () => {
+  describe('decimal input (0-1 range)', () => {
+    it('should convert decimal to percentage with default 2 decimals', () => {
+      expect(formatPercent(0.05)).toBe('5.00%');
+      expect(formatPercent(0.1575)).toBe('15.75%');
+      expect(formatPercent(0.3333)).toBe('33.33%');
+    });
+
+    it('should convert decimal to percentage with custom decimal places', () => {
+      expect(formatPercent(0.05, 0)).toBe('5%');
+      expect(formatPercent(0.3333, 1)).toBe('33.3%');
+      expect(formatPercent(0.125, 3)).toBe('12.500%');
+    });
+
+    it('should handle zero', () => {
+      expect(formatPercent(0)).toBe('0.00%');
+      expect(formatPercent(0, 0)).toBe('0%');
+    });
+
+    it('should handle negative decimals', () => {
+      expect(formatPercent(-0.05)).toBe('-5.00%');
+      expect(formatPercent(-0.15, 1)).toBe('-15.0%');
+    });
+  });
+
+  describe('percentage input (already > 1)', () => {
+    it('should format already-percentage values with default 2 decimals', () => {
+      expect(formatPercent(15.75)).toBe('15.75%');
+      expect(formatPercent(100)).toBe('100.00%');
+    });
+
+    it('should format already-percentage values with custom decimals', () => {
+      expect(formatPercent(100, 0)).toBe('100%');
+      expect(formatPercent(15.755, 1)).toBe('15.8%');
+    });
+
+    it('should handle negative percentage values', () => {
+      expect(formatPercent(-10)).toBe('-10.00%');
+      expect(formatPercent(-5.5, 1)).toBe('-5.5%');
+    });
+  });
+
+  describe('boundary cases', () => {
+    it('should handle boundary value of 1', () => {
+      // Value of exactly 1 is treated as already a percentage (not 100%)
+      expect(formatPercent(1)).toBe('1.00%');
+    });
+
+    it('should handle boundary value of -1', () => {
+      // Value of exactly -1 is treated as already a percentage
+      expect(formatPercent(-1)).toBe('-1.00%');
+    });
+
+    it('should distinguish between 0.99 and 1.01', () => {
+      expect(formatPercent(0.99)).toBe('99.00%'); // Decimal, converted
+      expect(formatPercent(1.01)).toBe('1.01%');  // Already percentage
+    });
+  });
+});
+
+// Test cases for formatCompact() - Compact notation with K, M, B suffixes
+
+describe('formatCompact', () => {
+  describe('values below 1000', () => {
+    it('should display small numbers without suffix', () => {
+      expect(formatCompact(0, 'en')).toBe('0');
+      expect(formatCompact(42, 'en')).toBe('42');
+      expect(formatCompact(500, 'en')).toBe('500');
+      expect(formatCompact(999, 'en')).toBe('999');
+    });
+
+    it('should round decimals for small numbers', () => {
+      expect(formatCompact(42.7, 'en')).toBe('43');
+      expect(formatCompact(999.4, 'en')).toBe('999');
+    });
+
+    it('should handle small negative numbers', () => {
+      expect(formatCompact(-42, 'en')).toBe('-42');
+      expect(formatCompact(-999, 'en')).toBe('-999');
+    });
+  });
+
+  describe('thousands (K)', () => {
+    it('should format thousands with k suffix in English', () => {
+      expect(formatCompact(1000, 'en')).toBe('1.0k');
+      expect(formatCompact(1500, 'en')).toBe('1.5k');
+      expect(formatCompact(15000, 'en')).toBe('15.0k');
+      expect(formatCompact(999999, 'en')).toBe('1000.0k');
+    });
+
+    it('should format thousands with k suffix in German', () => {
+      expect(formatCompact(1000, 'de')).toBe('1,0k');
+      expect(formatCompact(1500, 'de')).toBe('1,5k');
+      expect(formatCompact(15000, 'de')).toBe('15,0k');
+    });
+
+    it('should handle negative thousands', () => {
+      expect(formatCompact(-1500, 'en')).toBe('-1.5k');
+      expect(formatCompact(-1500, 'de')).toBe('-1,5k');
+    });
+  });
+
+  describe('millions (M)', () => {
+    it('should format millions with M suffix in English', () => {
+      expect(formatCompact(1000000, 'en')).toBe('1.0M');
+      expect(formatCompact(1234567, 'en')).toBe('1.2M');
+      expect(formatCompact(15000000, 'en')).toBe('15.0M');
+      expect(formatCompact(999999999, 'en')).toBe('1000.0M');
+    });
+
+    it('should format millions with M suffix in German', () => {
+      expect(formatCompact(1000000, 'de')).toBe('1,0M');
+      expect(formatCompact(1234567, 'de')).toBe('1,2M');
+      expect(formatCompact(15000000, 'de')).toBe('15,0M');
+    });
+
+    it('should handle negative millions', () => {
+      expect(formatCompact(-1234567, 'en')).toBe('-1.2M');
+      expect(formatCompact(-1234567, 'de')).toBe('-1,2M');
+    });
+  });
+
+  describe('billions (B)', () => {
+    it('should format billions with B suffix in English', () => {
+      expect(formatCompact(1000000000, 'en')).toBe('1.0B');
+      expect(formatCompact(1234567890, 'en')).toBe('1.2B');
+      expect(formatCompact(15000000000, 'en')).toBe('15.0B');
+    });
+
+    it('should format billions with B suffix in German', () => {
+      expect(formatCompact(1000000000, 'de')).toBe('1,0B');
+      expect(formatCompact(1234567890, 'de')).toBe('1,2B');
+      expect(formatCompact(15000000000, 'de')).toBe('15,0B');
+    });
+
+    it('should handle negative billions', () => {
+      expect(formatCompact(-1234567890, 'en')).toBe('-1.2B');
+      expect(formatCompact(-1234567890, 'de')).toBe('-1,2B');
+    });
+  });
+
+  describe('boundary values', () => {
+    it('should handle transition from no suffix to k', () => {
+      expect(formatCompact(999, 'en')).toBe('999');
+      expect(formatCompact(1000, 'en')).toBe('1.0k');
+    });
+
+    it('should handle transition from k to M', () => {
+      expect(formatCompact(999999, 'en')).toBe('1000.0k');
+      expect(formatCompact(1000000, 'en')).toBe('1.0M');
+    });
+
+    it('should handle transition from M to B', () => {
+      expect(formatCompact(999999999, 'en')).toBe('1000.0M');
+      expect(formatCompact(1000000000, 'en')).toBe('1.0B');
+    });
+  });
+
+  describe('rounding behavior', () => {
+    it('should round to one decimal place for compact values', () => {
+      expect(formatCompact(1549, 'en')).toBe('1.5k');  // 1.549k rounds to 1.5k
+      expect(formatCompact(1551, 'en')).toBe('1.6k');  // 1.551k rounds to 1.6k
+      expect(formatCompact(1234567, 'en')).toBe('1.2M'); // 1.234M rounds to 1.2M
+      expect(formatCompact(1254567, 'en')).toBe('1.3M'); // 1.254M rounds to 1.3M
+    });
+  });
+});
