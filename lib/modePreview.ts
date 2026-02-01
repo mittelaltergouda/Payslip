@@ -1,4 +1,4 @@
-import { SessionInput, PayslipResult, DistributionMode } from './types';
+import type { SessionInput, PayslipResult, DistributionMode } from './types';
 import { calculatePayslip } from './calc';
 
 /**

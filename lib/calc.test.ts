@@ -1,5 +1,6 @@
-import { calculatePayslip, SessionInput, applyTransferTaxes, calculateGrossAmount, calculateFeeAmount, calculateSummaryStatistics } from './calc';
-import { Transfer, MemberBreakdown } from './types';
+import { calculatePayslip, applyTransferTaxes, calculateGrossAmount, calculateFeeAmount, calculateSummaryStatistics } from './calc';
+import type { SessionInput } from './calc';
+import type { Transfer, MemberBreakdown } from './types';
 
 // Test cases for EQUAL distribution mode
 
@@ -2746,9 +2747,6 @@ describe('Performance Tests', () => {
 
     // Verify execution time is less than 1 second (1000ms)
     expect(executionTime).toBeLessThan(1000);
-
-    // Log the execution time for visibility
-    console.log(`Calculation for 100 members completed in ${executionTime.toFixed(2)}ms`);
   });
 
   it('should calculate payslip for 100 members with PERCENT mode in less than 1 second', () => {
@@ -2780,8 +2778,6 @@ describe('Performance Tests', () => {
 
     expect(result.members.length).toBe(100);
     expect(executionTime).toBeLessThan(1000);
-
-    console.log(`PERCENT mode calculation for 100 members completed in ${executionTime.toFixed(2)}ms`);
   });
 
   it('should calculate payslip for 100 members with ADJUSTABLE mode in less than 1 second', () => {
@@ -2815,8 +2811,6 @@ describe('Performance Tests', () => {
 
     expect(result.members.length).toBe(100);
     expect(executionTime).toBeLessThan(1000);
-
-    console.log(`ADJUSTABLE mode calculation for 100 members completed in ${executionTime.toFixed(2)}ms`);
   });
 
   it('should calculate payslip for 100 members with expenses in less than 1 second', () => {
@@ -2876,8 +2870,6 @@ describe('Performance Tests', () => {
     const hasExpenses = result.members.some(m => m.sharedExpenses > 0 || m.individualExpenses > 0);
     expect(hasExpenses).toBe(true);
     expect(executionTime).toBeLessThan(1000);
-
-    console.log(`Calculation with expenses for 100 members completed in ${executionTime.toFixed(2)}ms`);
   });
 
   it('should handle complex settlement with 100 members in less than 1 second', () => {
@@ -2911,8 +2903,6 @@ describe('Performance Tests', () => {
     expect(result.members.length).toBe(100);
     expect(result.suggestedTransfers.length).toBeGreaterThanOrEqual(0);
     expect(executionTime).toBeLessThan(1000);
-
-    console.log(`Complex settlement for 100 members completed in ${executionTime.toFixed(2)}ms with ${result.suggestedTransfers.length} transfers`);
   });
 });
 

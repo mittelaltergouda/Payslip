@@ -1,4 +1,4 @@
-import {
+import type {
   SessionInput,
   MemberInput,
   MemberBreakdown,
@@ -81,7 +81,9 @@ export function validatePercentShares(
   members: NormalizedMember[],
   mode: DistributionMode
 ): void {
-  if (mode !== 'PERCENT') return;
+  if (mode !== 'PERCENT') {
+    return;
+  }
 
   const activeMembers = members.filter((m) => m.active);
   const totalPercent = activeMembers.reduce((sum, m) => {
@@ -165,7 +167,9 @@ export function validateNonNegativeValues(session: SessionInput): void {
  * @throws Error if tax rate is outside valid bounds
  */
 export function validateTaxRate(taxRate: number | undefined): void {
-  if (taxRate === undefined) return;
+  if (taxRate === undefined) {
+    return;
+  }
   if (taxRate < 0 || taxRate > 1) {
     throw new Error(
       `Tax rate must be between 0 and 1, but got ${taxRate}`

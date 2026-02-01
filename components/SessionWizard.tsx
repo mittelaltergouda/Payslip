@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { calculatePayslip } from "@/lib/calc";
-import { DistributionMode, IndividualExpenseInput, MemberInput, SessionInput, Transfer } from "@/lib/types";
+import type { DistributionMode, IndividualExpenseInput, MemberInput, SessionInput, Transfer } from "@/lib/types";
 import { ModePreview } from "./ModePreview";
 import { calculateModePreviews } from "@/lib/modePreview";
 
@@ -153,8 +153,8 @@ export function SessionWizard({ initialLang = "de" }: Props) {
     try {
       setError(null);
       return calculatePayslip(session);
-    } catch (err: any) {
-      setError(err?.message ?? "Unknown error");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Unknown error");
       return null;
     }
   }, [session]);
@@ -319,7 +319,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                 <ModePreview
                   mode={hoveredMode}
                   preview={modePreviews[hoveredMode]}
-                  visible={true}
+                  visible
                   currency={session.currency}
                   className="top-full mt-2"
                 />
@@ -378,18 +378,23 @@ export function SessionWizard({ initialLang = "de" }: Props) {
             </thead>
             <tbody className="divide-y divide-white/10">
               {session.members.map((m) => {
-                const exp = (session.individualExpenses ?? []).filter((e) => e.memberId === m.id);
+                // Type guard: members should always have IDs (added by rndId())
+                if (!m.id) {
+                  return null;
+                }
+                const memberId = m.id;
+                const exp = (session.individualExpenses ?? []).filter((e) => e.memberId === memberId);
                 const expSum = exp.reduce((s, e) => s + e.amount, 0);
                 const netAfterFees =
-                  (result?.members.find((x) => x.memberId === m.id)?.finalNet ?? 0) -
-                  (feeByPayer[m.id!] ?? 0);
+                  (result?.members.find((x) => x.memberId === memberId)?.finalNet ?? 0) -
+                  (feeByPayer[memberId] ?? 0);
                 return (
-                  <tr key={m.id} className="align-top">
+                  <tr key={memberId} className="align-top">
                     <td className="py-3 px-3">
                       <input
                         className="input w-36"
                         value={m.handle}
-                        onChange={(e) => updateMember(m.id!, { handle: e.target.value })}
+                        onChange={(e) => updateMember(memberId, { handle: e.target.value })}
                       />
                     </td>
                     {showRole && (
@@ -397,7 +402,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         <input
                           className="input w-32"
                           value={m.role ?? ""}
-                          onChange={(e) => updateMember(m.id!, { role: e.target.value })}
+                          onChange={(e) => updateMember(memberId, { role: e.target.value })}
                         />
                       </td>
                     )}
@@ -406,7 +411,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         type="number"
                         className="input w-full"
                         value={m.revenue ?? 0}
-                        onChange={(e) => updateMember(m.id!, { revenue: Number(e.target.value) })}
+                        onChange={(e) => updateMember(memberId, { revenue: Number(e.target.value) })}
                       />
                     </td>
                     <td className="py-3 px-3 w-[300px]">
@@ -414,51 +419,57 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         type="number"
                         className="input w-full"
                         value={m.investment ?? 0}
-                        onChange={(e) => updateMember(m.id!, { investment: Number(e.target.value) })}
+                        onChange={(e) => updateMember(memberId, { investment: Number(e.target.value) })}
                       />
                     </td>
                     <td className="py-3 px-3">
                       <div className="flex flex-col gap-1 min-w-[220px]">
-                        {exp.map((e) => (
-                          <div key={e.id} className="flex gap-2 items-center">
-                            <input
-                              className="input flex-1"
-                              value={e.label}
-                              onChange={(ev) => updateIndividualExpense(e.id!, { label: ev.target.value })}
-                            />
-                            <input
-                              type="number"
-                              className="input w-24"
-                              value={e.amount}
-                              onChange={(ev) => updateIndividualExpense(e.id!, { amount: Number(ev.target.value) })}
-                            />
-                            <button
-                              className="text-red-400 text-xl leading-none"
-                              onClick={() =>
-                                setSession((prev) => ({
-                                  ...prev,
-                                  individualExpenses: (prev.individualExpenses ?? []).filter(
-                                    (ie) => ie.id !== e.id
-                                  )
-                                }))
-                              }
-                              title={t.remove}
-                            >
-                              🗑
-                            </button>
-                          </div>
-                        ))}
-                        <button className="btn text-xs" onClick={() => addIndividualExpense(m.id!)}>
+                        {exp.map((e) => {
+                          if (!e.id) {
+                            return null;
+                          }
+                          const expenseId = e.id;
+                          return (
+                            <div key={expenseId} className="flex gap-2 items-center">
+                              <input
+                                className="input flex-1"
+                                value={e.label}
+                                onChange={(ev) => updateIndividualExpense(expenseId, { label: ev.target.value })}
+                              />
+                              <input
+                                type="number"
+                                className="input w-24"
+                                value={e.amount}
+                                onChange={(ev) => updateIndividualExpense(expenseId, { amount: Number(ev.target.value) })}
+                              />
+                              <button
+                                className="text-red-400 text-xl leading-none"
+                                onClick={() =>
+                                  setSession((prev) => ({
+                                    ...prev,
+                                    individualExpenses: (prev.individualExpenses ?? []).filter(
+                                      (ie) => ie.id !== expenseId
+                                    )
+                                  }))
+                                }
+                                title={t.remove}
+                              >
+                                🗑
+                              </button>
+                            </div>
+                          );
+                        })}
+                        <button className="btn text-xs" onClick={() => addIndividualExpense(memberId)}>
                           {t.addExpense}
                         </button>
                         <div className="text-xs text-white/60">Σ {format(expSum, lang)}</div>
                       </div>
                     </td>
                     <td className="py-3 px-3">
-                      {format(feeByPayer[m.id!] ?? 0, lang)}
+                      {format(feeByPayer[memberId] ?? 0, lang)}
                     </td>
                     <td className="py-3 px-3">
-                      {format(result?.members.find((x) => x.memberId === m.id)?.profitShare ?? 0, lang)}
+                      {format(result?.members.find((x) => x.memberId === memberId)?.profitShare ?? 0, lang)}
                     </td>
                     <td className="py-3 px-3 font-semibold">
                       <span className={netAfterFees >= 0 ? "text-neon" : "text-red-400"}>
@@ -472,7 +483,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         value={m.percentShare ?? 0}
                         disabled={session.distributionMode === "EQUAL"}
                         onChange={(e) =>
-                          updateMember(m.id!, { percentShare: Number(e.target.value) })
+                          updateMember(memberId, { percentShare: Number(e.target.value) })
                         }
                       />
                     </td>
@@ -480,10 +491,10 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                       <input
                         type="number"
                         className="input w-full"
-                        value={(m as any).fixedBonus ?? 0}
+                        value={m.fixedBonus ?? 0}
                         disabled={session.distributionMode !== "ADJUSTABLE"}
                         onChange={(e) =>
-                          updateMember(m.id!, { fixedBonus: Number(e.target.value) as any })
+                          updateMember(memberId, { fixedBonus: Number(e.target.value) })
                         }
                       />
                     </td>
@@ -494,14 +505,14 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         value={m.fixedPayout ?? 0}
                         disabled={session.distributionMode !== "ADJUSTABLE"}
                         onChange={(e) =>
-                          updateMember(m.id!, { fixedPayout: Number(e.target.value) })
+                          updateMember(memberId, { fixedPayout: Number(e.target.value) })
                         }
                       />
                     </td>
                     <td className="py-3 px-3 text-right">
                       <button
                         className="text-red-400 text-xl leading-none"
-                        onClick={() => removeMember(m.id!)}
+                        onClick={() => removeMember(memberId)}
                         title={t.remove}
                       >
                         🗑

@@ -1,8 +1,8 @@
 import React from 'react';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { SessionWizard } from './SessionWizard';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 // Helper function to interact with custom distribution mode dropdown
 function getDistributionModeButton() {
@@ -32,9 +32,15 @@ function getCurrentDistributionMode(): string {
   const button = getDistributionModeButton();
   const text = button.textContent || '';
 
-  if (text.includes('Gleich') || text.includes('Equal')) return 'EQUAL';
-  if (text.includes('Prozent') || text.includes('Percent')) return 'PERCENT';
-  if (text.includes('Anpassbar') || text.includes('Adjustable')) return 'ADJUSTABLE';
+  if (text.includes('Gleich') || text.includes('Equal')) {
+    return 'EQUAL';
+  }
+  if (text.includes('Prozent') || text.includes('Percent')) {
+    return 'PERCENT';
+  }
+  if (text.includes('Anpassbar') || text.includes('Adjustable')) {
+    return 'ADJUSTABLE';
+  }
 
   return '';
 }
