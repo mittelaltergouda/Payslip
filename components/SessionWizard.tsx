@@ -5,6 +5,7 @@ import { calculatePayslip } from "@/lib/calc";
 import { DistributionMode, IndividualExpenseInput, MemberInput, SessionInput, Transfer } from "@/lib/types";
 import { ModePreview } from "./ModePreview";
 import { calculateModePreviews } from "@/lib/modePreview";
+import { format } from "@/lib/format";
 
 type Lang = "de" | "en";
 

@@ -19,8 +19,8 @@ export const memberSchema = z.object({
     }),
   role: z.string().max(64, "Role cannot exceed 64 characters").optional(),
   active: z.boolean().optional().default(true),
-  revenue: z.number().int("Revenue must be an integer").nonnegative("Revenue cannot be negative").default(0),
-  investment: z.number().int("Investment must be an integer").nonnegative("Investment cannot be negative").default(0),
+  revenue: z.number().int("Revenue must be an integer").nonnegative("Revenue cannot be negative").max(2147483647, "Revenue cannot exceed 2147483647").default(0),
+  investment: z.number().int("Investment must be an integer").nonnegative("Investment cannot be negative").max(2147483647, "Investment cannot exceed 2147483647").default(0),
   percentShare: z
     .number()
     .min(0, "Percent share cannot be negative")
@@ -31,12 +31,14 @@ export const memberSchema = z.object({
     .number()
     .int("Fixed bonus must be an integer")
     .nonnegative("Fixed bonus cannot be negative")
+    .max(2147483647, "Fixed bonus cannot exceed 2147483647")
     .optional()
     .nullable(),
   fixedPayout: z
     .number()
     .int("Fixed payout must be an integer")
     .nonnegative("Fixed payout cannot be negative")
+    .max(2147483647, "Fixed payout cannot exceed 2147483647")
     .optional()
     .nullable()
 });
