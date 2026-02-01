@@ -1,3 +1,22 @@
+/**
+ * Balance settlement module.
+ *
+ * This module calculates the minimum set of transfers needed to settle all
+ * balances between members using a greedy matching algorithm.
+ *
+ * The algorithm:
+ * 1. Calculates each member's balance (finalNet - investment)
+ * 2. Separates members into debtors (owe money) and creditors (owed money)
+ * 3. Greedily matches largest debtor with largest creditor
+ * 4. Continues until all balances are settled
+ *
+ * This approach minimizes the number of transfers required. Tax gross-up is
+ * applied to each transfer if tax is enabled, ensuring recipients receive the
+ * exact amount owed after fees.
+ *
+ * @module lib/calc/settlement
+ */
+
 import { MemberBreakdown, Transfer } from '../types';
 
 // ============================================================================

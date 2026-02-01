@@ -1,3 +1,22 @@
+/**
+ * Tax gross-up calculation module.
+ *
+ * This module handles tax gross-up calculations for transfers to ensure recipients
+ * receive the exact intended net amount after platform/game fees are deducted.
+ *
+ * When tax is enabled, transfers use the gross-up formula:
+ *   grossAmount = ceil(netAmount / (1 - taxRate))
+ *   feeAmount = grossAmount - netAmount
+ *
+ * This ensures the receiver gets the full netAmount after the tax fee is deducted.
+ * The sender pays slightly more to cover the tax burden.
+ *
+ * Example with 5% tax: To send 100 net, sender pays 106 gross, 6 fee deducted,
+ * receiver gets exactly 100.
+ *
+ * @module lib/calc/tax
+ */
+
 import { Transfer } from '../types';
 
 // ============================================================================

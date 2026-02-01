@@ -1,3 +1,21 @@
+/**
+ * Profit distribution module.
+ *
+ * This module handles the distribution of net profit among active crew members
+ * based on the selected distribution mode:
+ * - EQUAL: Divides profit equally among all active members
+ * - PERCENT: Distributes according to percentage shares (must sum to 100%)
+ * - ADJUSTABLE: Supports fixed payouts, fixed bonuses, and flexible percentages
+ *
+ * The ADJUSTABLE mode provides the most flexibility, allowing for:
+ * - Fixed payouts that bypass the profit pool entirely
+ * - Fixed bonuses added on top of base shares
+ * - Optional percentage-based distribution for remaining pool
+ * - Equal distribution fallback if no percentages specified
+ *
+ * @module lib/calc/distribution
+ */
+
 import { DistributionMode } from '../types';
 import { NormalizedMember } from './types';
 

@@ -1,3 +1,21 @@
+/**
+ * Input normalization module.
+ *
+ * This module normalizes raw session inputs by applying default values to all
+ * optional fields. This ensures downstream calculation logic can work with
+ * guaranteed non-null values, simplifying the codebase and reducing edge cases.
+ *
+ * Default values applied:
+ * - Member IDs: auto-generated if not provided
+ * - Member active status: true
+ * - Revenue/investment: 0
+ * - Session currency: 'aUEC'
+ * - Tax settings: disabled by default
+ * - Expenses: empty arrays
+ *
+ * @module lib/calc/normalization
+ */
+
 import {
   SessionInput,
   MemberInput,

@@ -1,3 +1,18 @@
+/**
+ * Summary statistics module.
+ *
+ * This module calculates aggregate summary statistics from member breakdowns
+ * and settlement transfers. It provides high-level metrics about the session:
+ * - Payout distribution (min/max/average)
+ * - Transfer metrics (count, largest transfer)
+ * - Top earners (highest and lowest earning members)
+ *
+ * These statistics are useful for displaying session summaries and identifying
+ * outliers or interesting patterns in the payout distribution.
+ *
+ * @module lib/calc/statistics
+ */
+
 import type { MemberBreakdown, Transfer, SummaryStatistics } from '../types';
 
 // ============================================================================

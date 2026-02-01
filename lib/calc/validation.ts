@@ -1,3 +1,17 @@
+/**
+ * Input validation module.
+ *
+ * This module provides validation functions for session inputs and normalized data.
+ * It ensures data integrity before calculations by checking for:
+ * - Active members presence
+ * - Valid percentage shares (must sum to 100% in PERCENT mode)
+ * - Non-negative values for revenue, investment, and expenses
+ * - Valid tax rates (0-1 range)
+ * - Non-empty member handles
+ *
+ * @module lib/calc/validation
+ */
+
 import {
   SessionInput,
   MemberInput,
