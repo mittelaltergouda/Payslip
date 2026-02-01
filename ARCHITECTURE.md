@@ -1,4 +1,4 @@
-# SC Payout Split
+# SC Payslip
 
 ## Überblick
 - **Stack**: Next.js (App Router) + TypeScript + TailwindCSS.
