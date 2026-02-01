@@ -116,10 +116,6 @@ const rndId = () =>
 
 const taxFixed = 0.005;
 
-function format(amount: number, lang: Lang) {
-  return Math.round(amount).toLocaleString(lang === "de" ? "de-DE" : "en-US");
-}
-
 function buildInitialSession(): SessionInput {
   return {
     name: "SC Session",
