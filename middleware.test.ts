@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { middleware } from './middleware';
 
 describe('middleware - CSP nonce generation', () => {
-  let mockUUID: ReturnType<typeof vi.fn>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockUUID: any;
 
   beforeEach(() => {
     // Mock crypto.randomUUID using vi.spyOn
