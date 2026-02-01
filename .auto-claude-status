@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "014-style-disabled-inputs-distinctly",
+  "spec": "028-implement-secure-token-generation-for-exporttoken-",
   "state": "building",
   "subtasks": {
-    "completed": 3,
-    "total": 4,
+    "completed": 1,
+    "total": 7,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Verification",
+    "current": "Implement Token Generation",
     "id": null,
-    "total": 3
+    "total": 5
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 5,
-    "started_at": "2026-02-01T21:22:35.874999"
+    "number": 3,
+    "started_at": "2026-02-02T00:43:16.078553"
   },
-  "last_update": "2026-02-01T22:29:20.642915"
+  "last_update": "2026-02-02T00:52:08.080045"
 }
