@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { calculatePayslip } from "@/lib/calc";
 import { DistributionMode, IndividualExpenseInput, MemberInput, SessionInput, Transfer } from "@/lib/types";
+import { ModePreview } from "./ModePreview";
+import { calculateModePreviews } from "@/lib/modePreview";
 
 type Lang = "de" | "en";
 
@@ -127,6 +129,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
   const [session, setSession] = useState<SessionInput>(buildInitialSession);
   const [error, setError] = useState<string | null>(null);
   const [showRole, setShowRole] = useState(false);
+  const [hoveredMode, setHoveredMode] = useState<DistributionMode | null>(null);
 
   const result = useMemo(() => {
     try {
@@ -137,6 +140,8 @@ export function SessionWizard({ initialLang = "de" }: Props) {
       return null;
     }
   }, [session]);
+
+  const modePreviews = useMemo(() => calculateModePreviews(session), [session]);
 
   const feeByPayer =
     result?.suggestedTransfers.reduce<Record<string, number>>((acc, tr) => {
@@ -241,17 +246,39 @@ export function SessionWizard({ initialLang = "de" }: Props) {
           </div>
         </div>
         <div className="grid gap-4 md:grid-cols-4">
-          <label className="flex flex-col gap-1">
+          <label className="flex flex-col gap-1 relative">
             <span className="text-sm text-white/70">{t.distribution}</span>
             <select
               className="input"
               value={session.distributionMode}
               onChange={(e) => onDistributionChange(e.target.value as DistributionMode)}
+              onMouseEnter={(e) => {
+                const option = (e.target as HTMLSelectElement).options[(e.target as HTMLSelectElement).selectedIndex];
+                if (option) {
+                  setHoveredMode(option.value as DistributionMode);
+                }
+              }}
+              onMouseLeave={() => setHoveredMode(null)}
+              onFocus={(e) => {
+                const option = (e.target as HTMLSelectElement).options[(e.target as HTMLSelectElement).selectedIndex];
+                if (option) {
+                  setHoveredMode(option.value as DistributionMode);
+                }
+              }}
+              onBlur={() => setHoveredMode(null)}
             >
               <option value="EQUAL">{t.equal}</option>
               <option value="PERCENT">{t.percent}</option>
               <option value="ADJUSTABLE">{t.adjustable}</option>
             </select>
+            {hoveredMode && (
+              <ModePreview
+                mode={hoveredMode}
+                preview={modePreviews[hoveredMode]}
+                visible={true}
+                currency={session.currency}
+              />
+            )}
             <span className="text-xs text-white/60">
               {t.explanation}:{" "}
               {session.distributionMode === "EQUAL"
