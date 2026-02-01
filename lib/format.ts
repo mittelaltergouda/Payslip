@@ -64,3 +64,30 @@ export function formatCurrency(
     currency: currency,
   }).format(amount);
 }
+
+/**
+ * Formats a number as a percentage with configurable decimal precision.
+ * Automatically detects whether the input is a decimal (0-1 range) or
+ * already a percentage value (>1).
+ *
+ * For values between -1 and 1 (exclusive), the function treats them
+ * as decimal percentages and multiplies by 100. For values >= 1 or <= -1,
+ * the function treats them as already being percentage values.
+ *
+ * @param value - The numeric value to format (decimal or percentage)
+ * @param decimals - Number of decimal places to show (default: 2)
+ * @returns Formatted percentage string with '%' suffix
+ *
+ * @example
+ * formatPercent(0.05)      // "5.00%"
+ * formatPercent(0.05, 0)   // "5%"
+ * formatPercent(0.1575, 2) // "15.75%"
+ * formatPercent(15.75)     // "15.75%"
+ * formatPercent(100, 0)    // "100%"
+ * formatPercent(0.3333, 1) // "33.3%"
+ */
+export function formatPercent(value: number, decimals: number = 2): string {
+  // Auto-detect if value is decimal (0-1 range) or already a percentage
+  const percentValue = value > -1 && value < 1 ? value * 100 : value;
+  return `${percentValue.toFixed(decimals)}%`;
+}
