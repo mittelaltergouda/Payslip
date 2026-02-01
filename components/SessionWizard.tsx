@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { calculatePayslip } from "@/lib/calc";
 import { DistributionMode, IndividualExpenseInput, MemberInput, SessionInput, Transfer } from "@/lib/types";
+import { ModePreview } from "./ModePreview";
+import { calculateModePreviews } from "@/lib/modePreview";
 
 type Lang = "de" | "en";
 
@@ -144,6 +146,8 @@ export function SessionWizard({ initialLang = "de" }: Props) {
   const updateSession = setSession;
   const [error, setError] = useState<string | null>(null);
   const [showRole, setShowRole] = useState(false);
+  const [hoveredMode, setHoveredMode] = useState<DistributionMode | null>(null);
+  const [isModeDropdownOpen, setIsModeDropdownOpen] = useState(false);
 
   const result = useMemo(() => {
     try {
@@ -154,6 +158,8 @@ export function SessionWizard({ initialLang = "de" }: Props) {
       return null;
     }
   }, [session]);
+
+  const modePreviews = useMemo(() => calculateModePreviews(session), [session]);
 
   const feeByPayer =
     result?.suggestedTransfers.reduce<Record<string, number>>((acc, tr) => {
@@ -258,17 +264,67 @@ export function SessionWizard({ initialLang = "de" }: Props) {
           </button>
         </div>
         <div className="grid gap-4 md:grid-cols-4">
-          <label className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 relative">
             <span className="text-sm text-white/70">{t.distribution}</span>
-            <select
-              className="input"
-              value={session.distributionMode}
-              onChange={(e) => onDistributionChange(e.target.value as DistributionMode)}
-            >
-              <option value="EQUAL">{t.equal}</option>
-              <option value="PERCENT">{t.percent}</option>
-              <option value="ADJUSTABLE">{t.adjustable}</option>
-            </select>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsModeDropdownOpen(!isModeDropdownOpen)}
+                onBlur={() => {
+                  // Delay closing to allow click events on options to fire
+                  setTimeout(() => setIsModeDropdownOpen(false), 200);
+                }}
+                className="input w-full text-left flex items-center justify-between"
+                aria-haspopup="listbox"
+                aria-expanded={isModeDropdownOpen}
+              >
+                <span>
+                  {session.distributionMode === "EQUAL" ? t.equal :
+                   session.distributionMode === "PERCENT" ? t.percent : t.adjustable}
+                </span>
+                <span className="text-white/50">{isModeDropdownOpen ? "▲" : "▼"}</span>
+              </button>
+
+              {isModeDropdownOpen && (
+                <div
+                  className="absolute z-10 w-full bg-night border border-white/20 rounded-lg mt-1 shadow-lg overflow-hidden"
+                  role="listbox"
+                >
+                  {(['EQUAL', 'PERCENT', 'ADJUSTABLE'] as DistributionMode[]).map(mode => (
+                    <div
+                      key={mode}
+                      role="option"
+                      aria-selected={session.distributionMode === mode}
+                      onMouseEnter={() => setHoveredMode(mode)}
+                      onMouseLeave={() => setHoveredMode(null)}
+                      onClick={() => {
+                        onDistributionChange(mode);
+                        setIsModeDropdownOpen(false);
+                        setHoveredMode(null);
+                      }}
+                      className={`px-3 py-2 cursor-pointer transition-colors ${
+                        session.distributionMode === mode
+                          ? 'bg-neon/20 text-neon'
+                          : 'hover:bg-white/10 text-white/80'
+                      }`}
+                    >
+                      {mode === "EQUAL" ? t.equal :
+                       mode === "PERCENT" ? t.percent : t.adjustable}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {hoveredMode && hoveredMode !== session.distributionMode && (
+                <ModePreview
+                  mode={hoveredMode}
+                  preview={modePreviews[hoveredMode]}
+                  visible={true}
+                  currency={session.currency}
+                  className="top-full mt-2"
+                />
+              )}
+            </div>
             <span className="text-xs text-white/60">
               {t.explanation}:{" "}
               {session.distributionMode === "EQUAL"
@@ -277,7 +333,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                   ? t.percent
                   : t.adjustable}
             </span>
-          </label>
+          </div>
           <label className="flex items-center gap-2">
             <input
               type="checkbox"

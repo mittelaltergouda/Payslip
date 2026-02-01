@@ -4,6 +4,41 @@ import '@testing-library/jest-dom';
 import { SessionWizard } from './SessionWizard';
 import { describe, it, expect, vi } from 'vitest';
 
+// Helper function to interact with custom distribution mode dropdown
+function getDistributionModeButton() {
+  // The button contains the current mode text and a dropdown arrow
+  return screen.getByRole('button', { name: /Gleich|Prozent|Anpassbar|Equal|Percent|Adjustable/i });
+}
+
+function selectDistributionMode(modeName: string) {
+  const button = getDistributionModeButton();
+  fireEvent.click(button); // Open dropdown
+
+  // Find and click the option - use getAllByRole and filter to avoid ambiguity
+  const options = screen.getAllByRole('option');
+  const option = options.find(opt => {
+    const text = opt.textContent || '';
+    return text.toLowerCase().includes(modeName.toLowerCase());
+  });
+
+  if (!option) {
+    throw new Error(`Could not find option with name: ${modeName}`);
+  }
+
+  fireEvent.click(option);
+}
+
+function getCurrentDistributionMode(): string {
+  const button = getDistributionModeButton();
+  const text = button.textContent || '';
+
+  if (text.includes('Gleich') || text.includes('Equal')) return 'EQUAL';
+  if (text.includes('Prozent') || text.includes('Percent')) return 'PERCENT';
+  if (text.includes('Anpassbar') || text.includes('Adjustable')) return 'ADJUSTABLE';
+
+  return '';
+}
+
 describe('SessionWizard - Initial Rendering', () => {
   it('should render the component with default German language', () => {
     render(<SessionWizard />);
@@ -50,8 +85,8 @@ describe('SessionWizard - Initial Rendering', () => {
   it('should render distribution mode select with default EQUAL value', () => {
     render(<SessionWizard />);
 
-    const select = screen.getByRole('combobox');
-    expect(select).toHaveValue('EQUAL');
+    const currentMode = getCurrentDistributionMode();
+    expect(currentMode).toBe('EQUAL');
   });
 
   it('should render tax toggle checkbox checked by default', () => {
@@ -120,26 +155,23 @@ describe('SessionWizard - Distribution Mode', () => {
   it('should change distribution mode to PERCENT', () => {
     render(<SessionWizard />);
 
-    const select = screen.getByRole('combobox');
-    fireEvent.change(select, { target: { value: 'PERCENT' } });
+    selectDistributionMode('Prozent');
 
-    expect(select).toHaveValue('PERCENT');
+    expect(getCurrentDistributionMode()).toBe('PERCENT');
   });
 
   it('should change distribution mode to ADJUSTABLE', () => {
     render(<SessionWizard />);
 
-    const select = screen.getByRole('combobox');
-    fireEvent.change(select, { target: { value: 'ADJUSTABLE' } });
+    selectDistributionMode('Anpassbar');
 
-    expect(select).toHaveValue('ADJUSTABLE');
+    expect(getCurrentDistributionMode()).toBe('ADJUSTABLE');
   });
 
   it('should distribute percent shares equally when switching to PERCENT mode', () => {
     render(<SessionWizard />);
 
-    const select = screen.getByRole('combobox');
-    fireEvent.change(select, { target: { value: 'PERCENT' } });
+    selectDistributionMode('Prozent');
 
     const percentInputs = screen.getAllByRole('spinbutton').filter(input => {
       const value = (input as HTMLInputElement).value;
@@ -165,8 +197,7 @@ describe('SessionWizard - Distribution Mode', () => {
   it('should enable fixed payout inputs only in ADJUSTABLE mode', () => {
     render(<SessionWizard />);
 
-    const select = screen.getByRole('combobox');
-    fireEvent.change(select, { target: { value: 'ADJUSTABLE' } });
+    selectDistributionMode('Anpassbar');
 
     const allInputs = screen.getAllByRole('spinbutton');
     const fixedPayoutInputs = allInputs.slice(-2);
@@ -367,14 +398,13 @@ describe('SessionWizard - Reset Functionality', () => {
   it('should reset distribution mode to EQUAL on reset', () => {
     render(<SessionWizard />);
 
-    const select = screen.getByRole('combobox');
-    fireEvent.change(select, { target: { value: 'PERCENT' } });
-    expect(select).toHaveValue('PERCENT');
+    selectDistributionMode('Prozent');
+    expect(getCurrentDistributionMode()).toBe('PERCENT');
 
     const resetButton = screen.getByRole('button', { name: 'Reset' });
     fireEvent.click(resetButton);
 
-    expect(select).toHaveValue('EQUAL');
+    expect(getCurrentDistributionMode()).toBe('EQUAL');
   });
 
   it('should reset tax toggle to enabled on reset', () => {
@@ -460,16 +490,15 @@ describe('SessionWizard - Integration Scenarios', () => {
   it('should handle switching modes and updating values', () => {
     render(<SessionWizard />);
 
-    const select = screen.getByRole('combobox');
-    fireEvent.change(select, { target: { value: 'PERCENT' } });
+    selectDistributionMode('Prozent');
 
     const numberInputs = screen.getAllByRole('spinbutton');
     const revenueInput = numberInputs[0] as HTMLInputElement;
     fireEvent.change(revenueInput, { target: { value: '2000' } });
 
-    fireEvent.change(select, { target: { value: 'EQUAL' } });
+    selectDistributionMode('Gleich');
 
-    expect(select).toHaveValue('EQUAL');
+    expect(getCurrentDistributionMode()).toBe('EQUAL');
   });
 
   it('should handle adding and removing expenses with calculations', () => {
@@ -745,8 +774,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should handle PERCENT mode with invalid total percentage', () => {
       render(<SessionWizard />);
 
-      const select = screen.getByRole('combobox');
-      fireEvent.change(select, { target: { value: 'PERCENT' } });
+      selectDistributionMode('Prozent');
 
       const allInputs = screen.getAllByRole('spinbutton');
       const percentInputs = allInputs.filter(input => {
@@ -765,8 +793,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should not crash with PERCENT mode and zero total percentage', () => {
       render(<SessionWizard />);
 
-      const select = screen.getByRole('combobox');
-      fireEvent.change(select, { target: { value: 'PERCENT' } });
+      selectDistributionMode('Prozent');
 
       const allInputs = screen.getAllByRole('spinbutton');
       const percentInputs = allInputs.filter(input => {
@@ -780,14 +807,13 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
         }
       });
 
-      expect(select).toHaveValue('PERCENT');
+      expect(getCurrentDistributionMode()).toBe('PERCENT');
     });
 
     it('should handle ADJUSTABLE mode with very high fixed payout', () => {
       render(<SessionWizard />);
 
-      const select = screen.getByRole('combobox');
-      fireEvent.change(select, { target: { value: 'ADJUSTABLE' } });
+      selectDistributionMode('Anpassbar');
 
       const allInputs = screen.getAllByRole('spinbutton');
       const revenueInput = allInputs[0] as HTMLInputElement;
@@ -804,19 +830,17 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should handle switching between modes multiple times', () => {
       render(<SessionWizard />);
 
-      const select = screen.getByRole('combobox');
+      selectDistributionMode('Prozent');
+      expect(getCurrentDistributionMode()).toBe('PERCENT');
 
-      fireEvent.change(select, { target: { value: 'PERCENT' } });
-      expect(select).toHaveValue('PERCENT');
+      selectDistributionMode('Anpassbar');
+      expect(getCurrentDistributionMode()).toBe('ADJUSTABLE');
 
-      fireEvent.change(select, { target: { value: 'ADJUSTABLE' } });
-      expect(select).toHaveValue('ADJUSTABLE');
+      selectDistributionMode('Gleich');
+      expect(getCurrentDistributionMode()).toBe('EQUAL');
 
-      fireEvent.change(select, { target: { value: 'EQUAL' } });
-      expect(select).toHaveValue('EQUAL');
-
-      fireEvent.change(select, { target: { value: 'PERCENT' } });
-      expect(select).toHaveValue('PERCENT');
+      selectDistributionMode('Prozent');
+      expect(getCurrentDistributionMode()).toBe('PERCENT');
 
       expect(screen.getByText('Gesamt')).toBeInTheDocument();
     });
@@ -965,8 +989,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       const numberInputs = screen.getAllByRole('spinbutton');
       fireEvent.change(numberInputs[0], { target: { value: '5000' } });
 
-      const select = screen.getByRole('combobox');
-      fireEvent.change(select, { target: { value: 'PERCENT' } });
+      selectDistributionMode('Prozent');
 
       const taxCheckbox = screen.getByRole('checkbox', {
         name: /Transfer Tax berücksichtigen/i
@@ -976,7 +999,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       const resetButton = screen.getByRole('button', { name: 'Reset' });
       fireEvent.click(resetButton);
 
-      expect(select).toHaveValue('EQUAL');
+      expect(getCurrentDistributionMode()).toBe('EQUAL');
       expect(taxCheckbox).toBeChecked();
       const pilotInputs = screen.getAllByDisplayValue('Pilot');
       expect(pilotInputs.length).toBeGreaterThan(0);
