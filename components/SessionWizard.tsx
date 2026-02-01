@@ -5,6 +5,8 @@ import { calculatePayslip } from "@/lib/calc";
 import { DistributionMode, IndividualExpenseInput, MemberInput, SessionInput, Transfer } from "@/lib/types";
 import { ModePreview } from "./ModePreview";
 import { calculateModePreviews } from "@/lib/modePreview";
+import { generateId } from "@/lib/id";
+import { format } from "@/lib/format";
 
 type Lang = "de" | "en";
 
@@ -109,11 +111,6 @@ const tmap: Record<Lang, Record<string, string>> = {
   }
 };
 
-const rndId = () =>
-  typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `id-${Math.random().toString(16).slice(2)}`;
-
 const taxFixed = 0.005;
 
 function buildInitialSession(): SessionInput {
@@ -125,8 +122,8 @@ function buildInitialSession(): SessionInput {
     taxEnabled: true,
     taxRate: taxFixed,
     members: [
-      { id: rndId(), handle: "Pilot", role: "Trader", revenue: 0, investment: 0, active: true },
-      { id: rndId(), handle: "Escort", role: "Escort", revenue: 0, investment: 0, active: true }
+      { id: generateId(), handle: "Pilot", role: "Trader", revenue: 0, investment: 0, active: true },
+      { id: generateId(), handle: "Escort", role: "Escort", revenue: 0, investment: 0, active: true }
     ],
     individualExpenses: [],
     sharedExpenses: []
@@ -181,7 +178,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
       ...prev,
       members: [
         ...prev.members,
-        { id: rndId(), handle: "Crew", role: showRole ? "" : undefined, revenue: 0, investment: 0, active: true }
+        { id: generateId(), handle: "Crew", role: showRole ? "" : undefined, revenue: 0, investment: 0, active: true }
       ]
     }));
   };
@@ -191,7 +188,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
       ...prev,
       individualExpenses: [
         ...(prev.individualExpenses ?? []),
-        { id: rndId(), memberId, label: t.expenses, amount: 0 }
+        { id: generateId(), memberId, label: t.expenses, amount: 0 }
       ]
     }));
   };
