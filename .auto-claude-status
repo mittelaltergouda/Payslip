@@ -1,17 +1,17 @@
 {
   "active": true,
-  "spec": "014-style-disabled-inputs-distinctly",
+  "spec": "019-add-security-headers-in-next-js-configuration",
   "state": "building",
   "subtasks": {
     "completed": 3,
-    "total": 4,
+    "total": 7,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Verification",
+    "current": "Security Headers Implementation",
     "id": null,
-    "total": 3
+    "total": 4
   },
   "workers": {
     "active": 0,
@@ -19,7 +19,7 @@
   },
   "session": {
     "number": 5,
-    "started_at": "2026-02-01T21:22:35.874999"
+    "started_at": "2026-02-01T23:57:22.643681"
   },
-  "last_update": "2026-02-01T22:29:20.642915"
+  "last_update": "2026-02-02T00:14:22.518313"
 }
