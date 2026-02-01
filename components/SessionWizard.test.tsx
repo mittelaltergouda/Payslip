@@ -29,8 +29,8 @@ describe('SessionWizard - Initial Rendering', () => {
   it('should render members section with initial members', () => {
     render(<SessionWizard />);
 
-    const mitgliederTexts = screen.getAllByText('Mitglieder');
-    expect(mitgliederTexts.length).toBeGreaterThan(0);
+    const eingabeTexts = screen.getAllByText('Eingabe');
+    expect(eingabeTexts.length).toBeGreaterThan(0);
     expect(screen.getByText('+ Mitglied')).toBeInTheDocument();
 
     const handleInputs = screen.getAllByDisplayValue('Pilot');
@@ -77,15 +77,15 @@ describe('SessionWizard - Language Switching', () => {
   it('should switch from German to English when EN button is clicked', () => {
     render(<SessionWizard />);
 
-    const mitgliederTexts = screen.getAllByText('Mitglieder');
-    expect(mitgliederTexts.length).toBeGreaterThan(0);
+    const eingabeTexts = screen.getAllByText('Eingabe');
+    expect(eingabeTexts.length).toBeGreaterThan(0);
 
     const enButton = screen.getByRole('button', { name: 'EN' });
     fireEvent.click(enButton);
 
     const membersTexts = screen.getAllByText('Members');
     expect(membersTexts.length).toBeGreaterThan(0);
-    expect(screen.queryByText('Mitglieder')).not.toBeInTheDocument();
+    expect(screen.queryByText('Eingabe')).not.toBeInTheDocument();
   });
 
   it('should switch from English to German when DE button is clicked', () => {
@@ -97,8 +97,8 @@ describe('SessionWizard - Language Switching', () => {
     const deButton = screen.getByRole('button', { name: 'DE' });
     fireEvent.click(deButton);
 
-    const mitgliederTexts = screen.getAllByText('Mitglieder');
-    expect(mitgliederTexts.length).toBeGreaterThan(0);
+    const eingabeTexts = screen.getAllByText('Eingabe');
+    expect(eingabeTexts.length).toBeGreaterThan(0);
     expect(screen.queryByText('Members')).not.toBeInTheDocument();
   });
 
@@ -496,7 +496,7 @@ describe('SessionWizard - Integration Scenarios', () => {
 
     const membersTexts = screen.getAllByText('Members');
     expect(membersTexts.length).toBeGreaterThan(0);
-    expect(screen.queryByText('Mitglieder')).not.toBeInTheDocument();
+    expect(screen.queryByText('Eingabe')).not.toBeInTheDocument();
   });
 });
 
@@ -884,8 +884,8 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       fireEvent.click(enButton);
       fireEvent.click(deButton);
 
-      const mitgliederTexts = screen.getAllByText('Mitglieder');
-      expect(mitgliederTexts.length).toBeGreaterThan(0);
+      const eingabeTexts = screen.getAllByText('Eingabe');
+      expect(eingabeTexts.length).toBeGreaterThan(0);
     });
 
     it('should preserve member data after toggling role visibility', () => {

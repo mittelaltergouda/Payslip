@@ -16,7 +16,7 @@ const tmap: Record<Lang, Record<string, string>> = {
     percent: "Prozent (Gewichte müssen 100% ergeben)",
     adjustable: "Anpassbar (Fix-Auszahlungen/Bonusse zuerst, Rest gleich oder prozentual)",
     taxToggle: "Transfer Tax berücksichtigen (0,5%)",
-    members: "Mitglieder",
+    members: "Eingabe",
     addMember: "+ Mitglied",
     handle: "Handle",
     role: "Rolle",
@@ -152,60 +152,62 @@ export function SessionWizard({ initialLang = "de" }: Props) {
   const netAfterTax = (result?.netProfit ?? 0) - totalFees;
 
   const updateMember = (id: string, patch: Partial<MemberInput>) => {
-    updateSession({
-      ...session,
-      members: session.members.map((m) => (m.id === id ? { ...m, ...patch } : m))
-    });
+    setSession((prev) => ({
+      ...prev,
+      members: prev.members.map((m) => (m.id === id ? { ...m, ...patch } : m))
+    }));
   };
 
   const addMember = () => {
-    updateSession({
-      ...session,
+    setSession((prev) => ({
+      ...prev,
       members: [
-        ...session.members,
+        ...prev.members,
         { id: rndId(), handle: "Crew", role: showRole ? "" : undefined, revenue: 0, investment: 0, active: true }
       ]
-    });
+    }));
   };
 
   const addIndividualExpense = (memberId: string) => {
-    updateSession({
-      ...session,
+    setSession((prev) => ({
+      ...prev,
       individualExpenses: [
-        ...(session.individualExpenses ?? []),
+        ...(prev.individualExpenses ?? []),
         { id: rndId(), memberId, label: t.expenses, amount: 0 }
       ]
-    });
+    }));
   };
 
   const updateIndividualExpense = (id: string, patch: Partial<IndividualExpenseInput>) => {
-    updateSession({
-      ...session,
-      individualExpenses: (session.individualExpenses ?? []).map((exp) =>
+    setSession((prev) => ({
+      ...prev,
+      individualExpenses: (prev.individualExpenses ?? []).map((exp) =>
         exp.id === id ? { ...exp, ...patch } : exp
       )
-    });
+    }));
   };
 
   const removeMember = (id: string) => {
-    updateSession({
-      ...session,
-      members: session.members.filter((m) => m.id !== id),
-      individualExpenses: (session.individualExpenses ?? []).filter((exp) => exp.memberId !== id)
-    });
+    setSession((prev) => ({
+      ...prev,
+      members: prev.members.filter((m) => m.id !== id),
+      individualExpenses: (prev.individualExpenses ?? []).filter((exp) => exp.memberId !== id)
+    }));
   };
 
   const onDistributionChange = (mode: DistributionMode) => {
     if (mode === "PERCENT") {
-      const active = session.members.filter((m) => m.active !== false);
-      const share = active.length ? 100 / active.length : 0;
-      updateSession({
-        ...session,
-        distributionMode: mode,
-        members: session.members.map((m) => (m.active === false ? m : { ...m, percentShare: share }))
+      setSession((prev) => {
+        const active = prev.members.filter((m) => m.active !== false);
+        const share = active.length ? 100 / active.length : 0;
+        return {
+          ...prev,
+          distributionMode: mode,
+          members: prev.members.map((m) => (m.active === false ? m : { ...m, percentShare: share }))
+        };
       });
     } else {
-      updateSession({ ...session, distributionMode: mode });
+      setSession((prev) => ({ ...prev, distributionMode: mode }));
     }
   };
 
@@ -264,7 +266,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
             <input
               type="checkbox"
               checked={session.taxEnabled ?? true}
-              onChange={(e) => updateSession({ ...session, taxEnabled: e.target.checked, taxRate: taxFixed })}
+              onChange={(e) => setSession((prev) => ({ ...prev, taxEnabled: e.target.checked, taxRate: taxFixed }))}
             />
             <span className="text-sm text-white/80">{t.taxToggle}</span>
           </label>
@@ -285,20 +287,20 @@ export function SessionWizard({ initialLang = "de" }: Props) {
           <button className="btn" onClick={addMember}>{t.addMember}</button>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm w-[1200px]">
+          <table className="min-w-full text-base">
             <thead className="text-white/60 border-b border-white/10">
               <tr className="whitespace-nowrap">
-                <th className="py-2 px-2 text-left">{t.handle}</th>
-                {showRole && <th className="py-2 px-2 text-left">{t.role}</th>}
-                <th className="py-2 px-2 text-left">{t.revenueLabel}</th>
-                <th className="py-2 px-2 text-left">{t.investmentLabel}</th>
-                <th className="py-2 px-2 text-left">{t.expensesLabel}</th>
-                <th className="py-2 px-2 text-left">{t.taxesLabel}</th>
-                <th className="py-2 px-2 text-left">{t.profitShareCol}</th>
-                <th className="py-2 px-2 text-left">{t.netAfterFeesCol}</th>
-                <th className="py-2 px-2 text-left">{t.percentShare}</th>
-                <th className="py-2 px-2 text-left">{t.fixedBonus}</th>
-                <th className="py-2 px-2 text-left">{t.fixedPayout}</th>
+                <th className="py-3 px-3 text-left">{t.handle}</th>
+                {showRole && <th className="py-3 px-3 text-left">{t.role}</th>}
+                <th className="py-3 px-3 text-left">{t.revenueLabel}</th>
+                <th className="py-3 px-3 text-left">{t.investmentLabel}</th>
+                <th className="py-3 px-3 text-left">{t.expensesLabel}</th>
+                <th className="py-3 px-3 text-left">{t.taxesLabel}</th>
+                <th className="py-3 px-3 text-left">{t.profitShareCol}</th>
+                <th className="py-3 px-3 text-left">{t.netAfterFeesCol}</th>
+                <th className="py-3 px-3 text-left">{t.percentShare}</th>
+                <th className="py-3 px-3 text-left">{t.fixedBonus}</th>
+                <th className="py-3 px-3 text-left">{t.fixedPayout}</th>
                 <th />
               </tr>
             </thead>
@@ -311,7 +313,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                   (feeByPayer[m.id!] ?? 0);
                 return (
                   <tr key={m.id} className="align-top">
-                    <td className="py-2 px-2">
+                    <td className="py-3 px-3">
                       <input
                         className="input w-36"
                         value={m.handle}
@@ -319,7 +321,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                       />
                     </td>
                     {showRole && (
-                      <td className="py-2 px-2">
+                      <td className="py-3 px-3">
                         <input
                           className="input w-32"
                           value={m.role ?? ""}
@@ -327,7 +329,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         />
                       </td>
                     )}
-                    <td className="py-2 px-2 w-[180px]">
+                    <td className="py-3 px-3 w-[300px]">
                       <input
                         type="number"
                         className="input w-full"
@@ -335,7 +337,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         onChange={(e) => updateMember(m.id!, { revenue: Number(e.target.value) })}
                       />
                     </td>
-                    <td className="py-2 px-2 w-[180px]">
+                    <td className="py-3 px-3 w-[300px]">
                       <input
                         type="number"
                         className="input w-full"
@@ -343,7 +345,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         onChange={(e) => updateMember(m.id!, { investment: Number(e.target.value) })}
                       />
                     </td>
-                    <td className="py-2 px-2">
+                    <td className="py-3 px-3">
                       <div className="flex flex-col gap-1 min-w-[220px]">
                         {exp.map((e) => (
                           <div key={e.id} className="flex gap-2 items-center">
@@ -361,12 +363,12 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                             <button
                               className="text-red-400 text-xl leading-none"
                               onClick={() =>
-                                updateSession({
-                                  ...session,
-                                  individualExpenses: (session.individualExpenses ?? []).filter(
+                                setSession((prev) => ({
+                                  ...prev,
+                                  individualExpenses: (prev.individualExpenses ?? []).filter(
                                     (ie) => ie.id !== e.id
                                   )
-                                })
+                                }))
                               }
                               title={t.remove}
                             >
@@ -380,18 +382,18 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         <div className="text-xs text-white/60">Σ {format(expSum, lang)}</div>
                       </div>
                     </td>
-                    <td className="py-2 px-2">
+                    <td className="py-3 px-3">
                       {format(feeByPayer[m.id!] ?? 0, lang)}
                     </td>
-                    <td className="py-2 px-2">
+                    <td className="py-3 px-3">
                       {format(result?.members.find((x) => x.memberId === m.id)?.profitShare ?? 0, lang)}
                     </td>
-                    <td className="py-2 px-2 font-semibold">
+                    <td className="py-3 px-3 font-semibold">
                       <span className={netAfterFees >= 0 ? "text-neon" : "text-red-400"}>
                         {format(netAfterFees, lang)}
                       </span>
                     </td>
-                    <td className="py-2 px-2 w-[140px]">
+                    <td className="py-3 px-3 w-[160px]">
                       <input
                         type="number"
                         className="input w-full"
@@ -402,7 +404,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         }
                       />
                     </td>
-                    <td className="py-2 px-2 w-[140px]">
+                    <td className="py-3 px-3 w-[240px]">
                       <input
                         type="number"
                         className="input w-full"
@@ -413,7 +415,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         }
                       />
                     </td>
-                    <td className="py-2 px-2 w-[140px]">
+                    <td className="py-3 px-3 w-[240px]">
                       <input
                         type="number"
                         className="input w-full"
@@ -424,7 +426,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         }
                       />
                     </td>
-                    <td className="py-2 px-2 text-right">
+                    <td className="py-3 px-3 text-right">
                       <button
                         className="text-red-400 text-xl leading-none"
                         onClick={() => removeMember(m.id!)}
@@ -471,16 +473,16 @@ export function SessionWizard({ initialLang = "de" }: Props) {
               <div className="space-y-2 mt-4">
                 <h4 className="font-semibold text-white/80">{t.members}</h4>
                 <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm">
+                  <table className="min-w-full text-base">
                     <thead className="text-white/60 border-b border-white/10">
                       <tr className="whitespace-nowrap">
-                        <th className="py-2 px-2 text-left">{t.handle}</th>
-                        <th className="py-2 px-2 text-left">{t.revenueLabel}</th>
-                        <th className="py-2 px-2 text-left">{t.investmentLabel}</th>
-                        <th className="py-2 px-2 text-left">{t.expensesLabel}</th>
-                        <th className="py-2 px-2 text-left">{t.taxesLabel}</th>
-                        <th className="py-2 px-2 text-left">{t.profitShareCol}</th>
-                        <th className="py-2 px-2 text-left">{t.netAfterFeesCol}</th>
+                        <th className="py-3 px-3 text-left">{t.handle}</th>
+                        <th className="py-3 px-3 text-left">{t.revenueLabel}</th>
+                        <th className="py-3 px-3 text-left">{t.investmentLabel}</th>
+                        <th className="py-3 px-3 text-left">{t.expensesLabel}</th>
+                        <th className="py-3 px-3 text-left">{t.taxesLabel}</th>
+                        <th className="py-3 px-3 text-left">{t.profitShareCol}</th>
+                        <th className="py-3 px-3 text-left">{t.netAfterFeesCol}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/10">
@@ -494,16 +496,16 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                             .join(" • ") || "-";
                         return (
                           <tr key={m.memberId}>
-                            <td className="py-2 px-2">{m.handle}</td>
-                            <td className="py-2 px-2">{format(m.revenue, lang)}</td>
-                            <td className="py-2 px-2">{format(m.investment, lang)}</td>
-                            <td className="py-2 px-2">
+                            <td className="py-3 px-3">{m.handle}</td>
+                            <td className="py-3 px-3">{format(m.revenue, lang)}</td>
+                            <td className="py-3 px-3">{format(m.investment, lang)}</td>
+                            <td className="py-3 px-3">
                               {format(m.expenses, lang)}
                               <div className="text-xs text-white/60">{memberExp}</div>
                             </td>
-                            <td className="py-2 px-2">{format(taxes, lang)}</td>
-                            <td className="py-2 px-2">{format(m.profitShare, lang)}</td>
-                            <td className="py-2 px-2 font-semibold">
+                            <td className="py-3 px-3">{format(taxes, lang)}</td>
+                            <td className="py-3 px-3">{format(m.profitShare, lang)}</td>
+                            <td className="py-3 px-3 font-semibold">
                               <span className={net >= 0 ? "text-neon" : "text-red-400"}>
                                 {format(net, lang)}
                               </span>
