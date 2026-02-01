@@ -153,8 +153,8 @@ export function SessionWizard({ initialLang = "de" }: Props) {
     try {
       setError(null);
       return calculatePayslip(session);
-    } catch (err: any) {
-      setError(err?.message ?? "Unknown error");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
       return null;
     }
   }, [session]);
