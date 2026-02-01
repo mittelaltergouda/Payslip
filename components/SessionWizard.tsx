@@ -46,7 +46,15 @@ const tmap: Record<Lang, Record<string, string>> = {
     investmentLabel: "Investment",
     expensesLabel: "Kosten",
     taxesLabel: "Steuern (Fees)",
-    netProfitLabel: "Gewinn (Netto)"
+    netProfitLabel: "Gewinn (Netto)",
+    statistics: "Statistiken",
+    minPayout: "Min. Auszahlung",
+    maxPayout: "Max. Auszahlung",
+    avgPayout: "Durchschn. Auszahlung",
+    transferCount: "Anzahl Transfers",
+    largestTransfer: "Größter Transfer",
+    highestEarner: "Höchster Verdienst",
+    lowestEarner: "Niedrigster Verdienst"
   },
   en: {
     appName: "SC Payslip",
@@ -87,7 +95,15 @@ const tmap: Record<Lang, Record<string, string>> = {
     investmentLabel: "Investment",
     expensesLabel: "Expenses",
     taxesLabel: "Taxes (fees)",
-    netProfitLabel: "Profit (Net)"
+    netProfitLabel: "Profit (Net)",
+    statistics: "Statistics",
+    minPayout: "Min. Payout",
+    maxPayout: "Max. Payout",
+    avgPayout: "Avg. Payout",
+    transferCount: "Transfer Count",
+    largestTransfer: "Largest Transfer",
+    highestEarner: "Highest Earner",
+    lowestEarner: "Lowest Earner"
   }
 };
 
@@ -470,6 +486,27 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                   {format(netAfterTax, lang)} aUEC
                 </span>
               </div>
+              {result.summaryStatistics && (
+                <div className="space-y-2 mt-4">
+                  <h4 className="font-semibold text-white/80">{t.statistics}</h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <span className="text-white/70">{t.minPayout}</span>
+                    <span>{format(result.summaryStatistics.minPayout, lang)} aUEC</span>
+                    <span className="text-white/70">{t.maxPayout}</span>
+                    <span>{format(result.summaryStatistics.maxPayout, lang)} aUEC</span>
+                    <span className="text-white/70">{t.avgPayout}</span>
+                    <span>{format(result.summaryStatistics.averagePayout, lang)} aUEC</span>
+                    <span className="text-white/70">{t.transferCount}</span>
+                    <span>{result.summaryStatistics.totalTransfers}</span>
+                    <span className="text-white/70">{t.largestTransfer}</span>
+                    <span>{format(result.summaryStatistics.largestTransfer, lang)} aUEC</span>
+                    <span className="text-white/70">{t.highestEarner}</span>
+                    <span>{result.summaryStatistics.highestEarner}</span>
+                    <span className="text-white/70">{t.lowestEarner}</span>
+                    <span>{result.summaryStatistics.lowestEarner}</span>
+                  </div>
+                </div>
+              )}
               <div className="space-y-2 mt-4">
                 <h4 className="font-semibold text-white/80">{t.members}</h4>
                 <div className="overflow-x-auto">
