@@ -483,7 +483,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                         value={m.fixedBonus ?? 0}
                         disabled={session.distributionMode !== "ADJUSTABLE"}
                         onChange={(e) =>
-                          updateMember(m.id!, { fixedBonus: Number(e.target.value) as any })
+                          updateMember(m.id!, { fixedBonus: Number(e.target.value) })
                         }
                       />
                     </td>
