@@ -91,3 +91,65 @@ export function formatPercent(value: number, decimals: number = 2): string {
   const percentValue = value > -1 && value < 1 ? value * 100 : value;
   return `${percentValue.toFixed(decimals)}%`;
 }
+
+/**
+ * Formats a number in compact notation using K, M, B suffixes for large values.
+ * Uses locale-appropriate decimal separators and preserves full precision
+ * for values below 1000.
+ *
+ * The function applies the following rules:
+ * - Values < 1000: display as-is with locale formatting
+ * - Values >= 1000 and < 1,000,000: divide by 1000 and append 'k'
+ * - Values >= 1,000,000 and < 1,000,000,000: divide by 1,000,000 and append 'M'
+ * - Values >= 1,000,000,000: divide by 1,000,000,000 and append 'B'
+ *
+ * Compact values are displayed with one decimal place and locale-appropriate
+ * decimal separator (comma for German, period for English).
+ *
+ * @param amount - The number to format in compact notation
+ * @param lang - The locale language ('de' for German, 'en' for English)
+ * @returns Formatted compact number string with appropriate suffix
+ *
+ * @example
+ * formatCompact(500, 'en')          // "500"
+ * formatCompact(1500, 'en')         // "1.5k"
+ * formatCompact(1500, 'de')         // "1,5k"
+ * formatCompact(1234567, 'en')      // "1.2M"
+ * formatCompact(1234567, 'de')      // "1,2M"
+ * formatCompact(1234567890, 'en')   // "1.2B"
+ * formatCompact(999, 'en')          // "999"
+ * formatCompact(1000, 'en')         // "1.0k"
+ */
+export function formatCompact(amount: number, lang: Lang): string {
+  const absAmount = Math.abs(amount);
+  const sign = amount < 0 ? '-' : '';
+
+  // Preserve full precision for values < 1000
+  if (absAmount < 1000) {
+    return `${sign}${Math.round(absAmount)}`;
+  }
+
+  // Determine magnitude and suffix
+  let value: number;
+  let suffix: string;
+
+  if (absAmount >= 1_000_000_000) {
+    // Billions
+    value = absAmount / 1_000_000_000;
+    suffix = 'B';
+  } else if (absAmount >= 1_000_000) {
+    // Millions
+    value = absAmount / 1_000_000;
+    suffix = 'M';
+  } else {
+    // Thousands
+    value = absAmount / 1000;
+    suffix = 'k';
+  }
+
+  // Format with one decimal place using locale-appropriate decimal separator
+  const decimalSeparator = lang === 'de' ? ',' : '.';
+  const formattedValue = value.toFixed(1).replace('.', decimalSeparator);
+
+  return `${sign}${formattedValue}${suffix}`;
+}
