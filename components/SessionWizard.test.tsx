@@ -43,14 +43,14 @@ describe('SessionWizard - Initial Rendering', () => {
   it('should render the component with default German language', () => {
     render(<SessionWizard />);
 
-    expect(screen.getByText('SC Payout Split')).toBeInTheDocument();
+    expect(screen.getByText('SC Payslip')).toBeInTheDocument();
     expect(screen.getByText(/Profite und Kosten crew-weise erfassen/i)).toBeInTheDocument();
   });
 
   it('should render with English language when initialLang is en', () => {
     render(<SessionWizard initialLang="en" />);
 
-    expect(screen.getByText('SC Payout Split')).toBeInTheDocument();
+    expect(screen.getByText('SC Payslip')).toBeInTheDocument();
     expect(screen.getByText(/Track profits and costs per crew/i)).toBeInTheDocument();
   });
 
@@ -64,8 +64,8 @@ describe('SessionWizard - Initial Rendering', () => {
   it('should render members section with initial members', () => {
     render(<SessionWizard />);
 
-    const mitgliederTexts = screen.getAllByText('Mitglieder');
-    expect(mitgliederTexts.length).toBeGreaterThan(0);
+    const eingabeTexts = screen.getAllByText('Eingabe');
+    expect(eingabeTexts.length).toBeGreaterThan(0);
     expect(screen.getByText('+ Mitglied')).toBeInTheDocument();
 
     const handleInputs = screen.getAllByDisplayValue('Pilot');
@@ -112,15 +112,15 @@ describe('SessionWizard - Language Switching', () => {
   it('should switch from German to English when EN button is clicked', () => {
     render(<SessionWizard />);
 
-    const mitgliederTexts = screen.getAllByText('Mitglieder');
-    expect(mitgliederTexts.length).toBeGreaterThan(0);
+    const eingabeTexts = screen.getAllByText('Eingabe');
+    expect(eingabeTexts.length).toBeGreaterThan(0);
 
     const enButton = screen.getByRole('button', { name: 'EN' });
     fireEvent.click(enButton);
 
     const membersTexts = screen.getAllByText('Members');
     expect(membersTexts.length).toBeGreaterThan(0);
-    expect(screen.queryByText('Mitglieder')).not.toBeInTheDocument();
+    expect(screen.queryByText('Eingabe')).not.toBeInTheDocument();
   });
 
   it('should switch from English to German when DE button is clicked', () => {
@@ -132,8 +132,8 @@ describe('SessionWizard - Language Switching', () => {
     const deButton = screen.getByRole('button', { name: 'DE' });
     fireEvent.click(deButton);
 
-    const mitgliederTexts = screen.getAllByText('Mitglieder');
-    expect(mitgliederTexts.length).toBeGreaterThan(0);
+    const eingabeTexts = screen.getAllByText('Eingabe');
+    expect(eingabeTexts.length).toBeGreaterThan(0);
     expect(screen.queryByText('Members')).not.toBeInTheDocument();
   });
 
@@ -525,7 +525,7 @@ describe('SessionWizard - Integration Scenarios', () => {
 
     const membersTexts = screen.getAllByText('Members');
     expect(membersTexts.length).toBeGreaterThan(0);
-    expect(screen.queryByText('Mitglieder')).not.toBeInTheDocument();
+    expect(screen.queryByText('Eingabe')).not.toBeInTheDocument();
   });
 });
 
@@ -908,8 +908,8 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       fireEvent.click(enButton);
       fireEvent.click(deButton);
 
-      const mitgliederTexts = screen.getAllByText('Mitglieder');
-      expect(mitgliederTexts.length).toBeGreaterThan(0);
+      const eingabeTexts = screen.getAllByText('Eingabe');
+      expect(eingabeTexts.length).toBeGreaterThan(0);
     });
 
     it('should preserve member data after toggling role visibility', () => {
