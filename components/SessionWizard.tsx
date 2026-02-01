@@ -149,8 +149,8 @@ export function SessionWizard({ initialLang = "de" }: Props) {
     try {
       setError(null);
       return calculatePayslip(session);
-    } catch (err: any) {
-      setError(err?.message ?? "Unknown error");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
       return null;
     }
   }, [session]);
@@ -476,10 +476,10 @@ export function SessionWizard({ initialLang = "de" }: Props) {
                       <input
                         type="number"
                         className="input w-full"
-                        value={(m as any).fixedBonus ?? 0}
+                        value={m.fixedBonus ?? 0}
                         disabled={session.distributionMode !== "ADJUSTABLE"}
                         onChange={(e) =>
-                          updateMember(m.id!, { fixedBonus: Number(e.target.value) as any })
+                          updateMember(m.id!, { fixedBonus: Number(e.target.value) })
                         }
                       />
                     </td>
