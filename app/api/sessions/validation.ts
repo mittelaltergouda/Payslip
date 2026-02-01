@@ -117,3 +117,20 @@ export const sessionSchema = z
   );
 
 export type SessionPayload = z.infer<typeof sessionSchema>;
+
+export const exportTokenSchema = z.object({
+  id: z.string().optional(),
+  sessionId: z.string().min(1, "Session ID cannot be empty"),
+  token: z
+    .string()
+    .min(1, "Token cannot be empty")
+    .regex(/^[A-Za-z0-9_-]+$/, "Token must be URL-safe (base64url format)")
+    .optional(),
+  expiresAt: z
+    .string()
+    .datetime("Expiry date must be a valid ISO 8601 datetime string")
+    .optional()
+    .nullable()
+});
+
+export type ExportTokenPayload = z.infer<typeof exportTokenSchema>;
