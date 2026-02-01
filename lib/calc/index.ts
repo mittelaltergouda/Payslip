@@ -26,9 +26,18 @@ import {
 import {
   calculateSummaryStatistics,
 } from './statistics';
+import {
+  applyTransferTaxes,
+  calculateGrossAmount,
+  calculateFeeAmount,
+} from './tax';
 
 // Re-export types for external use
 export type { SessionInput, PayslipResult, MemberBreakdown, Transfer } from '../types';
+
+// Re-export utility functions for testing and external use
+export { calculateSummaryStatistics } from './statistics';
+export { applyTransferTaxes, calculateGrossAmount, calculateFeeAmount } from './tax';
 
 // ============================================================================
 // MAIN CALCULATION ORCHESTRATOR
