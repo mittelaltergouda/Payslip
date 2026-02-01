@@ -1,25 +1,25 @@
 {
   "active": true,
   "spec": "014-style-disabled-inputs-distinctly",
-  "state": "planning",
+  "state": "building",
   "subtasks": {
-    "completed": 0,
-    "total": 0,
+    "completed": 3,
+    "total": 4,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Add Disabled Input Styling",
+    "current": "Verification",
     "id": null,
-    "total": 1
+    "total": 3
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 2,
+    "number": 5,
     "started_at": "2026-02-01T21:22:35.874999"
   },
-  "last_update": "2026-02-01T21:29:56.061722"
+  "last_update": "2026-02-01T22:29:20.642915"
 }
