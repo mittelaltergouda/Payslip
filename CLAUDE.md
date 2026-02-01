@@ -2,7 +2,7 @@
 
 ## Project Goal
 
-**SC Payout Split** is a payout calculator for crew-based revenue splitting in Star Citizen. It calculates fair profit distribution, settlement transfers, and applies transfer taxes (fee gross-up). The app combines a client-side calculation engine with Prisma ORM persistence and read-only share links.
+**SC Payslip** is a payout calculator for crew-based revenue splitting in Star Citizen. It calculates fair profit distribution, settlement transfers, and applies transfer taxes (fee gross-up). The app combines a client-side calculation engine with Prisma ORM persistence and read-only share links.
 
 Key features:
 - Multi-member revenue and expense tracking

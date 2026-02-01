@@ -36,11 +36,11 @@ test.describe('SessionWizard Browser Verification', () => {
 
   test('SessionWizard renders without errors', async ({ page }) => {
     // Wait for the main component to load (look for app name or session settings)
-    await page.waitForSelector('text=SC Payout Split', { timeout: 10000 });
+    await page.waitForSelector('text=SC Payslip', { timeout: 10000 });
 
     // Check that the app name is present
-    const appName = await page.locator('text=SC Payout Split').textContent();
-    expect(appName).toContain('SC Payout Split');
+    const appName = await page.locator('text=SC Payslip').textContent();
+    expect(appName).toContain('SC Payslip');
 
     // Verify key elements are present (select for distribution mode)
     await expect(page.locator('select')).toBeVisible();
@@ -158,7 +158,7 @@ test.describe('Responsive Design Verification', () => {
     }
 
     // Verify main content is visible (app name)
-    await expect(page.locator('text=SC Payout Split')).toBeVisible();
+    await expect(page.locator('text=SC Payslip')).toBeVisible();
   });
 
   test('Desktop viewport renders correctly', async ({ page, viewport }) => {
@@ -168,7 +168,7 @@ test.describe('Responsive Design Verification', () => {
     // On desktop viewports (>= 768px), check layout
     if (viewport && viewport.width >= 768) {
       // Main content should be visible (app name and h2)
-      await expect(page.locator('text=SC Payout Split')).toBeVisible();
+      await expect(page.locator('text=SC Payslip')).toBeVisible();
 
       // Session settings should be visible
       await expect(page.locator('h2').first()).toBeVisible();

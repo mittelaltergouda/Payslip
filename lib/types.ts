@@ -87,12 +87,3 @@ export type PayslipResult = {
   suggestedTransfers: Transfer[];
   summaryStatistics?: SummaryStatistics;
 };
-
-// History stack types for undo/redo functionality
-export interface HistoryStack<T> {
-  past: T[];
-  present: T;
-  future: T[];
-}
-
-export type SessionSnapshot = SessionInput;
