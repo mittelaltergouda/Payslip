@@ -1,28 +1,28 @@
 # SC Payslip
 
-## Überblick
+## Overview
 - **Stack**: Next.js (App Router) + TypeScript + TailwindCSS.
 - **API**: Next.js Route Handlers (REST), Prisma ORM, PostgreSQL.
-- **Calc Engine**: `/lib/calc/` modular calculation engine mit rein funktionaler Berechnung (9 domain-specific modules).
-- **Frontend**: Landing + Wizard + Result/Payslip in `app/page.tsx` mit Client-Komponente `SessionWizard`.
-- **Persistenz**: Prisma Schema in `prisma/schema.prisma`; share links via `ExportToken`.
+- **Calc Engine**: `/lib/calc/` modular calculation engine with pure functional computation (9 domain-specific modules).
+- **Frontend**: Landing + Wizard + Result/Payslip in `app/page.tsx` with client component `SessionWizard`.
+- **Persistence**: Prisma Schema in `prisma/schema.prisma`; share links via `ExportToken`.
 
-## Domänenmodell
-- `Session`: name, type (enum), currency, totalRevenue (aus Member-Revenue aggregiert), taxEnabled, taxRate, distributionMode, timestamps.
+## Domain Model
+- `Session`: name, type (enum), currency, totalRevenue (aggregated from member revenues), taxEnabled, taxRate, distributionMode, timestamps.
 - `Member`: handle, role, active, revenue, investment, percentShare, fixedBonus, fixedPayout.
-- `SharedExpense` + `SharedExpenseParticipant`: optional (Default nicht genutzt); Posten mit betroffenen Membern.
-- `IndividualExpense`: pro Member.
-- `ExportToken`: shareable read-only Token.
+- `SharedExpense` + `SharedExpenseParticipant`: optional (not used by default); entries with affected members.
+- `IndividualExpense`: per member.
+- `ExportToken`: shareable read-only token.
 
-## API Endpunkte (MVP)
-- `POST /api/sessions`: erstellt Session inkl. Members + Expenses.
-- `GET /api/sessions/:id`: lädt Session.
-- `PUT /api/sessions/:id`: upsert Members/Expenses + Sessiondaten.
-- `GET /api/sessions/:id/payslip`: berechnet Payslip on-the-fly aus DB.
-- `POST /api/sessions/:id/share`: erzeugt Token.
-- `GET /api/share/:token`: liefert Session + Payslip für read-only View.
+## API Endpoints (MVP)
+- `POST /api/sessions`: creates Session including Members + Expenses.
+- `GET /api/sessions/:id`: loads Session.
+- `PUT /api/sessions/:id`: upserts Members/Expenses + Session data.
+- `GET /api/sessions/:id/payslip`: calculates Payslip on-the-fly from DB.
+- `POST /api/sessions/:id/share`: generates Token.
+- `GET /api/share/:token`: returns Session + Payslip for read-only view.
 
-## Berechnung (lib/calc/)
+## Calculation (lib/calc/)
 
 ### Module Structure
 
@@ -100,19 +100,19 @@ The original `lib/calc.ts` now acts as a **barrel export** for backward compatib
 | Add new summary metrics | `statistics.ts` | Calculate median payout |
 | Change calculation flow | `index.ts` | Add pre-distribution hooks |
 
-## UI-Fluss
-- Wizard sammelt Basisdaten, Members, Shared/Individual Expenses, Distribution Mode, Tax-Toggle.
-- Berechnung läuft client-seitig über `calculatePayslip`.
-- Result-Kacheln zeigen Breakdown + Suggested Transfers; Copy-Buttons für JSON/Transfers.
-- Share-View unter `/share/:token` ist read-only mit gleicher Darstellung.
+## UI Flow
+- Wizard collects base data, Members, Shared/Individual Expenses, Distribution Mode, Tax-Toggle.
+- Calculation runs client-side via `calculatePayslip`.
+- Result tiles show Breakdown + Suggested Transfers; Copy buttons for JSON/Transfers.
+- Share view at `/share/:token` is read-only with the same display.
 
-## Annahmen & Trade-offs
-- Shared Expenses werden gleichmäßig auf Teilnehmer verteilt (V1: gewichtete Verteilung).
-- fixedPayout entfernt Member aus dem Resttopf, fixedBonus addiert nur oben drauf.
-- Tax wird pro Transfer berechnet (gross-up), Gebühren lasten auf Zahlerseite.
-- Rounding: `Math.ceil` beim Gross-Up um Unterzahlung zu vermeiden; leichte Überschüsse möglich.
-- Keine Auth (Phase 2: Magic Links). Share Tokens sind UUID-basiert.
-- Validation per Zod, Rate-Limiting noch nicht implementiert (kann via Middleware ergänzt werden).
+## Assumptions & Trade-offs
+- Shared expenses are distributed equally among participants (V1: weighted distribution).
+- fixedPayout removes members from the remaining pool, fixedBonus only adds on top.
+- Tax is calculated per transfer (gross-up), fees burden the sender side.
+- Rounding: `Math.ceil` in gross-up to avoid underpayment; slight excesses possible.
+- No authentication (Phase 2: Magic Links). Share tokens are UUID-based.
+- Validation via Zod, rate-limiting not yet implemented (can be added via middleware).
 
 ## Setup
 
