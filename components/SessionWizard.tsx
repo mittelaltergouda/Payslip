@@ -7,6 +7,7 @@ import { calculateModePreviews } from "@/lib/modePreview";
 import { translations, Lang } from "@/lib/i18n/translations";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { SessionSettings } from "./SessionSettings";
+import { MembersTable } from "./MembersTable";
 
 const rndId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -106,6 +107,13 @@ export function SessionWizard({ initialLang = "de" }: Props) {
     }));
   };
 
+  const removeIndividualExpense = (id: string) => {
+    setSession((prev) => ({
+      ...prev,
+      individualExpenses: (prev.individualExpenses ?? []).filter((exp) => exp.id !== id)
+    }));
+  };
+
   const removeMember = (id: string) => {
     setSession((prev) => ({
       ...prev,
@@ -152,167 +160,23 @@ export function SessionWizard({ initialLang = "de" }: Props) {
         taxRate={taxFixed}
       />
 
-      <div className="glass p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-display">{t.members}</h3>
-          <button className="btn" onClick={addMember}>{t.addMember}</button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-base">
-            <thead className="text-white/60 border-b border-white/10">
-              <tr className="whitespace-nowrap">
-                <th className="py-3 px-3 text-left">{t.handle}</th>
-                {showRole && <th className="py-3 px-3 text-left">{t.role}</th>}
-                <th className="py-3 px-3 text-left">{t.revenueLabel}</th>
-                <th className="py-3 px-3 text-left">{t.investmentLabel}</th>
-                <th className="py-3 px-3 text-left">{t.expensesLabel}</th>
-                <th className="py-3 px-3 text-left">{t.taxesLabel}</th>
-                <th className="py-3 px-3 text-left">{t.profitShareCol}</th>
-                <th className="py-3 px-3 text-left">{t.netAfterFeesCol}</th>
-                <th className="py-3 px-3 text-left">{t.percentShare}</th>
-                <th className="py-3 px-3 text-left">{t.fixedBonus}</th>
-                <th className="py-3 px-3 text-left">{t.fixedPayout}</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/10">
-              {session.members.map((m) => {
-                const exp = (session.individualExpenses ?? []).filter((e) => e.memberId === m.id);
-                const expSum = exp.reduce((s, e) => s + e.amount, 0);
-                const netAfterFees =
-                  (result?.members.find((x) => x.memberId === m.id)?.finalNet ?? 0) -
-                  (feeByPayer[m.id!] ?? 0);
-                return (
-                  <tr key={m.id} className="align-top">
-                    <td className="py-3 px-3">
-                      <input
-                        className="input w-36"
-                        value={m.handle}
-                        onChange={(e) => updateMember(m.id!, { handle: e.target.value })}
-                      />
-                    </td>
-                    {showRole && (
-                      <td className="py-3 px-3">
-                        <input
-                          className="input w-32"
-                          value={m.role ?? ""}
-                          onChange={(e) => updateMember(m.id!, { role: e.target.value })}
-                        />
-                      </td>
-                    )}
-                    <td className="py-3 px-3 w-[300px]">
-                      <input
-                        type="number"
-                        className="input w-full"
-                        value={m.revenue ?? 0}
-                        onChange={(e) => updateMember(m.id!, { revenue: Number(e.target.value) })}
-                      />
-                    </td>
-                    <td className="py-3 px-3 w-[300px]">
-                      <input
-                        type="number"
-                        className="input w-full"
-                        value={m.investment ?? 0}
-                        onChange={(e) => updateMember(m.id!, { investment: Number(e.target.value) })}
-                      />
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="flex flex-col gap-1 min-w-[220px]">
-                        {exp.map((e) => (
-                          <div key={e.id} className="flex gap-2 items-center">
-                            <input
-                              className="input flex-1"
-                              value={e.label}
-                              onChange={(ev) => updateIndividualExpense(e.id!, { label: ev.target.value })}
-                            />
-                            <input
-                              type="number"
-                              className="input w-24"
-                              value={e.amount}
-                              onChange={(ev) => updateIndividualExpense(e.id!, { amount: Number(ev.target.value) })}
-                            />
-                            <button
-                              className="text-red-400 text-xl leading-none"
-                              onClick={() =>
-                                setSession((prev) => ({
-                                  ...prev,
-                                  individualExpenses: (prev.individualExpenses ?? []).filter(
-                                    (ie) => ie.id !== e.id
-                                  )
-                                }))
-                              }
-                              title={t.remove}
-                            >
-                              🗑
-                            </button>
-                          </div>
-                        ))}
-                        <button className="btn text-xs" onClick={() => addIndividualExpense(m.id!)}>
-                          {t.addExpense}
-                        </button>
-                        <div className="text-xs text-white/60">Σ {format(expSum, lang)}</div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3">
-                      {format(feeByPayer[m.id!] ?? 0, lang)}
-                    </td>
-                    <td className="py-3 px-3">
-                      {format(result?.members.find((x) => x.memberId === m.id)?.profitShare ?? 0, lang)}
-                    </td>
-                    <td className="py-3 px-3 font-semibold">
-                      <span className={netAfterFees >= 0 ? "text-neon" : "text-red-400"}>
-                        {format(netAfterFees, lang)}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 w-[160px]">
-                      <input
-                        type="number"
-                        className="input w-full"
-                        value={m.percentShare ?? 0}
-                        disabled={session.distributionMode === "EQUAL"}
-                        onChange={(e) =>
-                          updateMember(m.id!, { percentShare: Number(e.target.value) })
-                        }
-                      />
-                    </td>
-                    <td className="py-3 px-3 w-[240px]">
-                      <input
-                        type="number"
-                        className="input w-full"
-                        value={(m as any).fixedBonus ?? 0}
-                        disabled={session.distributionMode !== "ADJUSTABLE"}
-                        onChange={(e) =>
-                          updateMember(m.id!, { fixedBonus: Number(e.target.value) as any })
-                        }
-                      />
-                    </td>
-                    <td className="py-3 px-3 w-[240px]">
-                      <input
-                        type="number"
-                        className="input w-full"
-                        value={m.fixedPayout ?? 0}
-                        disabled={session.distributionMode !== "ADJUSTABLE"}
-                        onChange={(e) =>
-                          updateMember(m.id!, { fixedPayout: Number(e.target.value) })
-                        }
-                      />
-                    </td>
-                    <td className="py-3 px-3 text-right">
-                      <button
-                        className="text-red-400 text-xl leading-none"
-                        onClick={() => removeMember(m.id!)}
-                        title={t.remove}
-                      >
-                        🗑
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <MembersTable
+        members={session.members}
+        individualExpenses={session.individualExpenses ?? []}
+        result={result}
+        showRole={showRole}
+        distributionMode={session.distributionMode}
+        feeByPayer={feeByPayer}
+        lang={lang}
+        t={t}
+        format={format}
+        onAddMember={addMember}
+        updateMember={updateMember}
+        removeMember={removeMember}
+        addIndividualExpense={addIndividualExpense}
+        updateIndividualExpense={updateIndividualExpense}
+        removeIndividualExpense={removeIndividualExpense}
+      />
 
       <div className="glass p-6 space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
