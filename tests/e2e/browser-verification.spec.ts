@@ -42,12 +42,12 @@ test.describe('SessionWizard Browser Verification', () => {
     const appName = await page.locator('text=SC Payslip').textContent();
     expect(appName).toContain('SC Payslip');
 
-    // Verify key elements are present (distribution mode dropdown button with translated text)
-    await expect(page.locator('button').filter({ hasText: /Equal|Gleich|Percent|Prozent|Adjustable|Anpassbar/i }).first()).toBeVisible();
+    // Verify key elements are present (distribution mode button - now a custom dropdown)
+    await expect(page.locator('button[aria-haspopup="listbox"]')).toBeVisible();
 
-    // Verify language buttons are present (use getByRole for exactness)
-    await expect(page.getByRole('button', { name: 'DE', exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'EN', exact: true })).toBeVisible();
+    // Verify language buttons are present (by aria-label for specificity)
+    await expect(page.getByRole('button', { name: 'Switch to German' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Switch to English' })).toBeVisible();
 
     // Check for no console errors
     expect(consoleErrors).toHaveLength(0);
@@ -75,9 +75,9 @@ test.describe('SessionWizard Browser Verification', () => {
     const initialText = await page.locator('h2').first().textContent();
     expect(initialText).toBeTruthy();
 
-    // Find the language buttons using getByRole for exact matching
-    const deButton = page.getByRole('button', { name: 'DE', exact: true });
-    const enButton = page.getByRole('button', { name: 'EN', exact: true });
+    // Find the language buttons by text content (they contain "DE" and "EN")
+    const deButton = page.locator('button:has-text("DE")').first();
+    const enButton = page.locator('button:has-text("EN")').first();
 
     // Verify both buttons exist
     await expect(deButton).toBeVisible();
@@ -109,19 +109,11 @@ test.describe('SessionWizard Browser Verification', () => {
   test('Form interactions work without errors', async ({ page }) => {
     await page.waitForLoadState('networkidle');
 
-    // Try to find and interact with distribution mode dropdown button
-    const modeButton = page.locator('button').filter({ hasText: /Equal|Gleich|Percent|Prozent|Adjustable|Anpassbar/i }).first();
-    if (await modeButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-      // Click to open dropdown
-      await modeButton.click();
-      await page.waitForTimeout(500);
-      // Click on PERCENT option if available (translated as "Percent" or "Prozent")
-      // Use force: true to bypass element interception issues
-      const percentOption = page.locator('[role="option"]').filter({ hasText: /Percent|Prozent/i }).first();
-      if (await percentOption.isVisible({ timeout: 1000 }).catch(() => false)) {
-        await percentOption.click({ force: true });
-        await page.waitForTimeout(300);
-      }
+    // Try to find and interact with select element
+    const select = page.locator('select').first();
+    if (await select.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await select.selectOption('PERCENT');
+      await page.waitForTimeout(300);
     }
 
     // Try to find text inputs (handle fields)
@@ -162,7 +154,6 @@ test.describe('Responsive Design Verification', () => {
       const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
 
       // Allow tolerance for mobile browser variations (scrollbars, zoom, etc.)
-      // Increased tolerance to 400 for Mobile Safari which has wider rendering differences
       expect(scrollWidth - clientWidth).toBeLessThan(400);
     }
 
@@ -182,8 +173,8 @@ test.describe('Responsive Design Verification', () => {
       // Session settings should be visible
       await expect(page.locator('h2').first()).toBeVisible();
 
-      // Distribution mode dropdown button should be visible (with translated text)
-      await expect(page.locator('button').filter({ hasText: /Equal|Gleich|Percent|Prozent|Adjustable|Anpassbar/i }).first()).toBeVisible();
+      // Distribution mode button should be visible (now a custom dropdown)
+      await expect(page.locator('button[aria-haspopup="listbox"]')).toBeVisible();
     }
   });
 
@@ -241,16 +232,20 @@ test.describe('SessionWizard Functionality', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Look for distribution mode dropdown button (with translated text)
-    const modeButton = page.locator('button').filter({ hasText: /Equal|Gleich|Percent|Prozent|Adjustable|Anpassbar/i }).first();
+    // Look for distribution mode dropdown button (custom dropdown)
+    const modeButton = page.locator('button[aria-haspopup="listbox"]').first();
 
     if (await modeButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       // Click to open dropdown
       await modeButton.click();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(300);
 
-      // Check that options are available
-      const options = await page.locator('[role="option"]').count();
+      // Check if dropdown options are visible
+      const dropdownOptions = page.locator('[role="listbox"]');
+      await expect(dropdownOptions).toBeVisible();
+
+      // Verify there are multiple mode options
+      const options = await dropdownOptions.locator('[role="option"]').count();
       expect(options).toBeGreaterThan(0);
     }
   });

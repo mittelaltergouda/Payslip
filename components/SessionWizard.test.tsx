@@ -121,7 +121,7 @@ describe('SessionWizard - Language Switching', () => {
     const eingabeTexts = screen.getAllByText('Eingabe');
     expect(eingabeTexts.length).toBeGreaterThan(0);
 
-    const enButton = screen.getByRole('button', { name: 'EN' });
+    const enButton = screen.getByRole('button', { name: /Switch to English/i });
     fireEvent.click(enButton);
 
     const membersTexts = screen.getAllByText('Members');
@@ -135,7 +135,7 @@ describe('SessionWizard - Language Switching', () => {
     const membersTexts = screen.getAllByText('Members');
     expect(membersTexts.length).toBeGreaterThan(0);
 
-    const deButton = screen.getByRole('button', { name: 'DE' });
+    const deButton = screen.getByRole('button', { name: /Switch to German/i });
     fireEvent.click(deButton);
 
     const eingabeTexts = screen.getAllByText('Eingabe');
@@ -149,7 +149,7 @@ describe('SessionWizard - Language Switching', () => {
     expect(screen.getByText('Session Einstellungen')).toBeInTheDocument();
     expect(screen.getByText('Verteilungsmodus')).toBeInTheDocument();
 
-    const enButton = screen.getByRole('button', { name: 'EN' });
+    const enButton = screen.getByRole('button', { name: /Switch to English/i });
     fireEvent.click(enButton);
 
     expect(screen.getByText('Session Settings')).toBeInTheDocument();
@@ -470,12 +470,13 @@ describe('SessionWizard - Results Display', () => {
   it('should display member results table with all members', () => {
     render(<SessionWizard />);
 
-    const resultsSection = screen.getByText('Gesamt').closest('div');
+    // Results section renders and contains member results
+    const payoutHeadings = screen.getAllByText('Payout');
+    expect(payoutHeadings.length).toBeGreaterThan(0);
 
-    if (resultsSection) {
-      const tables = resultsSection.querySelectorAll('table');
-      expect(tables.length).toBeGreaterThan(0);
-    }
+    // Check that member results table exists
+    const tables = screen.getAllByRole('table');
+    expect(tables.length).toBeGreaterThan(0);
   });
 });
 
@@ -523,7 +524,7 @@ describe('SessionWizard - Integration Scenarios', () => {
   it('should persist language preference across interactions', () => {
     render(<SessionWizard />);
 
-    const enButton = screen.getByRole('button', { name: 'EN' });
+    const enButton = screen.getByRole('button', { name: /Switch to English/i });
     fireEvent.click(enButton);
 
     const addButton = screen.getByRole('button', { name: '+ Member' });
@@ -906,13 +907,17 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should handle rapid language switching', () => {
       render(<SessionWizard />);
 
-      const enButton = screen.getByRole('button', { name: 'EN' });
-      const deButton = screen.getByRole('button', { name: 'DE' });
+      const enButton = screen.getByRole('button', { name: /Switch to English/i });
+      fireEvent.click(enButton);
 
-      fireEvent.click(enButton);
+      const deButton = screen.getByRole('button', { name: /Switch to German/i });
       fireEvent.click(deButton);
-      fireEvent.click(enButton);
-      fireEvent.click(deButton);
+
+      const enButton2 = screen.getByRole('button', { name: /Switch to English/i });
+      fireEvent.click(enButton2);
+
+      const deButton2 = screen.getByRole('button', { name: /Switch to German/i });
+      fireEvent.click(deButton2);
 
       const eingabeTexts = screen.getAllByText('Eingabe');
       expect(eingabeTexts.length).toBeGreaterThan(0);
