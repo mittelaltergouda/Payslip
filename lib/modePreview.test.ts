@@ -1,5 +1,5 @@
-import { calculateModePreviews, ModePreviewResult, ModePreviews } from './modePreview';
-import { SessionInput } from './types';
+import { calculateModePreviews } from './modePreview';
+import type { SessionInput } from './types';
 
 describe('calculateModePreviews', () => {
   it('should calculate previews for all three distribution modes', () => {

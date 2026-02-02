@@ -92,7 +92,9 @@ export const sessionSchema = z
   .refine(
     (data) => {
       // In PERCENT mode, validate that percentShare values sum to 100%
-      if (data.distributionMode !== "PERCENT") return true;
+      if (data.distributionMode !== "PERCENT") {
+        return true;
+      }
 
       const activeMembers = data.members.filter((m) => m.active !== false);
       const totalPercentShare = activeMembers.reduce((sum, member) => {
@@ -109,7 +111,9 @@ export const sessionSchema = z
   .refine(
     (data) => {
       // In PERCENT mode, all active members must have percentShare defined
-      if (data.distributionMode !== "PERCENT") return true;
+      if (data.distributionMode !== "PERCENT") {
+        return true;
+      }
 
       const activeMembers = data.members.filter((m) => m.active !== false);
       return activeMembers.every((member) => member.percentShare != null);
