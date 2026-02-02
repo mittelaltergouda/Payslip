@@ -1,11 +1,11 @@
 # SC Payslip
 
-## Überblick
+## Overview
 - **Stack**: Next.js (App Router) + TypeScript + TailwindCSS.
 - **API**: Next.js Route Handlers (REST), Prisma ORM, PostgreSQL.
-- **Calc Engine**: `/lib/calc/` modular calculation engine mit rein funktionaler Berechnung (9 domain-specific modules).
-- **Frontend**: Landing + Wizard + Result/Payslip in `app/page.tsx` mit Client-Komponente `SessionWizard`.
-- **Persistenz**: Prisma Schema in `prisma/schema.prisma`; share links via `ExportToken`.
+- **Calc Engine**: `/lib/calc/` modular calculation engine with pure functional computation (9 domain-specific modules).
+- **Frontend**: Landing + Wizard + Result/Payslip in `app/page.tsx` with client component `SessionWizard`.
+- **Persistence**: Prisma Schema in `prisma/schema.prisma`; share links via `ExportToken`.
 
 ## Domänenmodell
 - `Session`: name, type (enum), currency, totalRevenue (aus Member-Revenue aggregiert), taxEnabled, taxRate, distributionMode, timestamps.
