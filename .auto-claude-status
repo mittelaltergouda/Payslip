@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "036-localstorage-session-management-mit-auto-save-und-",
+  "spec": "039-modern-ui-system-mit-sam-palette-radix-components-",
   "state": "building",
   "subtasks": {
-    "completed": 16,
-    "total": 17,
+    "completed": 6,
+    "total": 34,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "End-to-End Testing",
+    "current": "Core UI Components (Radix-based)",
     "id": null,
-    "total": 2
+    "total": 8
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 14,
-    "started_at": "2026-02-02T15:04:57.114971"
+    "number": 8,
+    "started_at": "2026-02-02T18:35:50.479831"
   },
-  "last_update": "2026-02-02T16:16:48.619078"
+  "last_update": "2026-02-02T18:57:25.350160"
 }
