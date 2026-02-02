@@ -37,6 +37,22 @@ type SessionActionsProps = {
   onSessionsImported?: () => void;
 };
 
+// Translation strings
+const translations = {
+  de: {
+    exportAll: "Exportieren",
+    importSessions: "Importieren",
+    exportTooltip: "Alle Sessions als JSON herunterladen",
+    importTooltip: "Sessions aus JSON-Datei importieren",
+  },
+  en: {
+    exportAll: "Export All",
+    importSessions: "Import",
+    exportTooltip: "Download all sessions as JSON",
+    importTooltip: "Import sessions from JSON file",
+  },
+};
+
 /**
  * SessionActions Component
  *
@@ -66,23 +82,6 @@ export function SessionActions({
   onSessionsImported,
 }: SessionActionsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Translation strings
-  const translations = {
-    de: {
-      exportAll: "Exportieren",
-      importSessions: "Importieren",
-      exportTooltip: "Alle Sessions als JSON herunterladen",
-      importTooltip: "Sessions aus JSON-Datei importieren",
-    },
-    en: {
-      exportAll: "Export All",
-      importSessions: "Import",
-      exportTooltip: "Download all sessions as JSON",
-      importTooltip: "Import sessions from JSON file",
-    },
-  };
-
   const t = translations[lang];
 
   /**
