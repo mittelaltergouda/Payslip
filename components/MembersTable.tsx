@@ -2,6 +2,7 @@
 
 import { DistributionMode, IndividualExpenseInput, MemberInput, PayslipResult } from "@/lib/types";
 import { MemberRow } from "./MemberRow";
+import { MemberCard } from "./MemberCard";
 import { Button } from "@/components/ui/button";
 
 type Lang = "de" | "en";
@@ -90,7 +91,9 @@ export function MembersTable({
         <h3 className="text-xl font-display">{t.members}</h3>
         <Button onClick={onAddMember}>{t.addMember}</Button>
       </div>
-      <div className="overflow-x-auto">
+
+      {/* Desktop Table View - hidden on mobile */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="min-w-full text-base">
           <thead className="text-white/60 border-b border-white/10">
             <tr className="whitespace-nowrap">
@@ -133,6 +136,32 @@ export function MembersTable({
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View - shown on mobile, hidden on desktop */}
+      <div className="block md:hidden space-y-4">
+        {members.map((m) => {
+          const resultMember = result?.members.find((x) => x.memberId === m.id);
+          return (
+            <MemberCard
+              key={m.id}
+              member={m}
+              showRole={showRole}
+              distributionMode={distributionMode}
+              individualExpenses={individualExpenses}
+              resultMember={resultMember}
+              feeByPayer={feeByPayer}
+              lang={lang}
+              t={t}
+              format={format}
+              updateMember={updateMember}
+              removeMember={removeMember}
+              addIndividualExpense={addIndividualExpense}
+              updateIndividualExpense={updateIndividualExpense}
+              removeIndividualExpense={removeIndividualExpense}
+            />
+          );
+        })}
       </div>
     </div>
   );
