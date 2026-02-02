@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "027-enhance-eslint-configuration-with-stricter-rules",
+  "spec": "019-add-security-headers-in-next-js-configuration",
   "state": "building",
   "subtasks": {
-    "completed": 6,
+    "completed": 3,
     "total": 7,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Comprehensive Verification",
+    "current": "Security Headers Implementation",
     "id": null,
-    "total": 3
+    "total": 4
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 8,
-    "started_at": "2026-02-01T23:43:51.258955"
+    "number": 5,
+    "started_at": "2026-02-01T23:57:22.643681"
   },
-  "last_update": "2026-02-02T00:29:54.145887"
+  "last_update": "2026-02-02T00:14:22.518313"
 }
