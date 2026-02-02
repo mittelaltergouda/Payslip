@@ -1,9 +1,9 @@
 import React from 'react';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MembersTable } from './MembersTable';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DistributionMode, IndividualExpenseInput, MemberInput, PayslipResult } from '@/lib/types';
+import type { IndividualExpenseInput, MemberInput, PayslipResult } from '@/lib/types';
 
 // Mock translations
 const mockTranslationsDE = {
@@ -204,7 +204,7 @@ describe('MembersTable - Initial Rendering', () => {
         members={sampleMembers}
         individualExpenses={sampleIndividualExpenses}
         result={sampleResult}
-        showRole={true}
+        showRole
         distributionMode="EQUAL"
         feeByPayer={{}}
         lang="en"
@@ -322,7 +322,7 @@ describe('MembersTable - User Interactions', () => {
         members={sampleMembers}
         individualExpenses={sampleIndividualExpenses}
         result={sampleResult}
-        showRole={true}
+        showRole
         distributionMode="PERCENT"
         feeByPayer={{ 'member-1': 100 }}
         lang="de"

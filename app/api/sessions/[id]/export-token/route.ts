@@ -4,7 +4,8 @@
 // This endpoint generates secure export tokens for shareable read-only
 // session links. Uses cryptographically secure token generation.
 
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest} from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateSecureToken } from "@/lib/crypto";
 import { exportTokenSchema } from "@/app/api/sessions/validation";

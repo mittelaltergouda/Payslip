@@ -1,5 +1,5 @@
 import { calculateSummaryStatistics } from './calc';
-import { Transfer, MemberBreakdown } from './types';
+import type { Transfer, MemberBreakdown } from './types';
 
 // Test cases for calculateSummaryStatistics
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { SummaryStats } from './SummaryStats';
-import { PayslipResult } from '@/lib/types';
+import type { PayslipResult } from '@/lib/types';
 import { translations } from '@/lib/i18n/translations';
 import { describe, it, expect } from 'vitest';
 

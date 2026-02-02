@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { SessionHistory } from './SessionHistory';
-import { SavedSession } from '@/lib/types';
+import type { SavedSession } from '@/lib/types';
 import { describe, it, expect, vi } from 'vitest';
 
 // Mock saved sessions for testing
@@ -88,7 +88,7 @@ describe('SessionHistory - Initial Rendering', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[]}
         onLoad={mockOnLoad}
@@ -113,7 +113,7 @@ describe('SessionHistory - Initial Rendering', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[]}
         onLoad={mockOnLoad}
@@ -141,7 +141,7 @@ describe('SessionHistory - Initial Rendering', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[]}
         onLoad={mockOnLoad}
@@ -164,7 +164,7 @@ describe('SessionHistory - Empty State', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[]}
         onLoad={mockOnLoad}
@@ -184,7 +184,7 @@ describe('SessionHistory - Empty State', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[]}
         onLoad={mockOnLoad}
@@ -209,7 +209,7 @@ describe('SessionHistory - Display Sessions', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[mockSession1, mockSession2]}
         onLoad={mockOnLoad}
@@ -230,7 +230,7 @@ describe('SessionHistory - Display Sessions', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
@@ -255,7 +255,7 @@ describe('SessionHistory - Display Sessions', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
@@ -277,7 +277,7 @@ describe('SessionHistory - Display Sessions', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
@@ -300,7 +300,7 @@ describe('SessionHistory - Display Sessions', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[mockSession1, mockSession2]}
         onLoad={mockOnLoad}
@@ -321,7 +321,7 @@ describe('SessionHistory - Display Sessions', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[mockSession1, mockSession2]}
         onLoad={mockOnLoad}
@@ -348,7 +348,7 @@ describe('SessionHistory - Load Session', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[mockSession1, mockSession2]}
         onLoad={mockOnLoad}
@@ -372,7 +372,7 @@ describe('SessionHistory - Load Session', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[mockSession1, mockSession2]}
         onLoad={mockOnLoad}
@@ -396,7 +396,7 @@ describe('SessionHistory - Load Session', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
@@ -421,7 +421,7 @@ describe('SessionHistory - Delete Session', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
@@ -453,7 +453,7 @@ describe('SessionHistory - Delete Session', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
@@ -488,7 +488,7 @@ describe('SessionHistory - Delete Session', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
@@ -524,7 +524,7 @@ describe('SessionHistory - Delete Session', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
@@ -563,7 +563,7 @@ describe('SessionHistory - Delete Session', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
@@ -597,7 +597,7 @@ describe('SessionHistory - Delete Session', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[mockSession1, mockSession2]}
         onLoad={mockOnLoad}
@@ -637,7 +637,7 @@ describe('SessionHistory - Close Functionality', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[]}
         onLoad={mockOnLoad}
@@ -660,7 +660,7 @@ describe('SessionHistory - Close Functionality', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[]}
         onLoad={mockOnLoad}
@@ -682,7 +682,7 @@ describe('SessionHistory - Close Functionality', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[]}
         onLoad={mockOnLoad}
@@ -711,7 +711,7 @@ describe('SessionHistory - Close Functionality', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
@@ -735,7 +735,7 @@ describe('SessionHistory - Close Functionality', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
@@ -796,7 +796,7 @@ describe('SessionHistory - Accessibility', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[]}
         onLoad={mockOnLoad}
@@ -820,7 +820,7 @@ describe('SessionHistory - Accessibility', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
@@ -842,7 +842,7 @@ describe('SessionHistory - Accessibility', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[]}
         onLoad={mockOnLoad}
@@ -871,7 +871,7 @@ describe('SessionHistory - Edge Cases', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[sessionWithInvalidDate]}
         onLoad={mockOnLoad}
@@ -900,7 +900,7 @@ describe('SessionHistory - Edge Cases', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[sessionWithLongName]}
         onLoad={mockOnLoad}
@@ -923,7 +923,7 @@ describe('SessionHistory - Edge Cases', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[session1, session2]}
         onLoad={mockOnLoad}
@@ -952,7 +952,7 @@ describe('SessionHistory - Edge Cases', () => {
 
     render(
       <SessionHistory
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         sessions={[mockSession1]}
         onLoad={mockOnLoad}

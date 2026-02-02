@@ -6,7 +6,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ToastProvider } from './Toast';
 import * as sessionStorage from '@/lib/storage/sessionStorage';
 import * as useAutoSaveModule from '@/hooks/useAutoSave';
-import { SavedSession } from '@/lib/types';
+import type { SavedSession } from '@/lib/types';
 
 // Helper function to interact with custom distribution mode dropdown
 function getDistributionModeButton() {

@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { TransfersList } from './TransfersList';
-import { Transfer, MemberInput } from '@/lib/types';
+import type { Transfer, MemberInput } from '@/lib/types';
 import { translations } from '@/lib/i18n/translations';
 import { describe, it, expect } from 'vitest';
 

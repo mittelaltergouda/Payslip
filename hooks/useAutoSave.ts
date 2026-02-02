@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { SessionInput } from '../lib/types';
+import type { SessionInput } from '../lib/types';
 import { save } from '../lib/storage/sessionStorage';
 
 // ============================================================================
@@ -143,7 +143,7 @@ export function useAutoSave(
 
     // Set up debounced save
     debounceTimerRef.current = setTimeout(() => {
-      performSave();
+      void performSave();
       debounceTimerRef.current = null;
     }, DEBOUNCE_DELAY_MS);
 

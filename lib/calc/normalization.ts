@@ -16,11 +16,11 @@
  * @module lib/calc/normalization
  */
 
-import {
+import type {
   SessionInput,
   MemberInput,
 } from '../types';
-import {
+import type {
   NormalizedMember,
   NormalizedSessionInput,
 } from './types';

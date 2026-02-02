@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { PayslipResult, SessionInput, MemberInput } from "@/lib/types";
-import { Lang } from "@/lib/i18n/translations";
+import type { PayslipResult, SessionInput} from "@/lib/types";
+import type { Lang } from "@/lib/i18n/translations";
 import { SummaryStats } from "./SummaryStats";
 import { TransfersList } from "./TransfersList";
 
@@ -11,46 +10,6 @@ import { TransfersList } from "./TransfersList";
  */
 function format(amount: number, lang: Lang): string {
   return Math.round(amount).toLocaleString(lang === "de" ? "de-DE" : "en-US");
-}
-
-/**
- * Component that wraps a value and animates it when it changes.
- *
- * This component tracks the previous value using a ref and triggers
- * a highlight animation when the value changes. The animation is
- * defined in globals.css as 'value-changed' class.
- */
-function AnimatedValue({
-  value,
-  className = ""
-}: {
-  value: string | number;
-  className?: string;
-}) {
-  const [isAnimating, setIsAnimating] = useState(false);
-  const prevValueRef = useRef(value);
-
-  useEffect(() => {
-    // Check if value has changed
-    if (prevValueRef.current !== value) {
-      setIsAnimating(true);
-
-      // Remove animation class after animation completes (800ms duration)
-      const timer = setTimeout(() => {
-        setIsAnimating(false);
-      }, 800);
-
-      prevValueRef.current = value;
-
-      return () => clearTimeout(timer);
-    }
-  }, [value]);
-
-  return (
-    <span className={`inline-block ${isAnimating ? 'value-changed' : ''} ${className}`}>
-      {value}
-    </span>
-  );
 }
 
 /**
@@ -178,7 +137,7 @@ export function ResultsDisplay({
             <div className="space-y-2">
               <h4 className="font-semibold text-white/80">{t.members}</h4>
               <div className="overflow-x-auto">
-                <table className="min-w-full text-base" aria-label={t.members || "Member results"}>
+                <table className="min-w-full text-base">
                   <thead className="text-white/60 border-b border-white/10">
                     <tr className="whitespace-nowrap">
                       <th className="py-3 px-3 text-left">{t.handle}</th>
@@ -190,13 +149,7 @@ export function ResultsDisplay({
                       <th className="py-3 px-3 text-left">{t.netAfterFeesCol}</th>
                     </tr>
                   </thead>
-                  <tbody
-                    className="divide-y divide-white/10"
-                    role="status"
-                    aria-live="polite"
-                    aria-atomic="false"
-                    aria-relevant="additions text"
-                  >
+                  <tbody className="divide-y divide-white/10">
                     {result.members.map((m) => {
                       const taxes = feeByPayer[m.memberId] ?? 0;
                       const net = m.finalNet - taxes;
@@ -209,27 +162,18 @@ export function ResultsDisplay({
                       return (
                         <tr key={m.memberId}>
                           <td className="py-3 px-3">{m.handle}</td>
+                          <td className="py-3 px-3">{format(m.revenue, lang)}</td>
+                          <td className="py-3 px-3">{format(m.investment, lang)}</td>
                           <td className="py-3 px-3">
-                            <AnimatedValue value={format(m.revenue, lang)} />
-                          </td>
-                          <td className="py-3 px-3">
-                            <AnimatedValue value={format(m.investment, lang)} />
-                          </td>
-                          <td className="py-3 px-3">
-                            <AnimatedValue value={format(m.expenses, lang)} />
+                            {format(m.expenses, lang)}
                             <div className="text-xs text-white/60">{memberExp}</div>
                           </td>
-                          <td className="py-3 px-3">
-                            <AnimatedValue value={format(taxes, lang)} />
-                          </td>
-                          <td className="py-3 px-3">
-                            <AnimatedValue value={format(m.profitShare, lang)} />
-                          </td>
+                          <td className="py-3 px-3">{format(taxes, lang)}</td>
+                          <td className="py-3 px-3">{format(m.profitShare, lang)}</td>
                           <td className="py-3 px-3 font-semibold">
-                            <AnimatedValue
-                              value={format(net, lang)}
-                              className={net >= 0 ? "text-neon" : "text-red-400"}
-                            />
+                            <span className={net >= 0 ? "text-neon" : "text-red-400"}>
+                              {format(net, lang)}
+                            </span>
                           </td>
                         </tr>
                       );

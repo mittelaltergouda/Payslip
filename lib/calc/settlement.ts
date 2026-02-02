@@ -17,7 +17,7 @@
  * @module lib/calc/settlement
  */
 
-import { MemberBreakdown, Transfer } from '../types';
+import type { MemberBreakdown, Transfer } from '../types';
 
 // ============================================================================
 // BALANCE SETTLEMENT (Greedy Matching Algorithm)

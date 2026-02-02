@@ -29,7 +29,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="de" className={`${spaceGrotesk.variable} ${inter.variable}`}>
-      <body className="font-body">
+      <body>
         <ToastProvider>
           {children}
         </ToastProvider>

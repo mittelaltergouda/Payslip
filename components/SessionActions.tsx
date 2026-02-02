@@ -2,8 +2,7 @@
 
 import { useRef } from "react";
 import { exportAll, importAll } from "@/lib/storage/sessionStorage";
-import { Lang } from "@/lib/i18n/translations";
-import { Button } from "@/components/ui/button";
+import type { Lang } from "@/lib/i18n/translations";
 
 /**
  * Props for the SessionActions component
@@ -38,6 +37,22 @@ type SessionActionsProps = {
   onSessionsImported?: () => void;
 };
 
+// Translation strings
+const translations = {
+  de: {
+    exportAll: "Exportieren",
+    importSessions: "Importieren",
+    exportTooltip: "Alle Sessions als JSON herunterladen",
+    importTooltip: "Sessions aus JSON-Datei importieren",
+  },
+  en: {
+    exportAll: "Export All",
+    importSessions: "Import",
+    exportTooltip: "Download all sessions as JSON",
+    importTooltip: "Import sessions from JSON file",
+  },
+};
+
 /**
  * SessionActions Component
  *
@@ -67,23 +82,6 @@ export function SessionActions({
   onSessionsImported,
 }: SessionActionsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Translation strings
-  const translations = {
-    de: {
-      exportAll: "Exportieren",
-      importSessions: "Importieren",
-      exportTooltip: "Alle Sessions als JSON herunterladen",
-      importTooltip: "Sessions aus JSON-Datei importieren",
-    },
-    en: {
-      exportAll: "Export All",
-      importSessions: "Import",
-      exportTooltip: "Download all sessions as JSON",
-      importTooltip: "Import sessions from JSON file",
-    },
-  };
-
   const t = translations[lang];
 
   /**
@@ -184,63 +182,65 @@ export function SessionActions({
   return (
     <div className="flex items-center gap-3 flex-wrap">
       {/* Export Button */}
-      <Button
+      <button
         type="button"
-        variant="ghost"
-        size="sm"
         onClick={handleExport}
+        className="bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md px-4 py-2 text-white/90 hover:bg-white/10 transition-colors text-sm font-medium"
         title={t.exportTooltip}
         aria-label={t.exportTooltip}
       >
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-        {t.exportAll}
-      </Button>
+        <span className="flex items-center gap-2">
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          {t.exportAll}
+        </span>
+      </button>
 
       {/* Import Button */}
-      <Button
+      <button
         type="button"
-        variant="ghost"
-        size="sm"
         onClick={handleImportClick}
+        className="bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md px-4 py-2 text-white/90 hover:bg-white/10 transition-colors text-sm font-medium"
         title={t.importTooltip}
         aria-label={t.importTooltip}
       >
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-          />
-        </svg>
-        {t.importSessions}
-      </Button>
+        <span className="flex items-center gap-2">
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+            />
+          </svg>
+          {t.importSessions}
+        </span>
+      </button>
 
       {/* Hidden File Input */}
       <input
         ref={fileInputRef}
         type="file"
         accept="application/json,.json"
-        onChange={handleFileChange}
+        onChange={(e) => void handleFileChange(e)}
         className="hidden"
         aria-hidden="true"
       />

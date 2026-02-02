@@ -118,7 +118,7 @@ describe('SessionActions - Export Functionality', () => {
 
     // Mock link click
     mockClick = vi.fn();
-    const originalClick = HTMLAnchorElement.prototype.click;
+    const _originalClick = HTMLAnchorElement.prototype.click;
     HTMLAnchorElement.prototype.click = mockClick;
 
     // Mock exportAll
