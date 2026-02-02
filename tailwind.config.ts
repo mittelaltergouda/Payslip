@@ -65,7 +65,35 @@ const config: Config = {
       fontFamily: {
         display: ["var(--font-display)", "sans-serif"],
         body: ["var(--font-body)", "ui-sans-serif", "system-ui"]
-      }
+      },
+      // Transition utilities
+      transitionDuration: {
+        fast: "var(--duration-fast)",
+        normal: "var(--duration-normal)",
+        slow: "var(--duration-slow)",
+        slower: "var(--duration-slower)",
+      },
+      transitionTimingFunction: {
+        "in-out": "var(--ease-in-out)",
+        out: "var(--ease-out)",
+        in: "var(--ease-in)",
+      },
+      // Animation utilities
+      animation: {
+        "slide-in-right": "slide-in-from-right var(--duration-slow) var(--ease-out)",
+      },
+      keyframes: {
+        "slide-in-from-right": {
+          from: {
+            transform: "translateX(100%)",
+            opacity: "0",
+          },
+          to: {
+            transform: "translateX(0)",
+            opacity: "1",
+          },
+        },
+      },
     }
   },
   plugins: []
