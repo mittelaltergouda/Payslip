@@ -67,6 +67,8 @@ model SharedExpense {
 
   session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   members   SharedExpenseParticipant[]
+
+  @@index([sessionId])
 }
 
 model SharedExpenseParticipant {
