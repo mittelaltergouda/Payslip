@@ -1,6 +1,8 @@
 "use client";
 
 import { DistributionMode, IndividualExpenseInput, MemberBreakdown, MemberInput } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type Lang = "de" | "en";
 
@@ -140,33 +142,33 @@ export function MemberRow({
   return (
     <tr key={member.id} className="align-top">
       <td className="py-3 px-3">
-        <input
-          className="input w-36"
+        <Input
+          className="w-36"
           value={member.handle}
           onChange={(e) => updateMember(member.id!, { handle: e.target.value })}
         />
       </td>
       {showRole && (
         <td className="py-3 px-3">
-          <input
-            className="input w-32"
+          <Input
+            className="w-32"
             value={member.role ?? ""}
             onChange={(e) => updateMember(member.id!, { role: e.target.value })}
           />
         </td>
       )}
       <td className="py-3 px-3 w-[300px]">
-        <input
+        <Input
           type="number"
-          className="input w-full"
+          className="w-full"
           value={member.revenue ?? 0}
           onChange={(e) => updateMember(member.id!, { revenue: Number(e.target.value) })}
         />
       </td>
       <td className="py-3 px-3 w-[300px]">
-        <input
+        <Input
           type="number"
-          className="input w-full"
+          className="w-full"
           value={member.investment ?? 0}
           onChange={(e) => updateMember(member.id!, { investment: Number(e.target.value) })}
         />
@@ -175,29 +177,31 @@ export function MemberRow({
         <div className="flex flex-col gap-1 min-w-[220px]">
           {exp.map((e) => (
             <div key={e.id} className="flex gap-2 items-center">
-              <input
-                className="input flex-1"
+              <Input
+                className="flex-1"
                 value={e.label}
                 onChange={(ev) => updateIndividualExpense(e.id!, { label: ev.target.value })}
               />
-              <input
+              <Input
                 type="number"
-                className="input w-24"
+                className="w-24"
                 value={e.amount}
                 onChange={(ev) => updateIndividualExpense(e.id!, { amount: Number(ev.target.value) })}
               />
-              <button
-                className="text-red-400 text-xl leading-none"
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-red-400 h-8 w-8 p-0"
                 onClick={() => removeIndividualExpense(e.id!)}
                 title={t.remove}
               >
                 🗑
-              </button>
+              </Button>
             </div>
           ))}
-          <button className="btn text-xs" onClick={() => addIndividualExpense(member.id!)}>
+          <Button size="sm" onClick={() => addIndividualExpense(member.id!)}>
             {t.addExpense}
-          </button>
+          </Button>
           <div className="text-xs text-white/60">Σ {format(expSum, lang)}</div>
         </div>
       </td>
@@ -213,9 +217,9 @@ export function MemberRow({
         </span>
       </td>
       <td className="py-3 px-3 w-[160px]">
-        <input
+        <Input
           type="number"
-          className="input w-full"
+          className="w-full"
           value={member.percentShare ?? 0}
           disabled={distributionMode === "EQUAL"}
           onChange={(e) =>
@@ -224,9 +228,9 @@ export function MemberRow({
         />
       </td>
       <td className="py-3 px-3 w-[240px]">
-        <input
+        <Input
           type="number"
-          className="input w-full"
+          className="w-full"
           value={(member as any).fixedBonus ?? 0}
           disabled={distributionMode !== "ADJUSTABLE"}
           onChange={(e) =>
@@ -235,9 +239,9 @@ export function MemberRow({
         />
       </td>
       <td className="py-3 px-3 w-[240px]">
-        <input
+        <Input
           type="number"
-          className="input w-full"
+          className="w-full"
           value={member.fixedPayout ?? 0}
           disabled={distributionMode !== "ADJUSTABLE"}
           onChange={(e) =>
@@ -246,13 +250,15 @@ export function MemberRow({
         />
       </td>
       <td className="py-3 px-3 text-right">
-        <button
-          className="text-red-400 text-xl leading-none"
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-red-400 h-8 w-8 p-0"
           onClick={() => removeMember(member.id!)}
           title={t.remove}
         >
           🗑
-        </button>
+        </Button>
       </td>
     </tr>
   );

@@ -2,6 +2,7 @@
 
 import { DistributionMode, IndividualExpenseInput, MemberInput, PayslipResult } from "@/lib/types";
 import { MemberRow } from "./MemberRow";
+import { Button } from "@/components/ui/button";
 
 type Lang = "de" | "en";
 
@@ -87,7 +88,7 @@ export function MembersTable({
     <div className="glass p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-display">{t.members}</h3>
-        <button className="btn" onClick={onAddMember}>{t.addMember}</button>
+        <Button onClick={onAddMember}>{t.addMember}</Button>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full text-base">
