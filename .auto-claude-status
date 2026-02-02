@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "036-localstorage-session-management-mit-auto-save-und-",
+  "spec": "035-move-static-translation-map-outside-component-to-a",
   "state": "building",
   "subtasks": {
-    "completed": 16,
-    "total": 17,
+    "completed": 2,
+    "total": 5,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "End-to-End Testing",
+    "current": "Full Test Suite Verification",
     "id": null,
-    "total": 2
+    "total": 3
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 14,
-    "started_at": "2026-02-02T15:04:57.114971"
+    "number": 4,
+    "started_at": "2026-02-02T21:59:58.061782"
   },
-  "last_update": "2026-02-02T16:16:48.619078"
+  "last_update": "2026-02-02T22:07:47.497246"
 }
