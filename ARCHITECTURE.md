@@ -14,13 +14,13 @@
 - `IndividualExpense`: per member.
 - `ExportToken`: shareable read-only token.
 
-## API Endpunkte (MVP)
-- `POST /api/sessions`: erstellt Session inkl. Members + Expenses.
-- `GET /api/sessions/:id`: lädt Session.
-- `PUT /api/sessions/:id`: upsert Members/Expenses + Sessiondaten.
-- `GET /api/sessions/:id/payslip`: berechnet Payslip on-the-fly aus DB.
-- `POST /api/sessions/:id/share`: erzeugt Token.
-- `GET /api/share/:token`: liefert Session + Payslip für read-only View.
+## API Endpoints (MVP)
+- `POST /api/sessions`: creates Session including Members + Expenses.
+- `GET /api/sessions/:id`: loads Session.
+- `PUT /api/sessions/:id`: upserts Members/Expenses + Session data.
+- `GET /api/sessions/:id/payslip`: calculates Payslip on-the-fly from DB.
+- `POST /api/sessions/:id/share`: generates Token.
+- `GET /api/share/:token`: returns Session + Payslip for read-only View.
 
 ## Berechnung (lib/calc/)
 
