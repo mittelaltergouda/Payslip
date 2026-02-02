@@ -20,7 +20,7 @@ interface Ripple {
  */
 const buttonVariants = cva(
   // Base styles applied to all buttons - added relative and overflow-hidden for ripple effect
-  "relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-border-focus focus:ring-offset-2 focus:ring-offset-surface-base disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none",
+  "relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-border-focus focus:ring-offset-2 focus:ring-offset-surface-base disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none hover:scale-[1.02] active:scale-[0.98]",
   {
     variants: {
       /**
@@ -33,15 +33,15 @@ const buttonVariants = cva(
        */
       variant: {
         primary:
-          "bg-interaction-primary text-text-inverse hover:bg-interaction-primary-hover shadow-sm",
+          "bg-interaction-primary text-text-inverse hover:bg-interaction-primary-hover hover:shadow-lg hover:shadow-interaction-primary/20 shadow-sm",
         secondary:
-          "bg-interaction-secondary text-text-primary hover:bg-interaction-secondary-hover shadow-sm",
+          "bg-interaction-secondary text-text-primary hover:bg-interaction-secondary-hover hover:shadow-lg hover:shadow-interaction-secondary/20 shadow-sm",
         ghost:
-          "bg-white/5 border border-white/10 text-text-primary hover:bg-white/10 backdrop-blur-md",
+          "bg-white/5 border border-white/10 text-text-primary hover:bg-white/10 hover:border-white/20 hover:shadow-md backdrop-blur-md",
         danger:
-          "bg-feedback-error text-white hover:bg-feedback-error/90 shadow-sm",
+          "bg-feedback-error text-white hover:bg-feedback-error/90 hover:shadow-lg hover:shadow-feedback-error/20 shadow-sm",
         success:
-          "bg-feedback-success text-white hover:bg-feedback-success/90 shadow-sm",
+          "bg-feedback-success text-white hover:bg-feedback-success/90 hover:shadow-lg hover:shadow-feedback-success/20 shadow-sm",
       },
       /**
        * Size variants for different contexts

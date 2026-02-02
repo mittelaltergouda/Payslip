@@ -97,21 +97,21 @@ export function MembersTable({
         <table className="min-w-full text-base">
           <thead className="text-white/60 border-b border-white/10">
             <tr className="whitespace-nowrap">
-              <th className="py-3 px-3 text-left">{t.handle}</th>
-              {showRole && <th className="py-3 px-3 text-left">{t.role}</th>}
-              <th className="py-3 px-3 text-left">{t.revenueLabel}</th>
-              <th className="py-3 px-3 text-left">{t.investmentLabel}</th>
-              <th className="py-3 px-3 text-left">{t.expensesLabel}</th>
-              <th className="py-3 px-3 text-left">{t.taxesLabel}</th>
-              <th className="py-3 px-3 text-left">{t.profitShareCol}</th>
-              <th className="py-3 px-3 text-left">{t.netAfterFeesCol}</th>
-              <th className="py-3 px-3 text-left">{t.percentShare}</th>
-              <th className="py-3 px-3 text-left">{t.fixedBonus}</th>
-              <th className="py-3 px-3 text-left">{t.fixedPayout}</th>
+              <th className="py-3 px-3 text-left transition-colors duration-200">{t.handle}</th>
+              {showRole && <th className="py-3 px-3 text-left transition-colors duration-200">{t.role}</th>}
+              <th className="py-3 px-3 text-left transition-colors duration-200">{t.revenueLabel}</th>
+              <th className="py-3 px-3 text-left transition-colors duration-200">{t.investmentLabel}</th>
+              <th className="py-3 px-3 text-left transition-colors duration-200">{t.expensesLabel}</th>
+              <th className="py-3 px-3 text-left transition-colors duration-200">{t.taxesLabel}</th>
+              <th className="py-3 px-3 text-left transition-colors duration-200">{t.profitShareCol}</th>
+              <th className="py-3 px-3 text-left transition-colors duration-200">{t.netAfterFeesCol}</th>
+              <th className="py-3 px-3 text-left transition-colors duration-200">{t.percentShare}</th>
+              <th className="py-3 px-3 text-left transition-colors duration-200">{t.fixedBonus}</th>
+              <th className="py-3 px-3 text-left transition-colors duration-200">{t.fixedPayout}</th>
               <th />
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/10">
+          <tbody className="divide-y divide-white/10 [&>tr]:transition-colors [&>tr]:duration-200 [&>tr:hover]:bg-white/[0.02]">
             {members.map((m) => {
               const resultMember = result?.members.find((x) => x.memberId === m.id);
               return (

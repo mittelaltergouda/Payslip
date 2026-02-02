@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
  */
 const inputVariants = cva(
   // Base styles applied to all inputs
-  "inline-flex w-full rounded-lg border font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-border-focus focus:ring-offset-2 focus:ring-offset-surface-base disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-white/[0.02] disabled:border-white/5 placeholder:text-text-muted",
+  "inline-flex w-full rounded-lg border font-medium transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-border-focus focus:ring-offset-2 focus:ring-offset-surface-base disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-white/[0.02] disabled:border-white/5 placeholder:text-text-muted",
   {
     variants: {
       /**
@@ -20,9 +20,9 @@ const inputVariants = cva(
        */
       variant: {
         default:
-          "bg-white/5 border-border-default text-text-primary hover:border-border-hover focus:border-border-focus",
+          "bg-white/5 border-border-default text-text-primary hover:bg-white/[0.08] hover:border-border-hover hover:shadow-sm focus:bg-white/5 focus:border-border-focus",
         error:
-          "bg-feedback-error-bg border-border-error text-text-primary focus:border-border-error focus:ring-border-error",
+          "bg-feedback-error-bg border-border-error text-text-primary hover:bg-feedback-error-bg/80 focus:border-border-error focus:ring-border-error",
       },
       /**
        * Size variants for different contexts
