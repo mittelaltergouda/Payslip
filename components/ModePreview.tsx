@@ -1,7 +1,7 @@
 "use client";
 
-import { ModePreviewResult } from "@/lib/modePreview";
-import { DistributionMode } from "@/lib/types";
+import type { ModePreviewResult } from "@/lib/modePreview";
+import type { DistributionMode } from "@/lib/types";
 
 /**
  * Props for the ModePreview component.

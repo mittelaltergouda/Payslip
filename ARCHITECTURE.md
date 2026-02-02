@@ -3,7 +3,7 @@
 ## Überblick
 - **Stack**: Next.js (App Router) + TypeScript + TailwindCSS.
 - **API**: Next.js Route Handlers (REST), Prisma ORM, PostgreSQL.
-- **Calc Engine**: `/lib/calc` mit rein funktionaler Berechnung.
+- **Calc Engine**: `/lib/calc/` modular calculation engine mit rein funktionaler Berechnung (9 domain-specific modules).
 - **Frontend**: Landing + Wizard + Result/Payslip in `app/page.tsx` mit Client-Komponente `SessionWizard`.
 - **Persistenz**: Prisma Schema in `prisma/schema.prisma`; share links via `ExportToken`.
 
@@ -22,17 +22,83 @@
 - `POST /api/sessions/:id/share`: erzeugt Token.
 - `GET /api/share/:token`: liefert Session + Payslip für read-only View.
 
-## Berechnung (lib/calc)
-1. Validierung (aktive Member, Percent=100 %).
-2. Totals: totalRevenue = Summe Member-Revenue (oder gegeben), investmentsTotal, saleRevenue, Shared/Individual Expenses Allocation (shared gleichmäßig auf Teilnehmer, default keine).
-3. Net Profit = saleRevenue - exp gesamt.
-4. Profitverteilung:
-   - **EQUAL**: gleich pro aktivem Member.
-   - **PERCENT**: gemäß percentShare.
-   - **ADJUSTABLE**: fixedPayout + fixedBonus zuerst, Rest equal; percentShares werden genutzt, falls gesetzt.
-5. Final je Member: investment + profitShare - expenses.
-6. Settlement: Greedy Matching Debtors/Creditors → Transfers; optional Tax-Gross-Up pro Transfer.
-7. Tax: gross = ceil(targetNet/(1-taxRate)); Fee = gross*taxRate; letzte Transfers pro Empfänger decken Rest.
+## Berechnung (lib/calc/)
+
+### Module Structure
+
+The calculation engine is organized into domain-specific modules under `lib/calc/`:
+
+| Module | Purpose | Lines | Exports |
+|--------|---------|-------|---------|
+| **types.ts** | Internal calculation types | ~30 | `NormalizedMember`, `NormalizedSessionInput` |
+| **validation.ts** | Input validation & constraint checking | ~150 | `validateSessionInput`, `validateNormalizedSession` |
+| **normalization.ts** | Data normalization & defaults | ~90 | `normalizeSessionInput`, `normalizeMember` |
+| **distribution.ts** | Profit distribution algorithms | ~215 | `distributeProfit` (EQUAL/PERCENT/ADJUSTABLE) |
+| **expenses.ts** | Shared & individual expense allocation | ~90 | `allocateSharedExpenses`, `allocateIndividualExpenses` |
+| **settlement.ts** | Balance settlement & transfer generation | ~105 | `settleBalances` (greedy matching algorithm) |
+| **tax.ts** | Tax gross-up calculations | ~100 | `applyTransferTaxes`, `calculateGrossAmount`, `calculateFeeAmount` |
+| **statistics.ts** | Summary statistics (min/max/avg payouts) | ~60 | `calculateSummaryStatistics` |
+| **index.ts** | Main orchestrator & public API | ~210 | `calculatePayslip` (main entry point) |
+
+**Total:** ~1050 lines (previously monolithic `calc.ts`)
+
+The original `lib/calc.ts` now acts as a **barrel export** for backward compatibility, re-exporting from `lib/calc/index.ts`.
+
+### Calculation Flow
+
+1. **Validation** (`validation.ts`): Checks active members, percent shares sum to 100%, valid tax rate, non-negative values.
+2. **Normalization** (`normalization.ts`): Applies defaults to optional fields, generates member IDs, ensures consistent data structure.
+3. **Totals Calculation** (`index.ts`):
+   - `totalRevenue` = Sum of member revenues (or explicitly provided)
+   - `totalInvestments` = Sum of all member investments
+   - `saleRevenue` = totalRevenue - totalInvestments
+4. **Expense Allocation** (`expenses.ts`):
+   - Shared expenses distributed equally among participants
+   - Individual expenses allocated directly to members
+5. **Net Profit** (`index.ts`): saleRevenue - total expenses
+6. **Profit Distribution** (`distribution.ts`):
+   - **EQUAL**: Split equally among active members
+   - **PERCENT**: Distributed proportionally by `percentShare`
+   - **ADJUSTABLE**: `fixedPayout` + `fixedBonus` first, remainder split equally (or by percentShare if set)
+7. **Member Breakdowns** (`index.ts`): `finalNet = investment + profitShare - expenses`
+8. **Settlement** (`settlement.ts`): Greedy matching algorithm pairs largest debtors with largest creditors to minimize transfers
+9. **Tax Gross-Up** (`tax.ts`): `gross = ceil(targetNet / (1 - taxRate))`; fee = gross × taxRate
+10. **Summary Statistics** (`statistics.ts`): Calculates min/max/average payouts, transfer counts, highest/lowest earners
+
+### Benefits of Modular Structure
+
+**Maintainability:**
+- Each module has a single, well-defined responsibility
+- Easier to locate and modify specific calculation logic
+- Reduced cognitive load when reading code (9 focused modules vs 1 monolithic file)
+
+**Testability:**
+- Modules can be tested independently with focused unit tests
+- Easier to mock dependencies for integration testing
+- Clear separation of concerns enables better test isolation
+
+**Collaboration:**
+- Reduced merge conflicts (changes isolated to specific modules)
+- Easier code reviews (smaller, focused changesets)
+- New contributors can understand domain logic incrementally
+
+**Extensibility:**
+- New distribution modes can be added to `distribution.ts` without touching other logic
+- Tax calculations can be enhanced in `tax.ts` independently
+- Clear extension points for future features (e.g., weighted expense allocation in `expenses.ts`)
+
+### Which Module to Modify?
+
+| Task | Module | Example |
+|------|--------|---------|
+| Add new validation rule | `validation.ts` | Validate custom member field |
+| Change default values | `normalization.ts` | Set default role or investment |
+| Add distribution mode | `distribution.ts` | Implement WEIGHTED mode |
+| Change expense splitting logic | `expenses.ts` | Support weighted shared expenses |
+| Modify transfer algorithm | `settlement.ts` | Implement priority-based settlement |
+| Update tax calculation | `tax.ts` | Add tiered tax rates |
+| Add new summary metrics | `statistics.ts` | Calculate median payout |
+| Change calculation flow | `index.ts` | Add pre-distribution hooks |
 
 ## UI-Fluss
 - Wizard sammelt Basisdaten, Members, Shared/Individual Expenses, Distribution Mode, Tax-Toggle.
@@ -105,7 +171,7 @@ The application will be available at `http://localhost:3000`.
 
 ### Test Suite Overview
 
-The project uses **Vitest** for unit testing and **Playwright** for end-to-end testing. Test coverage focuses on the core calculation engine (`lib/calc.ts`) with 90%+ coverage achieved.
+The project uses **Vitest** for unit testing and **Playwright** for end-to-end testing. Test coverage focuses on the core calculation engine (`lib/calc/` modules) with 90%+ coverage achieved.
 
 ### Test Commands
 
@@ -127,7 +193,7 @@ Coverage report will show:
 - Function coverage
 - Uncovered lines
 
-**Target**: `lib/calc.ts` should maintain **90%+ coverage**.
+**Target**: `lib/calc/` modules should maintain **90%+ coverage**.
 
 #### Run End-to-End Tests (Playwright)
 ```bash
@@ -272,7 +338,7 @@ Error: Type 'X' is not assignable to type 'Y'
 ```
 Error: Cannot find module './calc'
 ```
-- Ensure lib/calc.ts is properly compiled
+- Ensure lib/calc/ modules are properly compiled
 - Run: `npm run test` to see detailed error messages
 
-For more help, see the inline JSDoc comments in `lib/calc.ts` for detailed algorithm explanations.
+For more help, see the inline JSDoc comments in `lib/calc/` modules for detailed algorithm explanations. The main orchestrator is in `lib/calc/index.ts`.
