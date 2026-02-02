@@ -247,11 +247,12 @@ describe("Input - Error State", () => {
     expect(input).toHaveAttribute("aria-describedby", "help-text");
   });
 
-  it("should override aria-describedby with errorId when error is true", () => {
+  it("should combine aria-describedby with errorId when error is true", () => {
     render(<Input error errorId="error-message" aria-describedby="help-text" />);
 
     const input = screen.getByRole("textbox");
-    expect(input).toHaveAttribute("aria-describedby", "error-message");
+    // Error ID should come first for priority announcement, followed by help text
+    expect(input).toHaveAttribute("aria-describedby", "error-message help-text");
   });
 
   it("should not set aria-describedby when error is true but errorId is not provided", () => {

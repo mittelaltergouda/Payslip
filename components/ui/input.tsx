@@ -122,8 +122,23 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     // Automatically set variant to error if error prop is true
     const effectiveVariant = error ? "error" : variant;
 
-    // Determine aria-describedby value
-    const ariaDescribedBy = error && errorId ? errorId : props["aria-describedby"];
+    // Combine errorId with existing aria-describedby for better accessibility
+    // This ensures both hint text and error messages are accessible to screen readers
+    const ariaDescribedBy = React.useMemo(() => {
+      const ids: string[] = [];
+
+      // Add errorId first when in error state for priority announcement
+      if (error && errorId) {
+        ids.push(errorId);
+      }
+
+      // Preserve any existing aria-describedby IDs (e.g., hint text)
+      if (props["aria-describedby"]) {
+        ids.push(props["aria-describedby"]);
+      }
+
+      return ids.length > 0 ? ids.join(" ") : undefined;
+    }, [error, errorId, props["aria-describedby"]]);
 
     return (
       <input

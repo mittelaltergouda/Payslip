@@ -323,7 +323,8 @@ describe("FormField - ARIA Attributes", () => {
     );
 
     const input = screen.getByRole("textbox");
-    expect(input).toHaveAttribute("aria-describedby", "test-hint test-error");
+    // Error ID comes first for priority announcement, followed by hint
+    expect(input).toHaveAttribute("aria-describedby", "test-error test-hint");
   });
 
   it("should not set aria-describedby when no hint or error", () => {

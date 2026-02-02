@@ -178,7 +178,8 @@ export const FormField = React.forwardRef<HTMLInputElement, FormFieldProps>(
           id={id}
           ref={ref}
           error={!!error}
-          aria-describedby={ariaDescribedBy}
+          errorId={errorId}
+          aria-describedby={hintId}
           aria-required={required}
           {...inputProps}
         />
