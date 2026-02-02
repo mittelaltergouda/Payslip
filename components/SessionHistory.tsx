@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { SavedSession } from "@/lib/types";
 import { Lang } from "@/lib/i18n/translations";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 /**
  * Props for the SessionHistory component.
@@ -56,9 +62,9 @@ export interface SessionHistoryProps {
 }
 
 /**
- * SessionHistory component displays a sidebar overlay with a list of saved sessions.
- * Users can load or delete sessions. The sidebar can be closed by clicking outside
- * or pressing the Escape key.
+ * SessionHistory component displays a dialog with a list of saved sessions.
+ * Users can load or delete sessions. The dialog can be closed by clicking outside,
+ * pressing the Escape key, or clicking the close button (handled automatically by Dialog).
  *
  * @example
  * ```tsx
@@ -82,38 +88,7 @@ export function SessionHistory({
   lang,
   translations,
 }: SessionHistoryProps) {
-  const sidebarRef = useRef<HTMLDivElement>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-
-  // Handle Escape key to close sidebar
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-        setDeleteConfirmId(null);
-      }
-    };
-
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, onClose]);
-
-  // Handle click outside to close sidebar
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleClickOutside = (e: MouseEvent) => {
-      if (sidebarRef.current && !sidebarRef.current.contains(e.target as Node)) {
-        onClose();
-        setDeleteConfirmId(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen, onClose]);
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -144,47 +119,23 @@ export function SessionHistory({
     setDeleteConfirmId(null);
   };
 
-  if (!isOpen) return null;
+  // Handle dialog open/close state changes
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      onClose();
+      setDeleteConfirmId(null);
+    }
+  };
 
   return (
-    <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent size="lg" className="max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{translations.sessionHistory}</DialogTitle>
+        </DialogHeader>
 
-      {/* Sidebar */}
-      <div
-        ref={sidebarRef}
-        className="fixed top-0 right-0 h-full w-full max-w-md bg-night/95 border-l border-white/10 backdrop-blur-xl z-50 overflow-y-auto"
-      >
-        <div className="p-6 space-y-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-neon">
-              {translations.sessionHistory}
-            </h2>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg hover:bg-white/10 transition text-sand"
-              aria-label="Close sidebar"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-
-          {/* Sessions List */}
+        {/* Sessions List */}
+        <div className="space-y-4">
           {sessions.length === 0 ? (
             <div className="glass p-6 text-center">
               <p className="text-white/60">{translations.noSessions}</p>
@@ -263,7 +214,7 @@ export function SessionHistory({
             </div>
           )}
         </div>
-      </div>
-    </>
+      </DialogContent>
+    </Dialog>
   );
 }
