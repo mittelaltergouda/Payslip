@@ -22,7 +22,7 @@
 - `POST /api/sessions/:id/share`: generates Token.
 - `GET /api/share/:token`: returns Session + Payslip for read-only view.
 
-## Berechnung (lib/calc/)
+## Calculation (lib/calc/)
 
 ### Module Structure
 
