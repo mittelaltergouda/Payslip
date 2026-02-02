@@ -178,7 +178,7 @@ export function ResultsDisplay({
             <div className="space-y-2">
               <h4 className="font-semibold text-white/80">{t.members}</h4>
               <div className="overflow-x-auto">
-                <table className="min-w-full text-base">
+                <table className="min-w-full text-base" aria-label={t.members || "Member results"}>
                   <thead className="text-white/60 border-b border-white/10">
                     <tr className="whitespace-nowrap">
                       <th className="py-3 px-3 text-left">{t.handle}</th>
@@ -190,7 +190,13 @@ export function ResultsDisplay({
                       <th className="py-3 px-3 text-left">{t.netAfterFeesCol}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/10">
+                  <tbody
+                    className="divide-y divide-white/10"
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="false"
+                    aria-relevant="additions text"
+                  >
                     {result.members.map((m) => {
                       const taxes = feeByPayer[m.memberId] ?? 0;
                       const net = m.finalNet - taxes;

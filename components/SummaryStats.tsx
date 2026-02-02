@@ -103,7 +103,13 @@ export function SummaryStats({
   return (
     <div className={`space-y-2 ${className}`}>
       <h4 className="font-semibold text-white/80">{t.summary}</h4>
-      <div className="grid grid-cols-2 gap-3 text-sm">
+      <div
+        className="grid grid-cols-2 gap-3 text-sm"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        aria-label={t.summary || "Summary statistics"}
+      >
         <span className="text-white/70">{t.revenueLabel}</span>
         <span>{format(totalRevenue, lang)} {currency}</span>
         <span className="text-white/70">{t.investmentLabel}</span>
@@ -123,7 +129,13 @@ export function SummaryStats({
       {result.summaryStatistics && (
         <div className="space-y-2 mt-4">
           <h4 className="font-semibold text-white/80">{t.statistics}</h4>
-          <div className="grid grid-cols-2 gap-3 text-sm">
+          <div
+            className="grid grid-cols-2 gap-3 text-sm"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            aria-label={t.statistics || "Detailed statistics"}
+          >
             <span className="text-white/70">{t.minPayout}</span>
             <span>{format(result.summaryStatistics.minPayout, lang)} {currency}</span>
             <span className="text-white/70">{t.maxPayout}</span>
