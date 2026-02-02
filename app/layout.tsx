@@ -1,5 +1,6 @@
-import "./globals.css";
+﻿import "./globals.css";
 import type { Metadata } from "next";
+import { ToastProvider } from "@/components/Toast";
 import { Space_Grotesk, Inter } from "next/font/google";
 
 const spaceGrotesk = Space_Grotesk({
@@ -18,7 +19,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "SC Payslip",
-  description: "Teilt Profite, Kosten und Steuern fair auf — Star Citizen ready."
+  description: "Teilt Profite, Kosten und Steuern fair auf  Star Citizen ready."
 };
 
 export default function RootLayout({
@@ -27,8 +28,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="de" className={`${spaceGrotesk.variable} ${inter.variable}`}>
-      <body>{children}</body>
+    <html lang="de" className={${" "}}>
+      <body>
+        <ToastProvider>
+          {children}
+        </ToastProvider>
+      </body>
     </html>
   );
 }

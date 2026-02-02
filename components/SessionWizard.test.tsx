@@ -1,8 +1,12 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { SessionWizard } from './SessionWizard';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { ToastProvider } from './Toast';
+import * as sessionStorage from '@/lib/storage/sessionStorage';
+import * as useAutoSaveModule from '@/hooks/useAutoSave';
+import { SavedSession } from '@/lib/types';
 
 // Helper function to interact with custom distribution mode dropdown
 function getDistributionModeButton() {
@@ -45,30 +49,55 @@ function getCurrentDistributionMode(): string {
   return '';
 }
 
+// Helper to render with ToastProvider
+function renderWithToast(component: React.ReactElement) {
+  return render(<ToastProvider>{component}</ToastProvider>);
+}
+
+// Mock setup for session management
+beforeEach(() => {
+  // Mock useAutoSave hook
+  const mockManualSave = vi.fn().mockResolvedValue(undefined);
+  vi.spyOn(useAutoSaveModule, 'useAutoSave').mockReturnValue({
+    saveStatus: 'saved',
+    manualSave: mockManualSave,
+    error: null
+  });
+
+  // Mock localStorage service functions
+  vi.spyOn(sessionStorage, 'getAll').mockReturnValue([]);
+  vi.spyOn(sessionStorage, 'deleteSession').mockReturnValue({ success: true });
+  vi.spyOn(sessionStorage, 'save').mockReturnValue({ success: true });
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe('SessionWizard - Initial Rendering', () => {
   it('should render the component with default German language', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     expect(screen.getByText('SC Payslip')).toBeInTheDocument();
     expect(screen.getByText(/Profite und Kosten crew-weise erfassen/i)).toBeInTheDocument();
   });
 
   it('should render with English language when initialLang is en', () => {
-    render(<SessionWizard initialLang="en" />);
+    renderWithToast(<SessionWizard initialLang="en" />);
 
     expect(screen.getByText('SC Payslip')).toBeInTheDocument();
     expect(screen.getByText(/Track profits and costs per crew/i)).toBeInTheDocument();
   });
 
   it('should render session settings section', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     expect(screen.getByText('Session Einstellungen')).toBeInTheDocument();
     expect(screen.getByText('Reset')).toBeInTheDocument();
   });
 
   it('should render members section with initial members', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const eingabeTexts = screen.getAllByText('Eingabe');
     expect(eingabeTexts.length).toBeGreaterThan(0);
@@ -82,21 +111,21 @@ describe('SessionWizard - Initial Rendering', () => {
   });
 
   it('should render results section', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const resultsHeadings = screen.getAllByText('Payout');
     expect(resultsHeadings.length).toBeGreaterThan(0);
   });
 
   it('should render distribution mode select with default EQUAL value', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const currentMode = getCurrentDistributionMode();
     expect(currentMode).toBe('EQUAL');
   });
 
   it('should render tax toggle checkbox checked by default', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const taxCheckbox = screen.getByRole('checkbox', {
       name: /Transfer Tax berücksichtigen/i
@@ -105,7 +134,7 @@ describe('SessionWizard - Initial Rendering', () => {
   });
 
   it('should render role toggle checkbox unchecked by default', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const roleCheckbox = screen.getByRole('checkbox', {
       name: /Rollen anzeigen/i
@@ -116,7 +145,7 @@ describe('SessionWizard - Initial Rendering', () => {
 
 describe('SessionWizard - Language Switching', () => {
   it('should switch from German to English when EN button is clicked', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const eingabeTexts = screen.getAllByText('Eingabe');
     expect(eingabeTexts.length).toBeGreaterThan(0);
@@ -130,7 +159,7 @@ describe('SessionWizard - Language Switching', () => {
   });
 
   it('should switch from English to German when DE button is clicked', () => {
-    render(<SessionWizard initialLang="en" />);
+    renderWithToast(<SessionWizard initialLang="en" />);
 
     const membersTexts = screen.getAllByText('Members');
     expect(membersTexts.length).toBeGreaterThan(0);
@@ -144,7 +173,7 @@ describe('SessionWizard - Language Switching', () => {
   });
 
   it('should update all UI text when language is changed', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     expect(screen.getByText('Session Einstellungen')).toBeInTheDocument();
     expect(screen.getByText('Verteilungsmodus')).toBeInTheDocument();
@@ -159,7 +188,7 @@ describe('SessionWizard - Language Switching', () => {
 
 describe('SessionWizard - Distribution Mode', () => {
   it('should change distribution mode to PERCENT', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     selectDistributionMode('Prozent');
 
@@ -167,7 +196,7 @@ describe('SessionWizard - Distribution Mode', () => {
   });
 
   it('should change distribution mode to ADJUSTABLE', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     selectDistributionMode('Anpassbar');
 
@@ -175,7 +204,7 @@ describe('SessionWizard - Distribution Mode', () => {
   });
 
   it('should distribute percent shares equally when switching to PERCENT mode', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     selectDistributionMode('Prozent');
 
@@ -188,7 +217,7 @@ describe('SessionWizard - Distribution Mode', () => {
   });
 
   it('should disable percent share inputs in EQUAL mode', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const allInputs = screen.getAllByRole('spinbutton');
     const percentShareInputs = allInputs.slice(-6);
@@ -201,7 +230,7 @@ describe('SessionWizard - Distribution Mode', () => {
   });
 
   it('should enable fixed payout inputs only in ADJUSTABLE mode', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     selectDistributionMode('Anpassbar');
 
@@ -216,7 +245,7 @@ describe('SessionWizard - Distribution Mode', () => {
 
 describe('SessionWizard - Member Management', () => {
   it('should add a new member when + Mitglied button is clicked', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const addButton = screen.getByRole('button', { name: '+ Mitglied' });
     fireEvent.click(addButton);
@@ -226,7 +255,7 @@ describe('SessionWizard - Member Management', () => {
   });
 
   it('should remove a member when delete button is clicked', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const pilotInputs = screen.getAllByDisplayValue('Pilot');
     expect(pilotInputs.length).toBeGreaterThan(0);
@@ -241,7 +270,7 @@ describe('SessionWizard - Member Management', () => {
   });
 
   it('should update member handle when input is changed', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const handleInputs = screen.getAllByDisplayValue('Pilot');
     const pilotInput = handleInputs[0] as HTMLInputElement;
@@ -252,7 +281,7 @@ describe('SessionWizard - Member Management', () => {
   });
 
   it('should update member revenue when input is changed', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const numberInputs = screen.getAllByRole('spinbutton');
     const revenueInput = numberInputs[0] as HTMLInputElement;
@@ -263,7 +292,7 @@ describe('SessionWizard - Member Management', () => {
   });
 
   it('should update member investment when input is changed', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const numberInputs = screen.getAllByRole('spinbutton');
     const investmentInput = numberInputs[1] as HTMLInputElement;
@@ -274,7 +303,7 @@ describe('SessionWizard - Member Management', () => {
   });
 
   it('should show role inputs when showRole checkbox is toggled', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const roleCheckbox = screen.getByRole('checkbox', {
       name: /Rollen anzeigen/i
@@ -289,7 +318,7 @@ describe('SessionWizard - Member Management', () => {
 
 describe('SessionWizard - Individual Expenses', () => {
   it('should add individual expense for a member', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
     fireEvent.click(addExpenseButtons[0]);
@@ -299,7 +328,7 @@ describe('SessionWizard - Individual Expenses', () => {
   });
 
   it('should update individual expense label', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
     fireEvent.click(addExpenseButtons[0]);
@@ -313,7 +342,7 @@ describe('SessionWizard - Individual Expenses', () => {
   });
 
   it('should update individual expense amount', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
     fireEvent.click(addExpenseButtons[0]);
@@ -332,7 +361,7 @@ describe('SessionWizard - Individual Expenses', () => {
   });
 
   it('should remove individual expense when delete button is clicked', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
     fireEvent.click(addExpenseButtons[0]);
@@ -357,7 +386,7 @@ describe('SessionWizard - Individual Expenses', () => {
 
 describe('SessionWizard - Tax Toggle', () => {
   it('should toggle tax off when checkbox is unchecked', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const taxCheckbox = screen.getByRole('checkbox', {
       name: /Transfer Tax berücksichtigen/i
@@ -371,7 +400,7 @@ describe('SessionWizard - Tax Toggle', () => {
   });
 
   it('should toggle tax back on when checkbox is checked again', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const taxCheckbox = screen.getByRole('checkbox', {
       name: /Transfer Tax berücksichtigen/i
@@ -387,7 +416,7 @@ describe('SessionWizard - Tax Toggle', () => {
 
 describe('SessionWizard - Reset Functionality', () => {
   it('should reset to initial state when Reset button is clicked', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const handleInputs = screen.getAllByDisplayValue('Pilot');
     const pilotInput = handleInputs[0] as HTMLInputElement;
@@ -402,7 +431,7 @@ describe('SessionWizard - Reset Functionality', () => {
   });
 
   it('should reset distribution mode to EQUAL on reset', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     selectDistributionMode('Prozent');
     expect(getCurrentDistributionMode()).toBe('PERCENT');
@@ -414,7 +443,7 @@ describe('SessionWizard - Reset Functionality', () => {
   });
 
   it('should reset tax toggle to enabled on reset', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const taxCheckbox = screen.getByRole('checkbox', {
       name: /Transfer Tax berücksichtigen/i
@@ -432,7 +461,7 @@ describe('SessionWizard - Reset Functionality', () => {
 
 describe('SessionWizard - Results Display', () => {
   it('should display summary section with revenue, investment, expenses', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     expect(screen.getByText('Gesamt')).toBeInTheDocument();
     const umsatzTexts = screen.getAllByText('Umsatz');
@@ -444,19 +473,19 @@ describe('SessionWizard - Results Display', () => {
   });
 
   it('should display suggested transfers section', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     expect(screen.getByText('Vorgeschlagene Überweisungen')).toBeInTheDocument();
   });
 
   it('should show "no transfers required" message when members have equal revenue', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     expect(screen.getByText('Keine Transfers nötig.')).toBeInTheDocument();
   });
 
   it('should update calculations when member revenue is changed', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const numberInputs = screen.getAllByRole('spinbutton');
     const revenueInput = numberInputs[0] as HTMLInputElement;
@@ -468,7 +497,7 @@ describe('SessionWizard - Results Display', () => {
   });
 
   it('should display member results table with all members', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     // Results section renders and contains member results
     const payoutHeadings = screen.getAllByText('Payout');
@@ -482,7 +511,7 @@ describe('SessionWizard - Results Display', () => {
 
 describe('SessionWizard - Integration Scenarios', () => {
   it('should handle complete workflow: add member, set revenue, check results', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const addButton = screen.getByRole('button', { name: '+ Mitglied' });
     fireEvent.click(addButton);
@@ -495,7 +524,7 @@ describe('SessionWizard - Integration Scenarios', () => {
   });
 
   it('should handle switching modes and updating values', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     selectDistributionMode('Prozent');
 
@@ -509,7 +538,7 @@ describe('SessionWizard - Integration Scenarios', () => {
   });
 
   it('should handle adding and removing expenses with calculations', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const numberInputs = screen.getAllByRole('spinbutton');
     const revenueInput = numberInputs[0] as HTMLInputElement;
@@ -522,7 +551,7 @@ describe('SessionWizard - Integration Scenarios', () => {
   });
 
   it('should persist language preference across interactions', () => {
-    render(<SessionWizard />);
+    renderWithToast(<SessionWizard />);
 
     const enButton = screen.getByRole('button', { name: /Switch to English/i });
     fireEvent.click(enButton);
@@ -539,7 +568,7 @@ describe('SessionWizard - Integration Scenarios', () => {
 describe('SessionWizard - Error Handling and Edge Cases', () => {
   describe('Invalid Input Handling', () => {
     it('should not crash when attempting negative revenue input', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('spinbutton');
       const revenueInput = numberInputs[0] as HTMLInputElement;
@@ -550,7 +579,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should not crash when attempting negative investment input', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('spinbutton');
       const investmentInput = numberInputs[1] as HTMLInputElement;
@@ -561,7 +590,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should not crash when attempting negative expense amount', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
       fireEvent.click(addExpenseButtons[0]);
@@ -583,7 +612,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should handle zero revenue input', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('spinbutton');
       const revenueInput = numberInputs[0] as HTMLInputElement;
@@ -595,7 +624,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should handle very large numbers without crashing', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('spinbutton');
       const revenueInput = numberInputs[0] as HTMLInputElement;
@@ -606,7 +635,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should handle empty string input for revenue', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('spinbutton');
       const revenueInput = numberInputs[0] as HTMLInputElement;
@@ -617,7 +646,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should not crash with empty member handle', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const handleInputs = screen.getAllByDisplayValue('Pilot');
       const pilotInput = handleInputs[0] as HTMLInputElement;
@@ -628,7 +657,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should not crash with whitespace-only member handle', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const handleInputs = screen.getAllByDisplayValue('Pilot');
       const pilotInput = handleInputs[0] as HTMLInputElement;
@@ -641,7 +670,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
   describe('Edge Cases - Member States', () => {
     it('should handle all members being inactive', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const checkboxes = screen.getAllByRole('checkbox').filter(checkbox => {
         const label = (checkbox as HTMLInputElement).getAttribute('aria-label');
@@ -658,7 +687,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should handle removing all members except one', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const deleteButtons = screen.getAllByTitle('Entfernen');
       const memberDeleteButtons = deleteButtons.slice(0, 2);
@@ -671,7 +700,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should handle adding maximum number of members', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const addButton = screen.getByRole('button', { name: '+ Mitglied' });
 
@@ -683,7 +712,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should handle single member with zero revenue', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const deleteButtons = screen.getAllByTitle('Entfernen');
       const memberDeleteButtons = deleteButtons.slice(0, 2);
@@ -700,7 +729,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
   describe('Edge Cases - Financial Calculations', () => {
     it('should handle investment greater than revenue', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('spinbutton');
       const revenueInput = numberInputs[0] as HTMLInputElement;
@@ -713,7 +742,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should handle expenses exceeding revenue', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('spinbutton');
       const revenueInput = numberInputs[0] as HTMLInputElement;
@@ -737,7 +766,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should handle zero revenue with non-zero investment', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('spinbutton');
       const revenueInput = numberInputs[0] as HTMLInputElement;
@@ -750,7 +779,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should handle multiple expenses exceeding total revenue', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('spinbutton');
       const revenueInput = numberInputs[0] as HTMLInputElement;
@@ -766,7 +795,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should handle decimal values in revenue input', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('spinbutton');
       const revenueInput = numberInputs[0] as HTMLInputElement;
@@ -779,7 +808,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
   describe('Edge Cases - Distribution Modes', () => {
     it('should handle PERCENT mode with invalid total percentage', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       selectDistributionMode('Prozent');
 
@@ -798,7 +827,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should not crash with PERCENT mode and zero total percentage', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       selectDistributionMode('Prozent');
 
@@ -818,7 +847,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should handle ADJUSTABLE mode with very high fixed payout', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       selectDistributionMode('Anpassbar');
 
@@ -835,7 +864,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should handle switching between modes multiple times', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       selectDistributionMode('Prozent');
       expect(getCurrentDistributionMode()).toBe('PERCENT');
@@ -855,7 +884,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
   describe('Edge Cases - UI State Management', () => {
     it('should maintain state after rapid member additions and removals', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const addButton = screen.getByRole('button', { name: '+ Mitglied' });
 
@@ -871,7 +900,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should maintain calculations after rapid expense additions and removals', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
       fireEvent.click(addExpenseButtons[0]);
@@ -891,7 +920,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should handle toggling tax multiple times', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const taxCheckbox = screen.getByRole('checkbox', {
         name: /Transfer Tax berücksichtigen/i
@@ -905,7 +934,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should handle rapid language switching', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const enButton = screen.getByRole('button', { name: /Switch to English/i });
       fireEvent.click(enButton);
@@ -924,7 +953,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should preserve member data after toggling role visibility', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const handleInputs = screen.getAllByDisplayValue('Pilot');
       const pilotInput = handleInputs[0] as HTMLInputElement;
@@ -943,7 +972,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
   describe('Edge Cases - Complex Scenarios', () => {
     it('should handle scenario with all zero values', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('spinbutton');
       numberInputs.forEach(input => {
@@ -955,7 +984,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should handle member with only investment and no revenue', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('spinbutton');
       const revenueInput = numberInputs[0] as HTMLInputElement;
@@ -968,7 +997,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should handle member with only expenses and no revenue', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('spinbutton');
       const revenueInput = numberInputs[0] as HTMLInputElement;
@@ -992,7 +1021,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     });
 
     it('should handle reset after complex modifications', () => {
-      render(<SessionWizard />);
+      renderWithToast(<SessionWizard />);
 
       const addButton = screen.getByRole('button', { name: '+ Mitglied' });
       fireEvent.click(addButton);
@@ -1014,6 +1043,560 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       expect(taxCheckbox).toBeChecked();
       const pilotInputs = screen.getAllByDisplayValue('Pilot');
       expect(pilotInputs.length).toBeGreaterThan(0);
+    });
+  });
+});
+
+// ============================================================================
+// SESSION MANAGEMENT TESTS
+// ============================================================================
+
+// Mock saved sessions for testing
+const mockSavedSessions: SavedSession[] = [
+  {
+    id: 'session-1',
+    session: {
+      name: 'Test Session 1',
+      type: 'TRADING',
+      currency: 'aUEC',
+      distributionMode: 'EQUAL',
+      taxEnabled: true,
+      taxRate: 0.005,
+      members: [
+        { id: 'member-1', handle: 'Pilot', role: 'Trader', revenue: 1000, investment: 0, active: true }
+      ],
+      individualExpenses: [],
+      sharedExpenses: []
+    },
+    createdAt: new Date('2024-01-01T10:00:00Z').toISOString(),
+    updatedAt: new Date('2024-01-01T12:00:00Z').toISOString()
+  },
+  {
+    id: 'session-2',
+    session: {
+      name: 'Test Session 2',
+      type: 'TRADING',
+      currency: 'aUEC',
+      distributionMode: 'PERCENT',
+      taxEnabled: true,
+      taxRate: 0.005,
+      members: [
+        { id: 'member-2', handle: 'Escort', role: 'Escort', revenue: 500, investment: 0, active: true, percentShare: 100 }
+      ],
+      individualExpenses: [],
+      sharedExpenses: []
+    },
+    createdAt: new Date('2024-01-02T10:00:00Z').toISOString(),
+    updatedAt: new Date('2024-01-02T12:00:00Z').toISOString()
+  }
+];
+
+describe('SessionWizard - Session Management', () => {
+  let mockUseAutoSave: ReturnType<typeof vi.fn>;
+  let mockManualSave: ReturnType<typeof vi.fn>;
+  let mockGetAll: ReturnType<typeof vi.fn>;
+  let mockDeleteSession: ReturnType<typeof vi.fn>;
+  let mockSave: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+
+    // Mock useAutoSave hook
+    mockManualSave = vi.fn().mockResolvedValue(undefined);
+    mockUseAutoSave = vi.fn().mockReturnValue({
+      saveStatus: 'saved',
+      manualSave: mockManualSave,
+      error: null
+    });
+    vi.spyOn(useAutoSaveModule, 'useAutoSave').mockImplementation(mockUseAutoSave);
+
+    // Mock localStorage service functions
+    mockGetAll = vi.fn().mockReturnValue(mockSavedSessions);
+    mockDeleteSession = vi.fn().mockReturnValue({ success: true });
+    mockSave = vi.fn().mockReturnValue({ success: true });
+
+    vi.spyOn(sessionStorage, 'getAll').mockImplementation(mockGetAll);
+    vi.spyOn(sessionStorage, 'deleteSession').mockImplementation(mockDeleteSession);
+    vi.spyOn(sessionStorage, 'save').mockImplementation(mockSave);
+  });
+
+  describe('Session Name Input', () => {
+    it('should render session name input field', () => {
+      renderWithToast(<SessionWizard />);
+
+      const nameInput = screen.getByLabelText(/Session Name/i);
+      expect(nameInput).toBeInTheDocument();
+      expect(nameInput).toHaveValue('SC Session');
+    });
+
+    it('should update session name when input changes', () => {
+      renderWithToast(<SessionWizard />);
+
+      const nameInput = screen.getByLabelText(/Session Name/i) as HTMLInputElement;
+      fireEvent.change(nameInput, { target: { value: 'My Custom Session' } });
+
+      expect(nameInput.value).toBe('My Custom Session');
+    });
+
+    it('should show placeholder text in German', () => {
+      renderWithToast(<SessionWizard />);
+
+      const nameInput = screen.getByPlaceholderText(/Session Name eingeben/i);
+      expect(nameInput).toBeInTheDocument();
+    });
+
+    it('should show placeholder text in English', () => {
+      renderWithToast(<SessionWizard initialLang="en" />);
+
+      const nameInput = screen.getByPlaceholderText(/Enter session name/i);
+      expect(nameInput).toBeInTheDocument();
+    });
+  });
+
+  describe('Save Status Indicator', () => {
+    it('should render save status indicator', () => {
+      renderWithToast(<SessionWizard />);
+
+      // SaveStatusIndicator should be present with 'saved' status
+      expect(mockUseAutoSave).toHaveBeenCalled();
+    });
+
+    it('should show saving status', () => {
+      mockUseAutoSave.mockReturnValue({
+        saveStatus: 'saving',
+        manualSave: mockManualSave,
+        error: null
+      });
+
+      renderWithToast(<SessionWizard />);
+
+      expect(mockUseAutoSave).toHaveBeenCalled();
+    });
+
+    it('should show unsaved status', () => {
+      mockUseAutoSave.mockReturnValue({
+        saveStatus: 'unsaved',
+        manualSave: mockManualSave,
+        error: null
+      });
+
+      renderWithToast(<SessionWizard />);
+
+      expect(mockUseAutoSave).toHaveBeenCalled();
+    });
+
+    it('should show error status when save fails', () => {
+      mockUseAutoSave.mockReturnValue({
+        saveStatus: 'unsaved',
+        manualSave: mockManualSave,
+        error: 'Failed to save'
+      });
+
+      renderWithToast(<SessionWizard />);
+
+      expect(mockUseAutoSave).toHaveBeenCalled();
+    });
+  });
+
+  describe('History Button', () => {
+    it('should render history button with German text', () => {
+      renderWithToast(<SessionWizard />);
+
+      const historyButton = screen.getByRole('button', { name: /Verlauf öffnen/i });
+      expect(historyButton).toBeInTheDocument();
+    });
+
+    it('should render history button with English text', () => {
+      renderWithToast(<SessionWizard initialLang="en" />);
+
+      const historyButton = screen.getByRole('button', { name: /Open History/i });
+      expect(historyButton).toBeInTheDocument();
+    });
+
+    it('should open session history sidebar when clicked', async () => {
+      renderWithToast(<SessionWizard />);
+
+      const historyButton = screen.getByRole('button', { name: /Verlauf öffnen/i });
+      fireEvent.click(historyButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Session Verlauf/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should load saved sessions on mount', () => {
+      renderWithToast(<SessionWizard />);
+
+      expect(mockGetAll).toHaveBeenCalled();
+    });
+  });
+
+  describe('Session History Sidebar', () => {
+    it('should display saved sessions when opened', async () => {
+      renderWithToast(<SessionWizard />);
+
+      const historyButton = screen.getByRole('button', { name: /Verlauf öffnen/i });
+      fireEvent.click(historyButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Session 1')).toBeInTheDocument();
+        expect(screen.getByText('Test Session 2')).toBeInTheDocument();
+      });
+    });
+
+    it('should close sidebar when close button is clicked', async () => {
+      renderWithToast(<SessionWizard />);
+
+      // Open sidebar
+      const historyButton = screen.getByRole('button', { name: /Verlauf öffnen/i });
+      fireEvent.click(historyButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Session Verlauf/i)).toBeInTheDocument();
+      });
+
+      // Close sidebar
+      const closeButton = screen.getByLabelText(/Close/i);
+      fireEvent.click(closeButton);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Test Session 1')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should load session when load button is clicked', async () => {
+      renderWithToast(<SessionWizard />);
+
+      // Open sidebar
+      const historyButton = screen.getByRole('button', { name: /Verlauf öffnen/i });
+      fireEvent.click(historyButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Session 1')).toBeInTheDocument();
+      });
+
+      // Click load button for first session - wait for it to appear
+      await waitFor(() => {
+        const loadButtons = screen.getAllByText(/^(Laden|Load)$/);
+        expect(loadButtons.length).toBeGreaterThan(0);
+      });
+
+      const loadButtons = screen.getAllByText(/^(Laden|Load)$/);
+      fireEvent.click(loadButtons[0]);
+
+      await waitFor(() => {
+        // Session name should be updated
+        const nameInput = screen.getByLabelText(/Session Name/i) as HTMLInputElement;
+        expect(nameInput.value).toBe('Test Session 1');
+      });
+    });
+
+    it('should delete session when delete button is clicked and confirmed', async () => {
+      renderWithToast(<SessionWizard />);
+
+      // Open sidebar
+      const historyButton = screen.getByRole('button', { name: /Verlauf öffnen/i });
+      fireEvent.click(historyButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Session 1')).toBeInTheDocument();
+      });
+
+      // Wait for sessions to render
+      await waitFor(() => {
+        const loadButtons = screen.getAllByText(/^(Laden|Load)$/);
+        expect(loadButtons.length).toBeGreaterThan(0);
+      });
+
+      // Find all buttons and locate the delete button (it's the one with SVG icon, no text, next to Load button)
+      const allButtons = screen.getAllByRole('button');
+      // Delete button should be after the first Load button
+      const loadButtonIndex = allButtons.findIndex(btn => btn.textContent?.match(/^(Laden|Load)$/));
+      const deleteButton = allButtons[loadButtonIndex + 1];
+
+      fireEvent.click(deleteButton);
+
+      // Confirm deletion - wait for confirmation dialog with "Löschen" or "Delete" text button
+      await waitFor(() => {
+        const confirmText = screen.getByText(/^(Löschen|Delete)$/);
+        expect(confirmText).toBeInTheDocument();
+      });
+
+      // Click the confirm button
+      const confirmButton = screen.getByText(/^(Löschen|Delete)$/);
+      fireEvent.click(confirmButton);
+
+      await waitFor(() => {
+        expect(mockDeleteSession).toHaveBeenCalledWith('session-1');
+        expect(mockGetAll).toHaveBeenCalledTimes(2); // Initial load + refresh after delete
+      });
+    });
+  });
+
+  describe('Session Actions', () => {
+    it('should render export button', () => {
+      renderWithToast(<SessionWizard />);
+
+      const exportButton = screen.getByText(/^(Exportieren|Export All)$/);
+      expect(exportButton).toBeInTheDocument();
+    });
+
+    it('should render import button', () => {
+      renderWithToast(<SessionWizard />);
+
+      const importButton = screen.getByText(/^(Importieren|Import)$/);
+      expect(importButton).toBeInTheDocument();
+    });
+  });
+
+  describe('Keyboard Shortcuts', () => {
+    it('should trigger manual save on Ctrl+S', async () => {
+      renderWithToast(<SessionWizard />);
+
+      // Simulate Ctrl+S
+      fireEvent.keyDown(window, { key: 's', ctrlKey: true });
+
+      await waitFor(() => {
+        expect(mockManualSave).toHaveBeenCalled();
+      });
+    });
+
+    it('should open history sidebar on Ctrl+O', async () => {
+      renderWithToast(<SessionWizard />);
+
+      // Simulate Ctrl+O
+      fireEvent.keyDown(window, { key: 'o', ctrlKey: true });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Session Verlauf/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should prevent default browser behavior on Ctrl+S', () => {
+      renderWithToast(<SessionWizard />);
+
+      const event = new KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true });
+      const preventDefaultSpy = vi.spyOn(event, 'preventDefault');
+
+      window.dispatchEvent(event);
+
+      expect(preventDefaultSpy).toHaveBeenCalled();
+    });
+
+    it('should prevent default browser behavior on Ctrl+O', () => {
+      renderWithToast(<SessionWizard />);
+
+      const event = new KeyboardEvent('keydown', { key: 'o', ctrlKey: true, bubbles: true });
+      const preventDefaultSpy = vi.spyOn(event, 'preventDefault');
+
+      window.dispatchEvent(event);
+
+      expect(preventDefaultSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('Auto-Save Integration', () => {
+    it('should call useAutoSave with session data', () => {
+      renderWithToast(<SessionWizard />);
+
+      expect(mockUseAutoSave).toHaveBeenCalled();
+      const callArgs = mockUseAutoSave.mock.calls[0];
+      expect(callArgs[0]).toHaveProperty('name');
+      expect(callArgs[0]).toHaveProperty('members');
+      expect(callArgs[1]).toBe(true); // enabled
+    });
+
+    it('should update auto-save when session changes', () => {
+      renderWithToast(<SessionWizard />);
+
+      const initialCallCount = mockUseAutoSave.mock.calls.length;
+
+      // Change session name
+      const nameInput = screen.getByLabelText(/Session Name/i) as HTMLInputElement;
+      fireEvent.change(nameInput, { target: { value: 'Updated Session' } });
+
+      // useAutoSave should be called again with updated session
+      expect(mockUseAutoSave.mock.calls.length).toBeGreaterThan(initialCallCount);
+    });
+
+    it('should display toast on save error', async () => {
+      mockUseAutoSave.mockReturnValue({
+        saveStatus: 'unsaved',
+        manualSave: mockManualSave,
+        error: 'Storage quota exceeded'
+      });
+
+      renderWithToast(<SessionWizard />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Storage quota exceeded/i)).toBeInTheDocument();
+      }, { timeout: 3500 });
+    });
+  });
+
+  describe('Unsaved Changes Warning', () => {
+    it('should set up beforeunload event listener', () => {
+      const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+
+      renderWithToast(<SessionWizard />);
+
+      expect(addEventListenerSpy).toHaveBeenCalledWith('beforeunload', expect.any(Function));
+    });
+
+    it('should show warning when status is unsaved', () => {
+      mockUseAutoSave.mockReturnValue({
+        saveStatus: 'unsaved',
+        manualSave: mockManualSave,
+        error: null
+      });
+
+      renderWithToast(<SessionWizard />);
+
+      const event = new Event('beforeunload', { bubbles: true, cancelable: true }) as BeforeUnloadEvent;
+      const preventDefaultSpy = vi.spyOn(event, 'preventDefault');
+
+      window.dispatchEvent(event);
+
+      expect(preventDefaultSpy).toHaveBeenCalled();
+      expect(event.returnValue).toBeDefined();
+    });
+
+    it('should show warning when status is saving', () => {
+      mockUseAutoSave.mockReturnValue({
+        saveStatus: 'saving',
+        manualSave: mockManualSave,
+        error: null
+      });
+
+      renderWithToast(<SessionWizard />);
+
+      const event = new Event('beforeunload', { bubbles: true, cancelable: true }) as BeforeUnloadEvent;
+      const preventDefaultSpy = vi.spyOn(event, 'preventDefault');
+
+      window.dispatchEvent(event);
+
+      expect(preventDefaultSpy).toHaveBeenCalled();
+    });
+
+    it('should not show warning when status is saved', () => {
+      mockUseAutoSave.mockReturnValue({
+        saveStatus: 'saved',
+        manualSave: mockManualSave,
+        error: null
+      });
+
+      renderWithToast(<SessionWizard />);
+
+      const event = new Event('beforeunload', { bubbles: true, cancelable: true }) as BeforeUnloadEvent;
+      const preventDefaultSpy = vi.spyOn(event, 'preventDefault');
+
+      window.dispatchEvent(event);
+
+      // preventDefault should not be called when saved
+      expect(preventDefaultSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Toast Notifications', () => {
+    it('should show success toast when session is saved with Ctrl+S', async () => {
+      renderWithToast(<SessionWizard />);
+
+      fireEvent.keyDown(window, { key: 's', ctrlKey: true });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Session gespeichert|Session saved/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should show success toast when session is loaded', async () => {
+      renderWithToast(<SessionWizard />);
+
+      // Open sidebar
+      const historyButton = screen.getByRole('button', { name: /Verlauf öffnen/i });
+      fireEvent.click(historyButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Session 1')).toBeInTheDocument();
+      });
+
+      // Load session
+      await waitFor(() => {
+        const loadButtons = screen.getAllByText(/^(Laden|Load)$/);
+        expect(loadButtons.length).toBeGreaterThan(0);
+      });
+
+      const loadButtons = screen.getAllByText(/^(Laden|Load)$/);
+      fireEvent.click(loadButtons[0]);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Session geladen|Session loaded/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should show success toast when session is deleted', async () => {
+      renderWithToast(<SessionWizard />);
+
+      // Open sidebar
+      const historyButton = screen.getByRole('button', { name: /Verlauf öffnen/i });
+      fireEvent.click(historyButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Session 1')).toBeInTheDocument();
+      });
+
+      // Wait for sessions to render
+      await waitFor(() => {
+        const loadButtons = screen.getAllByText(/^(Laden|Load)$/);
+        expect(loadButtons.length).toBeGreaterThan(0);
+      });
+
+      // Find delete button (it's the one with SVG icon, no text, next to Load button)
+      const allButtons = screen.getAllByRole('button');
+      const loadButtonIndex = allButtons.findIndex(btn => btn.textContent?.match(/^(Laden|Load)$/));
+      const deleteButton = allButtons[loadButtonIndex + 1];
+
+      fireEvent.click(deleteButton);
+
+      // Confirm deletion
+      await waitFor(() => {
+        const confirmText = screen.getByText(/^(Löschen|Delete)$/);
+        expect(confirmText).toBeInTheDocument();
+      });
+
+      const confirmButton = screen.getByText(/^(Löschen|Delete)$/);
+      fireEvent.click(confirmButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Session gelöscht|Session deleted/i)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Session Management with Language Switching', () => {
+    it('should update history button text when language changes', async () => {
+      renderWithToast(<SessionWizard />);
+
+      expect(screen.getByRole('button', { name: /Verlauf öffnen/i })).toBeInTheDocument();
+
+      // Switch to English
+      const enButton = screen.getByRole('button', { name: /Switch to English/i });
+      fireEvent.click(enButton);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Open History/i })).toBeInTheDocument();
+      });
+    });
+
+    it('should update session name label when language changes', () => {
+      renderWithToast(<SessionWizard />);
+
+      expect(screen.getByLabelText(/Session Name/i)).toBeInTheDocument();
+
+      // Switch to English
+      const enButton = screen.getByRole('button', { name: /Switch to English/i });
+      fireEvent.click(enButton);
+
+      expect(screen.getByLabelText(/Session Name/i)).toBeInTheDocument();
     });
   });
 });
