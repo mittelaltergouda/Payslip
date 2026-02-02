@@ -74,11 +74,14 @@ export function SessionWizard({ initialLang = "de" }: Props) {
 
   const modePreviews = useMemo(() => calculateModePreviews(session), [session]);
 
-  const feeByPayer =
-    result?.suggestedTransfers.reduce<Record<string, number>>((acc, tr) => {
-      acc[tr.fromMemberId] = (acc[tr.fromMemberId] ?? 0) + tr.feeAmount;
-      return acc;
-    }, {}) ?? {};
+  const feeByPayer = useMemo(
+    () =>
+      result?.suggestedTransfers.reduce<Record<string, number>>((acc, tr) => {
+        acc[tr.fromMemberId] = (acc[tr.fromMemberId] ?? 0) + tr.feeAmount;
+        return acc;
+      }, {}) ?? {},
+    [result]
+  );
 
   // Load saved sessions on mount
   useEffect(() => {
