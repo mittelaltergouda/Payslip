@@ -52,6 +52,7 @@ export type MemberBreakdown = {
   memberId: string;
   handle: string;
   role?: string;
+  active?: boolean;
   revenue: number;
   investment: number;
   expenses: number;
