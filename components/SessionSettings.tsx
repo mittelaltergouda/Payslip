@@ -4,6 +4,15 @@ import { useState } from "react";
 import { DistributionMode, SessionInput } from "@/lib/types";
 import { ModePreview } from "./ModePreview";
 import { ModePreviewResult } from "@/lib/modePreview";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { Switch } from "./ui/switch";
+import { Checkbox } from "./ui/checkbox";
 
 /**
  * Props for the SessionSettings component.
@@ -101,7 +110,6 @@ export function SessionSettings({
   taxRate,
   className = "",
 }: SessionSettingsProps) {
-  const [isModeDropdownOpen, setIsModeDropdownOpen] = useState(false);
   const [hoveredMode, setHoveredMode] = useState<DistributionMode | null>(null);
 
   const getModeLabel = (mode: DistributionMode): string => {
@@ -132,57 +140,32 @@ export function SessionSettings({
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
-        {/* Distribution Mode Dropdown */}
+        {/* Distribution Mode Select */}
         <div className="flex flex-col gap-1 relative">
           <span className="text-sm text-white/70">{t.distribution}</span>
           <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsModeDropdownOpen(!isModeDropdownOpen)}
-              onBlur={() => {
-                // Delay closing to allow click events on options to fire
-                setTimeout(() => setIsModeDropdownOpen(false), 200);
-              }}
-              className="input w-full text-left flex items-center justify-between"
-              aria-haspopup="listbox"
-              aria-expanded={isModeDropdownOpen}
+            <Select
+              value={session.distributionMode}
+              onValueChange={(value) => onDistributionChange(value as DistributionMode)}
             >
-              <span>{getModeLabel(session.distributionMode)}</span>
-              <span className="text-white/50">
-                {isModeDropdownOpen ? "▲" : "▼"}
-              </span>
-            </button>
-
-            {isModeDropdownOpen && (
-              <div
-                className="absolute z-10 w-full bg-night border border-white/20 rounded-lg mt-1 shadow-lg overflow-hidden"
-                role="listbox"
-              >
+              <SelectTrigger>
+                <SelectValue placeholder={getModeLabel(session.distributionMode)} />
+              </SelectTrigger>
+              <SelectContent>
                 {(["EQUAL", "PERCENT", "ADJUSTABLE"] as DistributionMode[]).map(
                   (mode) => (
-                    <div
+                    <SelectItem
                       key={mode}
-                      role="option"
-                      aria-selected={session.distributionMode === mode}
+                      value={mode}
                       onMouseEnter={() => setHoveredMode(mode)}
                       onMouseLeave={() => setHoveredMode(null)}
-                      onClick={() => {
-                        onDistributionChange(mode);
-                        setIsModeDropdownOpen(false);
-                        setHoveredMode(null);
-                      }}
-                      className={`px-3 py-2 cursor-pointer transition-colors ${
-                        session.distributionMode === mode
-                          ? "bg-neon/20 text-neon"
-                          : "hover:bg-white/10 text-white/80"
-                      }`}
                     >
                       {getModeLabel(mode)}
-                    </div>
+                    </SelectItem>
                   )
                 )}
-              </div>
-            )}
+              </SelectContent>
+            </Select>
 
             {hoveredMode && hoveredMode !== session.distributionMode && (
               <ModePreview
@@ -200,21 +183,21 @@ export function SessionSettings({
         </div>
 
         {/* Tax Toggle */}
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
+        <label className="flex items-center gap-2 cursor-pointer">
+          <Switch
             checked={session.taxEnabled ?? true}
-            onChange={(e) => handleTaxToggle(e.target.checked)}
+            onCheckedChange={handleTaxToggle}
+            aria-label={t.taxToggle}
           />
           <span className="text-sm text-white/80">{t.taxToggle}</span>
         </label>
 
         {/* Role Toggle */}
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
+        <label className="flex items-center gap-2 cursor-pointer">
+          <Checkbox
             checked={showRole}
-            onChange={(e) => onShowRoleChange(e.target.checked)}
+            onCheckedChange={(checked) => onShowRoleChange(checked === true)}
+            aria-label={t.showRole}
           />
           <span className="text-sm text-white/80">{t.showRole}</span>
         </label>
