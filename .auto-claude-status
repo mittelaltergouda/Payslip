@@ -3,7 +3,7 @@
   "spec": "033-add-database-indexes-for-frequently-queried-foreig",
   "state": "building",
   "subtasks": {
-    "completed": 1,
+    "completed": 2,
     "total": 9,
     "in_progress": 1,
     "failed": 0
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 3,
+    "number": 4,
     "started_at": "2026-02-02T22:00:00.523035"
   },
-  "last_update": "2026-02-02T22:05:41.763351"
+  "last_update": "2026-02-02T22:06:47.013322"
 }

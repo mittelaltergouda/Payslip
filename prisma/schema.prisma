@@ -90,6 +90,9 @@ model IndividualExpense {
 
   session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   member    Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([memberId])
 }
 
 model ExportToken {
