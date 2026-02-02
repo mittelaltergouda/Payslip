@@ -20,7 +20,7 @@
 - `PUT /api/sessions/:id`: upserts Members/Expenses + Session data.
 - `GET /api/sessions/:id/payslip`: calculates Payslip on-the-fly from DB.
 - `POST /api/sessions/:id/share`: generates Token.
-- `GET /api/share/:token`: returns Session + Payslip for read-only View.
+- `GET /api/share/:token`: returns Session + Payslip for read-only view.
 
 ## Berechnung (lib/calc/)
 
