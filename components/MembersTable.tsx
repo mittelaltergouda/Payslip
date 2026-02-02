@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { DistributionMode, IndividualExpenseInput, MemberInput, PayslipResult } from "@/lib/types";
 import { MemberRow } from "./MemberRow";
 
@@ -83,6 +84,12 @@ export function MembersTable({
   updateIndividualExpense,
   removeIndividualExpense
 }: MembersTableProps) {
+  // Pre-compute member lookup Map to eliminate O(n²) find() calls
+  const resultMemberMap = useMemo(() => {
+    if (!result?.members) return new Map();
+    return new Map(result.members.map((rm) => [rm.memberId, rm]));
+  }, [result]);
+
   return (
     <div className="glass p-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -109,7 +116,7 @@ export function MembersTable({
           </thead>
           <tbody className="divide-y divide-white/10">
             {members.map((m) => {
-              const resultMember = result?.members.find((x) => x.memberId === m.id);
+              const resultMember = resultMemberMap.get(m.id);
               return (
                 <MemberRow
                   key={m.id}
