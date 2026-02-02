@@ -106,13 +106,13 @@ The original `lib/calc.ts` now acts as a **barrel export** for backward compatib
 - Result tiles show Breakdown + Suggested Transfers; Copy buttons for JSON/Transfers.
 - Share view at `/share/:token` is read-only with the same display.
 
-## Annahmen & Trade-offs
-- Shared Expenses werden gleichmäßig auf Teilnehmer verteilt (V1: gewichtete Verteilung).
-- fixedPayout entfernt Member aus dem Resttopf, fixedBonus addiert nur oben drauf.
-- Tax wird pro Transfer berechnet (gross-up), Gebühren lasten auf Zahlerseite.
-- Rounding: `Math.ceil` beim Gross-Up um Unterzahlung zu vermeiden; leichte Überschüsse möglich.
-- Keine Auth (Phase 2: Magic Links). Share Tokens sind UUID-basiert.
-- Validation per Zod, Rate-Limiting noch nicht implementiert (kann via Middleware ergänzt werden).
+## Assumptions & Trade-offs
+- Shared expenses are distributed equally among participants (V1: weighted distribution).
+- fixedPayout removes members from the remaining pool, fixedBonus only adds on top.
+- Tax is calculated per transfer (gross-up), fees burden the sender side.
+- Rounding: `Math.ceil` in gross-up to avoid underpayment; slight excesses possible.
+- No authentication (Phase 2: Magic Links). Share tokens are UUID-based.
+- Validation via Zod, rate-limiting not yet implemented (can be added via middleware).
 
 ## Setup
 
