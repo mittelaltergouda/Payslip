@@ -7,12 +7,12 @@
 - **Frontend**: Landing + Wizard + Result/Payslip in `app/page.tsx` with client component `SessionWizard`.
 - **Persistence**: Prisma Schema in `prisma/schema.prisma`; share links via `ExportToken`.
 
-## Domänenmodell
-- `Session`: name, type (enum), currency, totalRevenue (aus Member-Revenue aggregiert), taxEnabled, taxRate, distributionMode, timestamps.
+## Domain Model
+- `Session`: name, type (enum), currency, totalRevenue (aggregated from member revenues), taxEnabled, taxRate, distributionMode, timestamps.
 - `Member`: handle, role, active, revenue, investment, percentShare, fixedBonus, fixedPayout.
-- `SharedExpense` + `SharedExpenseParticipant`: optional (Default nicht genutzt); Posten mit betroffenen Membern.
-- `IndividualExpense`: pro Member.
-- `ExportToken`: shareable read-only Token.
+- `SharedExpense` + `SharedExpenseParticipant`: optional (not used by default); entries with affected members.
+- `IndividualExpense`: per member.
+- `ExportToken`: shareable read-only token.
 
 ## API Endpunkte (MVP)
 - `POST /api/sessions`: erstellt Session inkl. Members + Expenses.
