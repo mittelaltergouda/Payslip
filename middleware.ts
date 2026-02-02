@@ -8,9 +8,9 @@ export function middleware(request: NextRequest) {
   const cspHeader = [
     `default-src 'self'`,
     `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' 'unsafe-inline'`,
-    `style-src 'self' 'nonce-${nonce}' 'unsafe-inline' https://fonts.googleapis.com`,
+    `style-src 'self' 'nonce-${nonce}' 'unsafe-inline'`,
     `img-src 'self' data: blob:`,
-    `font-src 'self' data: https://fonts.gstatic.com`,
+    `font-src 'self' data:`,
     `connect-src 'self'`,
     `frame-ancestors 'none'`,
     `base-uri 'self'`,

@@ -198,4 +198,17 @@ describe('middleware - CSP nonce generation', () => {
     const cspHeader = response.headers.get('Content-Security-Policy');
     expect(cspHeader).toContain("form-action 'self'");
   });
+
+  it('should not include Google Fonts domains in CSP headers', () => {
+    const request = new NextRequest(new Request('http://localhost:3000/'));
+
+    const response = middleware(request);
+
+    const cspHeader = response.headers.get('Content-Security-Policy');
+    expect(cspHeader).toBeDefined();
+
+    // Verify Google Fonts domains are not present (fonts are now self-hosted via next/font)
+    expect(cspHeader).not.toContain('fonts.googleapis.com');
+    expect(cspHeader).not.toContain('fonts.gstatic.com');
+  });
 });

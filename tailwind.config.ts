@@ -15,8 +15,8 @@ const config: Config = {
         sand: "#f5f0e6"
       },
       fontFamily: {
-        display: ["'Space Grotesk'", "sans-serif"],
-        body: ["'Inter'", "ui-sans-serif", "system-ui"]
+        display: ["var(--font-display)", "sans-serif"],
+        body: ["var(--font-body)", "ui-sans-serif", "system-ui"]
       }
     }
   },
