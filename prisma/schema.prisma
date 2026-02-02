@@ -104,4 +104,6 @@ model ExportToken {
   expiresAt DateTime?
 
   session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
 }
