@@ -1,17 +1,17 @@
 {
   "active": true,
-  "spec": "024-refactor-sessionwizard-tsx-into-smaller-components",
+  "spec": "031-optimize-font-loading-with-next-font-instead-of-cs",
   "state": "building",
   "subtasks": {
-    "completed": 22,
-    "total": 23,
+    "completed": 4,
+    "total": 6,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Cleanup and Polish",
+    "current": "Verification and Testing",
     "id": null,
-    "total": 5
+    "total": 2
   },
   "workers": {
     "active": 0,
@@ -19,7 +19,7 @@
   },
   "session": {
     "number": 4,
-    "started_at": "2026-02-02T10:40:02.861515"
+    "started_at": "2026-02-02T15:05:04.739425"
   },
-  "last_update": "2026-02-02T11:12:02.267736"
+  "last_update": "2026-02-02T15:09:30.845694"
 }
