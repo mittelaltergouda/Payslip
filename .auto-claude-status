@@ -3,7 +3,7 @@
   "spec": "028-implement-secure-token-generation-for-exporttoken-",
   "state": "building",
   "subtasks": {
-    "completed": 1,
+    "completed": 3,
     "total": 7,
     "in_progress": 1,
     "failed": 0
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 3,
+    "number": 5,
     "started_at": "2026-02-02T00:43:16.078553"
   },
-  "last_update": "2026-02-02T00:52:08.080045"
+  "last_update": "2026-02-02T01:00:05.216151"
 }
