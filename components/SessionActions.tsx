@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { exportAll, importAll } from "@/lib/storage/sessionStorage";
-import { Lang } from "@/lib/i18n/translations";
+import type { Lang } from "@/lib/i18n/translations";
 
 /**
  * Props for the SessionActions component
@@ -240,7 +240,7 @@ export function SessionActions({
         ref={fileInputRef}
         type="file"
         accept="application/json,.json"
-        onChange={handleFileChange}
+        onChange={(e) => void handleFileChange(e)}
         className="hidden"
         aria-hidden="true"
       />

@@ -1,5 +1,6 @@
-import { calculatePayslip, SessionInput, applyTransferTaxes, calculateGrossAmount, calculateFeeAmount } from './calc';
-import { Transfer } from './types';
+import type { SessionInput} from './calc';
+import { calculatePayslip, applyTransferTaxes, calculateGrossAmount, calculateFeeAmount } from './calc';
+import type { Transfer } from './types';
 
 // Test cases for Tax Gross-Up Calculations
 

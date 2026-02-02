@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { SavedSession } from "@/lib/types";
-import { Lang } from "@/lib/i18n/translations";
+import type { SavedSession } from "@/lib/types";
+import type { Lang } from "@/lib/i18n/translations";
 
 /**
  * Props for the SessionHistory component.
@@ -87,7 +87,7 @@ export function SessionHistory({
 
   // Handle Escape key to close sidebar
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {return;}
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -102,7 +102,7 @@ export function SessionHistory({
 
   // Handle click outside to close sidebar
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {return;}
 
     const handleClickOutside = (e: MouseEvent) => {
       if (sidebarRef.current && !sidebarRef.current.contains(e.target as Node)) {
@@ -144,7 +144,7 @@ export function SessionHistory({
     setDeleteConfirmId(null);
   };
 
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
 
   return (
     <>

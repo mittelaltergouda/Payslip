@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as sessionStorage from '../../../lib/storage/sessionStorage';
-import { SessionInput, SavedSession } from '../../../lib/types';
+import type { SessionInput, SavedSession } from '../../../lib/types';
 
 // ============================================================================
 // MOCKS

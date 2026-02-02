@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import type { ReactNode } from "react";
+import { createContext, useContext, useState, useCallback } from "react";
 
 /**
  * Toast notification type
@@ -87,7 +88,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
  * Toast container component - renders all active toasts
  */
 function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: string) => void }) {
-  if (toasts.length === 0) return null;
+  if (toasts.length === 0) {return null;}
 
   return (
     <div className="toast-container">

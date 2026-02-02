@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { randomUUID } from 'crypto';
 
 /**
  * Session Management E2E Tests
@@ -370,12 +369,12 @@ test.describe('Session Management E2E Tests', () => {
               const names = importedData.map((s: any) => s.session.name);
               expect(names).toContain(session1Name);
               expect(names).toContain(session2Name);
-            } catch (error) {
+            } catch (_error) {
               console.log('File chooser not triggered, skipping import verification');
             }
           }
         }
-      } catch (error) {
+      } catch (_error) {
         console.log('Download not triggered, skipping export/import verification');
       }
     }

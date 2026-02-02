@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { SaveStatusIndicator } from './SaveStatusIndicator';
 import { describe, it, expect } from 'vitest';
-import { SaveStatus } from '@/hooks/useAutoSave';
+import type { SaveStatus } from '@/hooks/useAutoSave';
 
 describe('SaveStatusIndicator - Basic Rendering', () => {
   it('should render with "saved" status', () => {

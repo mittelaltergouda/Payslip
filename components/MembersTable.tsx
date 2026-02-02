@@ -1,6 +1,6 @@
 "use client";
 
-import { DistributionMode, IndividualExpenseInput, MemberInput, PayslipResult } from "@/lib/types";
+import type { DistributionMode, IndividualExpenseInput, MemberInput, PayslipResult } from "@/lib/types";
 import { MemberRow } from "./MemberRow";
 
 type Lang = "de" | "en";

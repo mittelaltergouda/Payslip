@@ -1,12 +1,12 @@
 import React from 'react';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemberRow } from './MemberRow';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DistributionMode, IndividualExpenseInput, MemberBreakdown, MemberInput } from '@/lib/types';
+import type { IndividualExpenseInput, MemberBreakdown, MemberInput } from '@/lib/types';
 
 // Mock translations
-const mockTranslationsDE = {
+const _mockTranslationsDE = {
   remove: 'Entfernen',
   addExpense: '+ Ausgabe',
 };
@@ -108,7 +108,7 @@ describe('MemberRow - Initial Rendering', () => {
         <tbody>
           <MemberRow
             member={sampleMember}
-            showRole={true}
+            showRole
             distributionMode="EQUAL"
             individualExpenses={[]}
             resultMember={sampleResultMember}
@@ -450,7 +450,7 @@ describe('MemberRow - User Interactions', () => {
         <tbody>
           <MemberRow
             member={sampleMember}
-            showRole={true}
+            showRole
             distributionMode="EQUAL"
             individualExpenses={[]}
             resultMember={sampleResultMember}
@@ -914,7 +914,7 @@ describe('MemberRow - Edge Cases', () => {
         <tbody>
           <MemberRow
             member={memberWithoutRole}
-            showRole={true}
+            showRole
             distributionMode="EQUAL"
             individualExpenses={[]}
             resultMember={sampleResultMember}

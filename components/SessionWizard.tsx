@@ -2,9 +2,10 @@
 
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { calculatePayslip } from "@/lib/calc";
-import { DistributionMode, IndividualExpenseInput, MemberInput, SessionInput, SavedSession } from "@/lib/types";
+import type { DistributionMode, IndividualExpenseInput, MemberInput, SessionInput, SavedSession } from "@/lib/types";
 import { calculateModePreviews } from "@/lib/modePreview";
-import { translations, Lang } from "@/lib/i18n/translations";
+import type { Lang } from "@/lib/i18n/translations";
+import { translations } from "@/lib/i18n/translations";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { SessionSettings } from "./SessionSettings";
 import { MembersTable } from "./MembersTable";
@@ -104,7 +105,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
       // Ctrl+S: Manual save
       if (e.ctrlKey && e.key === "s") {
         e.preventDefault();
-        manualSave();
+        void manualSave();
         showToast(t.sessionSaved || "Session saved", "success");
       }
       // Ctrl+O: Open history

@@ -17,7 +17,7 @@
  * @module lib/calc/tax
  */
 
-import { Transfer } from '../types';
+import type { Transfer } from '../types';
 
 // ============================================================================
 // TAX GROSS-UP CALCULATION
