@@ -19,8 +19,8 @@ export const memberSchema = z.object({
     }),
   role: z.string().max(64, "Role cannot exceed 64 characters").optional(),
   active: z.boolean().optional().default(true),
-  revenue: z.number().int("Revenue must be an integer").nonnegative("Revenue cannot be negative").default(0),
-  investment: z.number().int("Investment must be an integer").nonnegative("Investment cannot be negative").default(0),
+  revenue: z.number().int("Revenue must be an integer").nonnegative("Revenue cannot be negative").max(2147483647, "Revenue cannot exceed 2147483647").default(0),
+  investment: z.number().int("Investment must be an integer").nonnegative("Investment cannot be negative").max(2147483647, "Investment cannot exceed 2147483647").default(0),
   percentShare: z
     .number()
     .min(0, "Percent share cannot be negative")
@@ -31,12 +31,14 @@ export const memberSchema = z.object({
     .number()
     .int("Fixed bonus must be an integer")
     .nonnegative("Fixed bonus cannot be negative")
+    .max(2147483647, "Fixed bonus cannot exceed 2147483647")
     .optional()
     .nullable(),
   fixedPayout: z
     .number()
     .int("Fixed payout must be an integer")
     .nonnegative("Fixed payout cannot be negative")
+    .max(2147483647, "Fixed payout cannot exceed 2147483647")
     .optional()
     .nullable()
 });
@@ -44,7 +46,7 @@ export const memberSchema = z.object({
 export const sharedExpenseSchema = z.object({
   id: z.string().optional(),
   label: z.string().min(1, "Label cannot be empty").max(128, "Label cannot exceed 128 characters"),
-  amount: z.number().int("Amount must be an integer").nonnegative("Amount cannot be negative"),
+  amount: z.number().int("Amount must be an integer").nonnegative("Amount cannot be negative").max(2147483647, "Amount cannot exceed 2147483647"),
   participantIds: z
     .array(z.string())
     .min(1, "Participant IDs must include at least one member if provided")
@@ -55,7 +57,7 @@ export const individualExpenseSchema = z.object({
   id: z.string().optional(),
   memberId: z.string().min(1, "Member ID cannot be empty"),
   label: z.string().min(1, "Label cannot be empty").max(128, "Label cannot exceed 128 characters"),
-  amount: z.number().int("Amount must be an integer").nonnegative("Amount cannot be negative")
+  amount: z.number().int("Amount must be an integer").nonnegative("Amount cannot be negative").max(2147483647, "Amount cannot exceed 2147483647")
 });
 
 export const sessionSchema = z
@@ -70,6 +72,7 @@ export const sessionSchema = z
       .number()
       .int("Total revenue must be an integer")
       .nonnegative("Total revenue cannot be negative")
+      .max(2147483647, "Total revenue cannot exceed 2147483647")
       .optional()
       .default(0),
     distributionMode: z.enum(["EQUAL", "PERCENT", "ADJUSTABLE"], {
@@ -89,7 +92,9 @@ export const sessionSchema = z
   .refine(
     (data) => {
       // In PERCENT mode, validate that percentShare values sum to 100%
-      if (data.distributionMode !== "PERCENT") return true;
+      if (data.distributionMode !== "PERCENT") {
+        return true;
+      }
 
       const activeMembers = data.members.filter((m) => m.active !== false);
       const totalPercentShare = activeMembers.reduce((sum, member) => {
@@ -106,7 +111,9 @@ export const sessionSchema = z
   .refine(
     (data) => {
       // In PERCENT mode, all active members must have percentShare defined
-      if (data.distributionMode !== "PERCENT") return true;
+      if (data.distributionMode !== "PERCENT") {
+        return true;
+      }
 
       const activeMembers = data.members.filter((m) => m.active !== false);
       return activeMembers.every((member) => member.percentShare != null);
@@ -117,3 +124,20 @@ export const sessionSchema = z
   );
 
 export type SessionPayload = z.infer<typeof sessionSchema>;
+
+export const exportTokenSchema = z.object({
+  id: z.string().optional(),
+  sessionId: z.string().min(1, "Session ID cannot be empty"),
+  token: z
+    .string()
+    .min(1, "Token cannot be empty")
+    .regex(/^[A-Za-z0-9_-]+$/, "Token must be URL-safe (base64url format)")
+    .optional(),
+  expiresAt: z
+    .string()
+    .datetime("Expiry date must be a valid ISO 8601 datetime string")
+    .optional()
+    .nullable()
+});
+
+export type ExportTokenPayload = z.infer<typeof exportTokenSchema>;
