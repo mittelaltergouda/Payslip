@@ -16,8 +16,8 @@
  * @module lib/calc/distribution
  */
 
-import { DistributionMode } from '../types';
-import { NormalizedMember } from './types';
+import type { DistributionMode } from '../types';
+import type { NormalizedMember } from './types';
 
 // ============================================================================
 // PROFIT DISTRIBUTION

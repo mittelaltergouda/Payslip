@@ -1,6 +1,6 @@
 "use client";
 
-import { DistributionMode, IndividualExpenseInput, MemberBreakdown, MemberInput } from "@/lib/types";
+import type { DistributionMode, IndividualExpenseInput, MemberBreakdown, MemberInput } from "@/lib/types";
 
 type Lang = "de" | "en";
 

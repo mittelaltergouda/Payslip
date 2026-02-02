@@ -1,4 +1,5 @@
-import { calculatePayslip, SessionInput } from './calc';
+import type { SessionInput } from './calc';
+import { calculatePayslip } from './calc';
 
 // Test cases for PERCENT distribution mode
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { DistributionMode, IndividualExpenseInput, MemberInput, PayslipResult } from "@/lib/types";
+import type { DistributionMode, IndividualExpenseInput, MemberInput, PayslipResult } from "@/lib/types";
 import { MemberRow } from "./MemberRow";
 
 type Lang = "de" | "en";
@@ -86,7 +86,7 @@ export function MembersTable({
 }: MembersTableProps) {
   // Pre-compute member lookup Map to eliminate O(n²) find() calls
   const resultMemberMap = useMemo(() => {
-    if (!result?.members) return new Map();
+    if (!result?.members) {return new Map();}
     return new Map(result.members.map((rm) => [rm.memberId, rm]));
   }, [result]);
 

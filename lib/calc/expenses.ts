@@ -9,8 +9,8 @@
  * @module lib/calc/expenses
  */
 
-import { SharedExpenseInput, IndividualExpenseInput } from '../types';
-import { NormalizedMember } from './types';
+import type { SharedExpenseInput, IndividualExpenseInput } from '../types';
+import type { NormalizedMember } from './types';
 
 // ============================================================================
 // SHARED EXPENSE ALLOCATION

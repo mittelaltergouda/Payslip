@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { SessionInput } from '../lib/types';
+import type { SessionInput } from '../lib/types';
 import { save } from '../lib/storage/sessionStorage';
 
 // ============================================================================

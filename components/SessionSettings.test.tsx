@@ -1,15 +1,16 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { SessionSettings, SessionSettingsProps } from './SessionSettings';
-import { SessionInput, DistributionMode } from '@/lib/types';
-import { ModePreviewResult } from '@/lib/modePreview';
+import type { SessionSettingsProps } from './SessionSettings';
+import { SessionSettings } from './SessionSettings';
+import type { SessionInput, DistributionMode } from '@/lib/types';
+import type { ModePreviewResult } from '@/lib/modePreview';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock the ModePreview component
 vi.mock('./ModePreview', () => ({
   ModePreview: ({ mode, visible }: { mode: DistributionMode; visible: boolean }) => {
-    if (!visible) return null;
+    if (!visible) {return null;}
     return <div data-testid={`mode-preview-${mode}`}>Preview for {mode}</div>;
   },
 }));

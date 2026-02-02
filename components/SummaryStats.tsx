@@ -1,7 +1,7 @@
 "use client";
 
-import { PayslipResult } from "@/lib/types";
-import { Lang } from "@/lib/i18n/translations";
+import type { PayslipResult } from "@/lib/types";
+import type { Lang } from "@/lib/i18n/translations";
 
 /**
  * Format a number according to the specified language locale.

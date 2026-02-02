@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { SessionInput, SavedSession, savedSessionSchema } from '../types';
+import type { SessionInput, SavedSession} from '../types';
+import { savedSessionSchema } from '../types';
 import { generateId } from '../id';
 
 // ============================================================================

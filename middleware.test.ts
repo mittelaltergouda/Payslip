@@ -165,7 +165,7 @@ describe('middleware - CSP nonce generation', () => {
       const request = new NextRequest(new Request(`http://localhost:3000${path}`));
       const response = middleware(request);
       const nonce = response.headers.get('x-nonce');
-      if (nonce) nonces.add(nonce);
+      if (nonce) {nonces.add(nonce);}
     });
 
     // All nonces should be unique
