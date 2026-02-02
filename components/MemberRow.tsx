@@ -4,23 +4,119 @@ import { DistributionMode, IndividualExpenseInput, MemberBreakdown, MemberInput 
 
 type Lang = "de" | "en";
 
+/**
+ * Props for the MemberRow component.
+ */
 interface MemberRowProps {
+  /**
+   * The member data to display and edit.
+   */
   member: MemberInput;
+
+  /**
+   * Whether to show the role field column.
+   */
   showRole: boolean;
+
+  /**
+   * Current distribution mode (affects which fields are editable).
+   */
   distributionMode: DistributionMode;
+
+  /**
+   * Array of all individual expenses for filtering by member.
+   */
   individualExpenses: IndividualExpenseInput[];
+
+  /**
+   * Calculated result data for this member, or undefined if not yet calculated.
+   */
   resultMember: MemberBreakdown | undefined;
+
+  /**
+   * Map of member IDs to their total transfer fees paid.
+   */
   feeByPayer: Record<string, number>;
+
+  /**
+   * Current language for number formatting.
+   */
   lang: Lang;
+
+  /**
+   * Translation strings object.
+   */
   t: Record<string, string>;
+
+  /**
+   * Number formatting function.
+   */
   format: (amount: number, lang: Lang) => string;
+
+  /**
+   * Callback to update a member's properties.
+   */
   updateMember: (id: string, patch: Partial<MemberInput>) => void;
+
+  /**
+   * Callback to remove this member.
+   */
   removeMember: (id: string) => void;
+
+  /**
+   * Callback to add a new individual expense for this member.
+   */
   addIndividualExpense: (memberId: string) => void;
+
+  /**
+   * Callback to update an individual expense.
+   */
   updateIndividualExpense: (id: string, patch: Partial<IndividualExpenseInput>) => void;
+
+  /**
+   * Callback to remove an individual expense.
+   */
   removeIndividualExpense: (id: string) => void;
 }
 
+/**
+ * MemberRow component renders a single table row for a member with editable inputs
+ * and calculated results.
+ *
+ * The row displays:
+ * - Handle: Editable text input for member name
+ * - Role: Optional editable text input (shown if showRole is true)
+ * - Revenue: Editable number input for income generated
+ * - Investment: Editable number input for capital invested
+ * - Expenses: List of editable individual expenses with add/remove controls
+ * - Taxes: Display of total transfer fees (read-only)
+ * - Profit Share: Display of calculated profit share (read-only)
+ * - Net After Fees: Display of final payout amount (color-coded: green for positive, red for negative)
+ * - Percent Share: Editable in PERCENT and ADJUSTABLE modes
+ * - Fixed Bonus: Editable only in ADJUSTABLE mode
+ * - Fixed Payout: Editable only in ADJUSTABLE mode
+ * - Remove button: Deletes this member from the session
+ *
+ * @example
+ * ```tsx
+ * <MemberRow
+ *   member={member}
+ *   showRole={true}
+ *   distributionMode="ADJUSTABLE"
+ *   individualExpenses={session.individualExpenses ?? []}
+ *   resultMember={result?.members.find(m => m.memberId === member.id)}
+ *   feeByPayer={feeByPayer}
+ *   lang="en"
+ *   t={translations.en}
+ *   format={formatNumber}
+ *   updateMember={handleUpdateMember}
+ *   removeMember={handleRemoveMember}
+ *   addIndividualExpense={handleAddExpense}
+ *   updateIndividualExpense={handleUpdateExpense}
+ *   removeIndividualExpense={handleRemoveExpense}
+ * />
+ * ```
+ */
 export function MemberRow({
   member,
   showRole,

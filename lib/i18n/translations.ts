@@ -1,5 +1,40 @@
+/**
+ * Supported language codes for the application.
+ * - "de": German
+ * - "en": English
+ */
 export type Lang = "de" | "en";
 
+/**
+ * Translation strings for all supported languages.
+ *
+ * This object contains UI text translations for German (de) and English (en).
+ * Each language has a complete set of translation keys covering:
+ * - App branding and hero text
+ * - Session settings and controls
+ * - Distribution mode labels and descriptions
+ * - Member table headers and labels
+ * - Results display labels
+ * - Summary and statistics labels
+ * - Transfer-related messages
+ *
+ * Usage:
+ * ```tsx
+ * const t = translations[lang];
+ * <h1>{t.appName}</h1>
+ * <button>{t.addMember}</button>
+ * ```
+ *
+ * @example
+ * ```tsx
+ * import { translations, Lang } from "@/lib/i18n/translations";
+ *
+ * function MyComponent({ lang }: { lang: Lang }) {
+ *   const t = translations[lang];
+ *   return <h1>{t.appName}</h1>;
+ * }
+ * ```
+ */
 export const translations: Record<Lang, Record<string, string>> = {
   de: {
     appName: "SC Payslip",
