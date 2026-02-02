@@ -3,10 +3,10 @@
 import { useMemo, useState } from "react";
 import { calculatePayslip } from "@/lib/calc";
 import { DistributionMode, IndividualExpenseInput, MemberInput, SessionInput, Transfer } from "@/lib/types";
-import { ModePreview } from "./ModePreview";
 import { calculateModePreviews } from "@/lib/modePreview";
 import { translations, Lang } from "@/lib/i18n/translations";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { SessionSettings } from "./SessionSettings";
 
 const rndId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -45,8 +45,6 @@ export function SessionWizard({ initialLang = "de" }: Props) {
   const updateSession = setSession;
   const [error, setError] = useState<string | null>(null);
   const [showRole, setShowRole] = useState(false);
-  const [hoveredMode, setHoveredMode] = useState<DistributionMode | null>(null);
-  const [isModeDropdownOpen, setIsModeDropdownOpen] = useState(false);
 
   const result = useMemo(() => {
     try {
@@ -142,102 +140,17 @@ export function SessionWizard({ initialLang = "de" }: Props) {
         <LanguageSwitcher lang={lang} onLangChange={setLang} />
       </div>
 
-      <div className="glass p-6 space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <h2 className="text-xl font-display">{t.sessionSettings}</h2>
-          <button className="btn" onClick={() => updateSession(buildInitialSession())}>
-            {t.reset}
-          </button>
-        </div>
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="flex flex-col gap-1 relative">
-            <span className="text-sm text-white/70">{t.distribution}</span>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setIsModeDropdownOpen(!isModeDropdownOpen)}
-                onBlur={() => {
-                  // Delay closing to allow click events on options to fire
-                  setTimeout(() => setIsModeDropdownOpen(false), 200);
-                }}
-                className="input w-full text-left flex items-center justify-between"
-                aria-haspopup="listbox"
-                aria-expanded={isModeDropdownOpen}
-              >
-                <span>
-                  {session.distributionMode === "EQUAL" ? t.equal :
-                   session.distributionMode === "PERCENT" ? t.percent : t.adjustable}
-                </span>
-                <span className="text-white/50">{isModeDropdownOpen ? "▲" : "▼"}</span>
-              </button>
-
-              {isModeDropdownOpen && (
-                <div
-                  className="absolute z-10 w-full bg-night border border-white/20 rounded-lg mt-1 shadow-lg overflow-hidden"
-                  role="listbox"
-                >
-                  {(['EQUAL', 'PERCENT', 'ADJUSTABLE'] as DistributionMode[]).map(mode => (
-                    <div
-                      key={mode}
-                      role="option"
-                      aria-selected={session.distributionMode === mode}
-                      onMouseEnter={() => setHoveredMode(mode)}
-                      onMouseLeave={() => setHoveredMode(null)}
-                      onClick={() => {
-                        onDistributionChange(mode);
-                        setIsModeDropdownOpen(false);
-                        setHoveredMode(null);
-                      }}
-                      className={`px-3 py-2 cursor-pointer transition-colors ${
-                        session.distributionMode === mode
-                          ? 'bg-neon/20 text-neon'
-                          : 'hover:bg-white/10 text-white/80'
-                      }`}
-                    >
-                      {mode === "EQUAL" ? t.equal :
-                       mode === "PERCENT" ? t.percent : t.adjustable}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {hoveredMode && hoveredMode !== session.distributionMode && (
-                <ModePreview
-                  mode={hoveredMode}
-                  preview={modePreviews[hoveredMode]}
-                  visible={true}
-                  currency={session.currency}
-                  className="top-full mt-2"
-                />
-              )}
-            </div>
-            <span className="text-xs text-white/60">
-              {t.explanation}:{" "}
-              {session.distributionMode === "EQUAL"
-                ? t.equal
-                : session.distributionMode === "PERCENT"
-                  ? t.percent
-                  : t.adjustable}
-            </span>
-          </div>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={session.taxEnabled ?? true}
-              onChange={(e) => setSession((prev) => ({ ...prev, taxEnabled: e.target.checked, taxRate: taxFixed }))}
-            />
-            <span className="text-sm text-white/80">{t.taxToggle}</span>
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={showRole}
-              onChange={(e) => setShowRole(e.target.checked)}
-            />
-            <span className="text-sm text-white/80">{t.showRole}</span>
-          </label>
-        </div>
-      </div>
+      <SessionSettings
+        session={session}
+        onSessionUpdate={(updates) => setSession((prev) => ({ ...prev, ...updates }))}
+        onDistributionChange={onDistributionChange}
+        onReset={() => updateSession(buildInitialSession())}
+        showRole={showRole}
+        onShowRoleChange={setShowRole}
+        translations={t}
+        modePreviews={modePreviews}
+        taxRate={taxFixed}
+      />
 
       <div className="glass p-6 space-y-4">
         <div className="flex items-center justify-between">

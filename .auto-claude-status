@@ -3,23 +3,23 @@
   "spec": "024-refactor-sessionwizard-tsx-into-smaller-components",
   "state": "building",
   "subtasks": {
-    "completed": 7,
+    "completed": 10,
     "total": 23,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Add New Components",
+    "current": "Migrate SessionWizard",
     "id": null,
-    "total": 8
+    "total": 5
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 5,
+    "number": 8,
     "started_at": "2026-02-02T09:45:57.005825"
   },
-  "last_update": "2026-02-02T09:54:19.235075"
+  "last_update": "2026-02-02T10:00:29.779770"
 }
