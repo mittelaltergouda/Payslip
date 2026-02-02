@@ -72,6 +72,7 @@ export const sessionSchema = z
       .number()
       .int("Total revenue must be an integer")
       .nonnegative("Total revenue cannot be negative")
+      .max(2147483647, "Total revenue cannot exceed 2147483647")
       .optional()
       .default(0),
     distributionMode: z.enum(["EQUAL", "PERCENT", "ADJUSTABLE"], {
