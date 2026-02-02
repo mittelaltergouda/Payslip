@@ -507,7 +507,8 @@ describe("Button - Edge Cases", () => {
 
     const button = screen.getByRole("button");
     expect(button).toBeInTheDocument();
-    expect(button).toBeEmptyDOMElement();
+    // Button contains animation wrappers, but no text content
+    expect(button.textContent).toBe("");
   });
 
   it("should handle both disabled and loading states", () => {
@@ -538,21 +539,24 @@ describe("Button - Edge Cases", () => {
     render(<Button>{""}</Button>);
 
     const button = screen.getByRole("button");
-    expect(button).toBeEmptyDOMElement();
+    // Button contains animation wrappers, but no text content
+    expect(button.textContent).toBe("");
   });
 
   it("should handle null as children", () => {
     render(<Button>{null}</Button>);
 
     const button = screen.getByRole("button");
-    expect(button).toBeEmptyDOMElement();
+    // Button contains animation wrappers, but no text content
+    expect(button.textContent).toBe("");
   });
 
   it("should handle undefined as children", () => {
     render(<Button>{undefined}</Button>);
 
     const button = screen.getByRole("button");
-    expect(button).toBeEmptyDOMElement();
+    // Button contains animation wrappers, but no text content
+    expect(button.textContent).toBe("");
   });
 });
 
