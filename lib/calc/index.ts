@@ -20,6 +20,9 @@ import {
 import {
   settleBalances,
 } from './settlement';
+import {
+  calculateSummaryStatistics,
+} from './statistics';
 
 // Re-export types for external use
 export type { SessionInput, PayslipResult, MemberBreakdown, Transfer } from '../types';
