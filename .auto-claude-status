@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "022-add-input-length-limits-to-numeric-fields-to-preve",
+  "spec": "028-implement-secure-token-generation-for-exporttoken-",
   "state": "building",
   "subtasks": {
-    "completed": 3,
-    "total": 5,
+    "completed": 5,
+    "total": 7,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Create Validation Tests",
+    "current": "Final Verification",
     "id": null,
-    "total": 1
+    "total": 2
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 5,
-    "started_at": "2026-02-02T00:45:13.899626"
+    "number": 7,
+    "started_at": "2026-02-02T00:43:16.078553"
   },
-  "last_update": "2026-02-02T01:02:51.213825"
+  "last_update": "2026-02-02T01:10:50.597457"
 }
