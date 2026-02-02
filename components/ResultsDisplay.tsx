@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { PayslipResult, SessionInput, MemberInput } from "@/lib/types";
 import { Lang } from "@/lib/i18n/translations";
 import { SummaryStats } from "./SummaryStats";
@@ -10,6 +11,46 @@ import { TransfersList } from "./TransfersList";
  */
 function format(amount: number, lang: Lang): string {
   return Math.round(amount).toLocaleString(lang === "de" ? "de-DE" : "en-US");
+}
+
+/**
+ * Component that wraps a value and animates it when it changes.
+ *
+ * This component tracks the previous value using a ref and triggers
+ * a highlight animation when the value changes. The animation is
+ * defined in globals.css as 'value-changed' class.
+ */
+function AnimatedValue({
+  value,
+  className = ""
+}: {
+  value: string | number;
+  className?: string;
+}) {
+  const [isAnimating, setIsAnimating] = useState(false);
+  const prevValueRef = useRef(value);
+
+  useEffect(() => {
+    // Check if value has changed
+    if (prevValueRef.current !== value) {
+      setIsAnimating(true);
+
+      // Remove animation class after animation completes (800ms duration)
+      const timer = setTimeout(() => {
+        setIsAnimating(false);
+      }, 800);
+
+      prevValueRef.current = value;
+
+      return () => clearTimeout(timer);
+    }
+  }, [value]);
+
+  return (
+    <span className={`inline-block ${isAnimating ? 'value-changed' : ''} ${className}`}>
+      {value}
+    </span>
+  );
 }
 
 /**
@@ -162,18 +203,27 @@ export function ResultsDisplay({
                       return (
                         <tr key={m.memberId}>
                           <td className="py-3 px-3">{m.handle}</td>
-                          <td className="py-3 px-3">{format(m.revenue, lang)}</td>
-                          <td className="py-3 px-3">{format(m.investment, lang)}</td>
                           <td className="py-3 px-3">
-                            {format(m.expenses, lang)}
+                            <AnimatedValue value={format(m.revenue, lang)} />
+                          </td>
+                          <td className="py-3 px-3">
+                            <AnimatedValue value={format(m.investment, lang)} />
+                          </td>
+                          <td className="py-3 px-3">
+                            <AnimatedValue value={format(m.expenses, lang)} />
                             <div className="text-xs text-white/60">{memberExp}</div>
                           </td>
-                          <td className="py-3 px-3">{format(taxes, lang)}</td>
-                          <td className="py-3 px-3">{format(m.profitShare, lang)}</td>
+                          <td className="py-3 px-3">
+                            <AnimatedValue value={format(taxes, lang)} />
+                          </td>
+                          <td className="py-3 px-3">
+                            <AnimatedValue value={format(m.profitShare, lang)} />
+                          </td>
                           <td className="py-3 px-3 font-semibold">
-                            <span className={net >= 0 ? "text-neon" : "text-red-400"}>
-                              {format(net, lang)}
-                            </span>
+                            <AnimatedValue
+                              value={format(net, lang)}
+                              className={net >= 0 ? "text-neon" : "text-red-400"}
+                            />
                           </td>
                         </tr>
                       );

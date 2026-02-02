@@ -144,6 +144,18 @@ a {
   }
 }
 
+@keyframes value-highlight {
+  0% {
+    background-color: rgba(147, 51, 234, 0.3);
+  }
+  50% {
+    background-color: rgba(147, 51, 234, 0.5);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
 .animate-in {
   animation-fill-mode: backwards;
 }
@@ -164,4 +176,10 @@ a {
   transform: scale(0);
   animation: ripple 600ms ease-out;
   pointer-events: none;
+}
+
+/* Result Highlight Animation */
+.value-changed {
+  animation: value-highlight 800ms ease-out;
+  border-radius: 0.25rem;
 }
