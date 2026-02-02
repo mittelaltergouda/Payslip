@@ -5,12 +5,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 /**
+ * Ripple effect state
+ */
+interface Ripple {
+  x: number;
+  y: number;
+  size: number;
+  id: number;
+}
+
+/**
  * Button variant styles using class-variance-authority.
  * Supports multiple visual styles and sizes with consistent design tokens.
  */
 const buttonVariants = cva(
-  // Base styles applied to all buttons
-  "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-border-focus focus:ring-offset-2 focus:ring-offset-surface-base disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none",
+  // Base styles applied to all buttons - added relative and overflow-hidden for ripple effect
+  "relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-border-focus focus:ring-offset-2 focus:ring-offset-surface-base disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none",
   {
     variants: {
       /**
@@ -124,10 +134,55 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       isLoading = false,
       disabled,
       type = "button",
+      onClick,
       ...props
     },
     ref
   ) => {
+    const [ripples, setRipples] = React.useState<Ripple[]>([]);
+    const rippleIdRef = React.useRef(0);
+
+    /**
+     * Creates a ripple effect at the click position
+     */
+    const createRipple = React.useCallback(
+      (event: React.MouseEvent<HTMLButtonElement>) => {
+        const button = event.currentTarget;
+        const rect = button.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = event.clientX - rect.left - size / 2;
+        const y = event.clientY - rect.top - size / 2;
+
+        const newRipple: Ripple = {
+          x,
+          y,
+          size,
+          id: rippleIdRef.current++,
+        };
+
+        setRipples((prev) => [...prev, newRipple]);
+
+        // Remove ripple after animation completes (600ms)
+        setTimeout(() => {
+          setRipples((prev) => prev.filter((r) => r.id !== newRipple.id));
+        }, 600);
+      },
+      []
+    );
+
+    /**
+     * Handle click with ripple effect
+     */
+    const handleClick = React.useCallback(
+      (event: React.MouseEvent<HTMLButtonElement>) => {
+        if (!disabled && !isLoading) {
+          createRipple(event);
+          onClick?.(event);
+        }
+      },
+      [disabled, isLoading, createRipple, onClick]
+    );
+
     return (
       <button
         type={type}
@@ -135,11 +190,29 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || isLoading}
         aria-busy={isLoading}
+        onClick={handleClick}
         {...props}
       >
+        {/* Ripple container */}
+        <span className="absolute inset-0 overflow-hidden rounded-lg pointer-events-none">
+          {ripples.map((ripple) => (
+            <span
+              key={ripple.id}
+              className="button-ripple"
+              style={{
+                left: ripple.x,
+                top: ripple.y,
+                width: ripple.size,
+                height: ripple.size,
+              }}
+            />
+          ))}
+        </span>
+
+        {/* Loading spinner with enhanced animation */}
         {isLoading && (
           <svg
-            className="animate-spin h-4 w-4"
+            className="animate-spin h-4 w-4 transition-opacity duration-200"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -160,7 +233,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             />
           </svg>
         )}
-        {children}
+
+        {/* Button content */}
+        <span className="relative z-10">{children}</span>
       </button>
     );
   }
