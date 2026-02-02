@@ -4,6 +4,13 @@ import { Transfer, MemberInput } from "@/lib/types";
 import { Lang } from "@/lib/i18n/translations";
 
 /**
+ * Format a number according to the specified language locale.
+ */
+function format(amount: number, lang: Lang): string {
+  return Math.round(amount).toLocaleString(lang === "de" ? "de-DE" : "en-US");
+}
+
+/**
  * Props for the TransfersList component.
  */
 export interface TransfersListProps {
@@ -36,13 +43,6 @@ export interface TransfersListProps {
    * Optional CSS class name for additional styling.
    */
   className?: string;
-}
-
-/**
- * Helper function to format amounts with locale-specific formatting.
- */
-function format(amount: number, lang: Lang) {
-  return Math.round(amount).toLocaleString(lang === "de" ? "de-DE" : "en-US");
 }
 
 /**
