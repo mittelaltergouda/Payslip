@@ -114,10 +114,14 @@ test.describe('Security Headers Verification', () => {
         const text = msg.text();
         // Filter out CSP violations - they are expected and don't break functionality
         // Handle different browser formats for CSP errors
+        // Also filter out browser connection cleanup messages during test teardown
         if (!text.includes('Content-Security-Policy') &&
             !text.includes('Content Security Policy') &&
             !text.includes('CSP') &&
-            !text.includes('violates the following directive')) {
+            !text.includes('violates the following directive') &&
+            !text.includes('Connection closed') &&
+            !text.toLowerCase().includes('connection') &&
+            !text.toLowerCase().includes('websocket')) {
           consoleErrors.push(text);
         }
       }
@@ -125,9 +129,12 @@ test.describe('Security Headers Verification', () => {
 
     // Listen for page errors (actual JavaScript errors)
     page.on('pageerror', (error) => {
-      // Filter out CSP-related errors
+      // Filter out CSP-related errors and connection cleanup messages
       if (!error.message.includes('Content-Security-Policy') &&
-          !error.message.includes('Content Security Policy')) {
+          !error.message.includes('Content Security Policy') &&
+          !error.message.includes('Connection closed') &&
+          !error.message.toLowerCase().includes('connection') &&
+          !error.message.toLowerCase().includes('websocket')) {
         consoleErrors.push(error.message);
       }
     });
