@@ -3,7 +3,7 @@
   "spec": "031-optimize-font-loading-with-next-font-instead-of-cs",
   "state": "building",
   "subtasks": {
-    "completed": 4,
+    "completed": 5,
     "total": 6,
     "in_progress": 1,
     "failed": 0
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 4,
+    "number": 5,
     "started_at": "2026-02-02T15:05:04.739425"
   },
-  "last_update": "2026-02-02T15:09:30.845694"
+  "last_update": "2026-02-02T15:11:39.815179"
 }
