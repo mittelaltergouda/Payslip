@@ -28,8 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="de" className={${" "}}>
-      <body>
+    <html lang="de" className={`${spaceGrotesk.variable} ${inter.variable}`}>
+      <body className="font-body">
         <ToastProvider>
           {children}
         </ToastProvider>
