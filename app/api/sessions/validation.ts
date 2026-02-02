@@ -46,7 +46,7 @@ export const memberSchema = z.object({
 export const sharedExpenseSchema = z.object({
   id: z.string().optional(),
   label: z.string().min(1, "Label cannot be empty").max(128, "Label cannot exceed 128 characters"),
-  amount: z.number().int("Amount must be an integer").nonnegative("Amount cannot be negative"),
+  amount: z.number().int("Amount must be an integer").nonnegative("Amount cannot be negative").max(2147483647, "Amount cannot exceed 2147483647"),
   participantIds: z
     .array(z.string())
     .min(1, "Participant IDs must include at least one member if provided")
@@ -57,7 +57,7 @@ export const individualExpenseSchema = z.object({
   id: z.string().optional(),
   memberId: z.string().min(1, "Member ID cannot be empty"),
   label: z.string().min(1, "Label cannot be empty").max(128, "Label cannot exceed 128 characters"),
-  amount: z.number().int("Amount must be an integer").nonnegative("Amount cannot be negative")
+  amount: z.number().int("Amount must be an integer").nonnegative("Amount cannot be negative").max(2147483647, "Amount cannot exceed 2147483647")
 });
 
 export const sessionSchema = z
