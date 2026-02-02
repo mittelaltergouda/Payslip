@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "024-refactor-sessionwizard-tsx-into-smaller-components",
+  "spec": "036-localstorage-session-management-mit-auto-save-und-",
   "state": "building",
   "subtasks": {
-    "completed": 22,
-    "total": 23,
+    "completed": 0,
+    "total": 17,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Cleanup and Polish",
+    "current": "Storage Layer Foundation",
     "id": null,
-    "total": 5
+    "total": 3
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 4,
-    "started_at": "2026-02-02T10:40:02.861515"
+    "number": 1,
+    "started_at": "2026-02-02T12:22:19.727826"
   },
-  "last_update": "2026-02-02T11:12:02.267736"
+  "last_update": "2026-02-02T12:22:19.788338"
 }
