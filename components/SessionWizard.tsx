@@ -6,6 +6,7 @@ import { DistributionMode, IndividualExpenseInput, MemberInput, SessionInput, Tr
 import { ModePreview } from "./ModePreview";
 import { calculateModePreviews } from "@/lib/modePreview";
 import { translations, Lang } from "@/lib/i18n/translations";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 const rndId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -138,20 +139,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
           <p className="text-sm uppercase text-neon/80 font-semibold">{t.appName}</p>
           <p className="text-white/70 max-w-2xl text-sm">{t.heroSubtitle}</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            className={`px-3 py-2 rounded-lg ${lang === "de" ? "bg-neon text-night" : "bg-white/10"}`}
-            onClick={() => setLang("de")}
-          >
-            DE
-          </button>
-          <button
-            className={`px-3 py-2 rounded-lg ${lang === "en" ? "bg-neon text-night" : "bg-white/10"}`}
-            onClick={() => setLang("en")}
-          >
-            EN
-          </button>
-        </div>
+        <LanguageSwitcher lang={lang} onLangChange={setLang} />
       </div>
 
       <div className="glass p-6 space-y-4">
