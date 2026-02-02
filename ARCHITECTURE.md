@@ -100,11 +100,11 @@ The original `lib/calc.ts` now acts as a **barrel export** for backward compatib
 | Add new summary metrics | `statistics.ts` | Calculate median payout |
 | Change calculation flow | `index.ts` | Add pre-distribution hooks |
 
-## UI-Fluss
-- Wizard sammelt Basisdaten, Members, Shared/Individual Expenses, Distribution Mode, Tax-Toggle.
-- Berechnung läuft client-seitig über `calculatePayslip`.
-- Result-Kacheln zeigen Breakdown + Suggested Transfers; Copy-Buttons für JSON/Transfers.
-- Share-View unter `/share/:token` ist read-only mit gleicher Darstellung.
+## UI Flow
+- Wizard collects base data, Members, Shared/Individual Expenses, Distribution Mode, Tax-Toggle.
+- Calculation runs client-side via `calculatePayslip`.
+- Result tiles show Breakdown + Suggested Transfers; Copy buttons for JSON/Transfers.
+- Share view at `/share/:token` is read-only with the same display.
 
 ## Annahmen & Trade-offs
 - Shared Expenses werden gleichmäßig auf Teilnehmer verteilt (V1: gewichtete Verteilung).
