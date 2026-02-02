@@ -19,7 +19,6 @@ const mockSession: SessionInput = {
   type: 'TRADING',
   currency: 'aUEC',
   totalRevenue: 100000,
-  totalExpenses: 20000,
   distributionMode: 'EQUAL',
   taxEnabled: true,
   taxRate: 0.005,
@@ -28,46 +27,118 @@ const mockSession: SessionInput = {
       handle: 'Pilot',
       role: 'Captain',
       percentShare: 50,
-      adjustedPayout: 0,
-      individualExpenses: 0,
+      revenue: 50000,
+      investment: 10000,
     },
     {
       handle: 'Escort',
       role: 'Fighter',
       percentShare: 50,
-      adjustedPayout: 0,
-      individualExpenses: 0,
+      revenue: 50000,
+      investment: 10000,
     },
   ],
 };
 
 const mockModePreviews: Record<DistributionMode, ModePreviewResult | null> = {
   EQUAL: {
+    mode: 'EQUAL',
     result: {
+      saleRevenue: 100000,
       netProfit: 80000,
+      taxRateApplied: 0.005,
+      suggestedTransfers: [],
       members: [
-        { handle: 'Pilot', finalNet: 40000 },
-        { handle: 'Escort', finalNet: 40000 },
+        {
+          memberId: '1',
+          handle: 'Pilot',
+          revenue: 50000,
+          investment: 10000,
+          expenses: 10000,
+          sharedExpenses: 10000,
+          individualExpenses: 0,
+          profitShare: 40000,
+          finalNet: 40000
+        },
+        {
+          memberId: '2',
+          handle: 'Escort',
+          revenue: 50000,
+          investment: 10000,
+          expenses: 10000,
+          sharedExpenses: 10000,
+          individualExpenses: 0,
+          profitShare: 40000,
+          finalNet: 40000
+        },
       ],
     },
     error: null,
   },
   PERCENT: {
+    mode: 'PERCENT',
     result: {
+      saleRevenue: 100000,
       netProfit: 80000,
+      taxRateApplied: 0.005,
+      suggestedTransfers: [],
       members: [
-        { handle: 'Pilot', finalNet: 40000 },
-        { handle: 'Escort', finalNet: 40000 },
+        {
+          memberId: '1',
+          handle: 'Pilot',
+          revenue: 50000,
+          investment: 10000,
+          expenses: 10000,
+          sharedExpenses: 10000,
+          individualExpenses: 0,
+          profitShare: 40000,
+          finalNet: 40000
+        },
+        {
+          memberId: '2',
+          handle: 'Escort',
+          revenue: 50000,
+          investment: 10000,
+          expenses: 10000,
+          sharedExpenses: 10000,
+          individualExpenses: 0,
+          profitShare: 40000,
+          finalNet: 40000
+        },
       ],
     },
     error: null,
   },
   ADJUSTABLE: {
+    mode: 'ADJUSTABLE',
     result: {
+      saleRevenue: 100000,
       netProfit: 80000,
+      taxRateApplied: 0.005,
+      suggestedTransfers: [],
       members: [
-        { handle: 'Pilot', finalNet: 40000 },
-        { handle: 'Escort', finalNet: 40000 },
+        {
+          memberId: '1',
+          handle: 'Pilot',
+          revenue: 50000,
+          investment: 10000,
+          expenses: 10000,
+          sharedExpenses: 10000,
+          individualExpenses: 0,
+          profitShare: 40000,
+          finalNet: 40000
+        },
+        {
+          memberId: '2',
+          handle: 'Escort',
+          revenue: 50000,
+          investment: 10000,
+          expenses: 10000,
+          sharedExpenses: 10000,
+          individualExpenses: 0,
+          profitShare: 40000,
+          finalNet: 40000
+        },
       ],
     },
     error: null,
