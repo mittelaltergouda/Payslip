@@ -79,6 +79,8 @@ model SharedExpenseParticipant {
   member          Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@id([sharedExpenseId, memberId])
+  @@index([sharedExpenseId])
+  @@index([memberId])
 }
 
 model IndividualExpense {
