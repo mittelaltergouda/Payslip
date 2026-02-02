@@ -131,10 +131,14 @@ export function SessionSettings({
   };
 
   return (
-    <div className={`glass p-6 space-y-4 ${className}`}>
+    <div className={`glass p-6 space-y-4 ${className}`} role="region" aria-labelledby="session-settings-heading">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="text-xl font-display">{t.sessionSettings}</h2>
-        <button className="btn" onClick={onReset}>
+        <h2 id="session-settings-heading" className="text-xl font-display">{t.sessionSettings}</h2>
+        <button
+          className="btn"
+          onClick={onReset}
+          aria-label={`${t.reset} ${t.sessionSettings}`}
+        >
           {t.reset}
         </button>
       </div>
@@ -142,13 +146,13 @@ export function SessionSettings({
       <div className="grid gap-4 md:grid-cols-4">
         {/* Distribution Mode Select */}
         <div className="flex flex-col gap-1 relative">
-          <span className="text-sm text-white/70">{t.distribution}</span>
+          <span className="text-sm text-white/70" id="distribution-mode-label">{t.distribution}</span>
           <div className="relative">
             <Select
               value={session.distributionMode}
               onValueChange={(value) => onDistributionChange(value as DistributionMode)}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-labelledby="distribution-mode-label" aria-describedby="distribution-mode-description">
                 <SelectValue placeholder={getModeLabel(session.distributionMode)} />
               </SelectTrigger>
               <SelectContent>
@@ -177,7 +181,7 @@ export function SessionSettings({
               />
             )}
           </div>
-          <span className="text-xs text-white/60">
+          <span className="text-xs text-white/60" id="distribution-mode-description">
             {t.explanation}: {getModeLabel(session.distributionMode)}
           </span>
         </div>
@@ -188,8 +192,9 @@ export function SessionSettings({
             checked={session.taxEnabled ?? true}
             onCheckedChange={handleTaxToggle}
             aria-label={t.taxToggle}
+            aria-describedby="tax-toggle-label"
           />
-          <span className="text-sm text-white/80">{t.taxToggle}</span>
+          <span className="text-sm text-white/80" id="tax-toggle-label">{t.taxToggle}</span>
         </label>
 
         {/* Role Toggle */}
@@ -198,8 +203,9 @@ export function SessionSettings({
             checked={showRole}
             onCheckedChange={(checked) => onShowRoleChange(checked === true)}
             aria-label={t.showRole}
+            aria-describedby="role-toggle-label"
           />
-          <span className="text-sm text-white/80">{t.showRole}</span>
+          <span className="text-sm text-white/80" id="role-toggle-label">{t.showRole}</span>
         </label>
       </div>
     </div>

@@ -146,6 +146,7 @@ export function MemberRow({
           className="w-36"
           value={member.handle}
           onChange={(e) => updateMember(member.id!, { handle: e.target.value })}
+          aria-label={`${t.handle} ${t.for || "for"} ${member.handle}`}
         />
       </td>
       {showRole && (
@@ -154,6 +155,7 @@ export function MemberRow({
             className="w-32"
             value={member.role ?? ""}
             onChange={(e) => updateMember(member.id!, { role: e.target.value })}
+            aria-label={`${t.role} ${t.for || "for"} ${member.handle}`}
           />
         </td>
       )}
@@ -163,6 +165,7 @@ export function MemberRow({
           className="w-full"
           value={member.revenue ?? 0}
           onChange={(e) => updateMember(member.id!, { revenue: Number(e.target.value) })}
+          aria-label={`${t.revenueLabel} ${t.for || "for"} ${member.handle}`}
         />
       </td>
       <td className="py-3 px-3 w-[300px]">
@@ -171,6 +174,7 @@ export function MemberRow({
           className="w-full"
           value={member.investment ?? 0}
           onChange={(e) => updateMember(member.id!, { investment: Number(e.target.value) })}
+          aria-label={`${t.investmentLabel} ${t.for || "for"} ${member.handle}`}
         />
       </td>
       <td className="py-3 px-3">
@@ -181,12 +185,14 @@ export function MemberRow({
                 className="flex-1"
                 value={e.label}
                 onChange={(ev) => updateIndividualExpense(e.id!, { label: ev.target.value })}
+                aria-label={`${t.expensesLabel} ${t.label || "label"} ${t.for || "for"} ${member.handle}`}
               />
               <Input
                 type="number"
                 className="w-24"
                 value={e.amount}
                 onChange={(ev) => updateIndividualExpense(e.id!, { amount: Number(ev.target.value) })}
+                aria-label={`${t.expensesLabel} ${t.amount || "amount"} ${t.for || "for"} ${member.handle}`}
               />
               <Button
                 variant="ghost"
@@ -194,25 +200,39 @@ export function MemberRow({
                 className="text-red-400 h-8 w-8 p-0"
                 onClick={() => removeIndividualExpense(e.id!)}
                 title={t.remove}
+                aria-label={`${t.remove} ${t.expensesLabel} ${t.for || "for"} ${member.handle}`}
               >
                 🗑
               </Button>
             </div>
           ))}
-          <Button size="sm" onClick={() => addIndividualExpense(member.id!)}>
+          <Button
+            size="sm"
+            onClick={() => addIndividualExpense(member.id!)}
+            aria-label={`${t.addExpense} ${t.for || "for"} ${member.handle}`}
+          >
             {t.addExpense}
           </Button>
-          <div className="text-xs text-white/60">Σ {format(expSum, lang)}</div>
+          <div className="text-xs text-white/60" aria-label={`${t.total || "Total"} ${t.expensesLabel}`}>
+            Σ {format(expSum, lang)}
+          </div>
         </div>
       </td>
       <td className="py-3 px-3">
-        {format(feeByPayer[member.id!] ?? 0, lang)}
+        <span aria-label={`${t.taxesLabel} ${t.for || "for"} ${member.handle}`}>
+          {format(feeByPayer[member.id!] ?? 0, lang)}
+        </span>
       </td>
       <td className="py-3 px-3">
-        {format(resultMember?.profitShare ?? 0, lang)}
+        <span aria-label={`${t.profitShareCol} ${t.for || "for"} ${member.handle}`}>
+          {format(resultMember?.profitShare ?? 0, lang)}
+        </span>
       </td>
       <td className="py-3 px-3 font-semibold">
-        <span className={netAfterFees >= 0 ? "text-neon" : "text-red-400"}>
+        <span
+          className={netAfterFees >= 0 ? "text-neon" : "text-red-400"}
+          aria-label={`${t.netAfterFeesCol} ${t.for || "for"} ${member.handle}: ${format(netAfterFees, lang)}`}
+        >
           {format(netAfterFees, lang)}
         </span>
       </td>
@@ -225,6 +245,8 @@ export function MemberRow({
           onChange={(e) =>
             updateMember(member.id!, { percentShare: Number(e.target.value) })
           }
+          aria-label={`${t.percentShare} ${t.for || "for"} ${member.handle}`}
+          aria-disabled={distributionMode === "EQUAL"}
         />
       </td>
       <td className="py-3 px-3 w-[240px]">
@@ -236,6 +258,8 @@ export function MemberRow({
           onChange={(e) =>
             updateMember(member.id!, { fixedBonus: Number(e.target.value) as any })
           }
+          aria-label={`${t.fixedBonus} ${t.for || "for"} ${member.handle}`}
+          aria-disabled={distributionMode !== "ADJUSTABLE"}
         />
       </td>
       <td className="py-3 px-3 w-[240px]">
@@ -247,6 +271,8 @@ export function MemberRow({
           onChange={(e) =>
             updateMember(member.id!, { fixedPayout: Number(e.target.value) })
           }
+          aria-label={`${t.fixedPayout} ${t.for || "for"} ${member.handle}`}
+          aria-disabled={distributionMode !== "ADJUSTABLE"}
         />
       </td>
       <td className="py-3 px-3 text-right">
@@ -256,6 +282,7 @@ export function MemberRow({
           className="text-red-400 h-8 w-8 p-0"
           onClick={() => removeMember(member.id!)}
           title={t.remove}
+          aria-label={`${t.remove} ${t.member || "member"} ${member.handle}`}
         >
           🗑
         </Button>

@@ -230,7 +230,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" role="main" aria-label={t.appName}>
       {/* Header with app name and language switcher */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
@@ -241,7 +241,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
       </div>
 
       {/* Session name and management controls */}
-      <div className="glass p-6 space-y-4">
+      <div className="glass p-6 space-y-4" role="region" aria-label={t.sessionName || "Session Information"}>
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div className="flex-1 min-w-[250px]">
             <FormField
