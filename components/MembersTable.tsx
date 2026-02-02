@@ -90,6 +90,17 @@ export function MembersTable({
     return new Map(result.members.map((rm) => [rm.memberId, rm]));
   }, [result]);
 
+  // Pre-compute expenses-by-member Map to eliminate O(n²) filter() calls
+  const expensesByMember = useMemo(() => {
+    const map = new Map<string, IndividualExpenseInput[]>();
+    for (const expense of individualExpenses) {
+      const memberId = expense.memberId;
+      const existing = map.get(memberId) ?? [];
+      map.set(memberId, [...existing, expense]);
+    }
+    return map;
+  }, [individualExpenses]);
+
   return (
     <div className="glass p-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -117,13 +128,14 @@ export function MembersTable({
           <tbody className="divide-y divide-white/10">
             {members.map((m) => {
               const resultMember = resultMemberMap.get(m.id);
+              const memberExpenses = expensesByMember.get(m.id) ?? [];
               return (
                 <MemberRow
                   key={m.id}
                   member={m}
                   showRole={showRole}
                   distributionMode={distributionMode}
-                  individualExpenses={individualExpenses}
+                  individualExpenses={memberExpenses}
                   resultMember={resultMember}
                   feeByPayer={feeByPayer}
                   lang={lang}
