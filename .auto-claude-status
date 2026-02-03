@@ -1,15 +1,15 @@
 {
   "active": true,
-  "spec": "043-export-to-pdf-payslip",
+  "spec": "044-export-to-csv",
   "state": "building",
   "subtasks": {
-    "completed": 1,
-    "total": 9,
+    "completed": 5,
+    "total": 6,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "PDF Export Implementation",
+    "current": "Testing & Verification",
     "id": null,
     "total": 7
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 3,
-    "started_at": "2026-02-03T01:52:48.514968"
+    "number": 5,
+    "started_at": "2026-02-03T20:16:59.383492"
   },
-  "last_update": "2026-02-03T01:59:00.569813"
+  "last_update": "2026-02-03T20:27:47.871744"
 }
