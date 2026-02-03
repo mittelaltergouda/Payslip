@@ -3,6 +3,8 @@
 import { useMemo } from "react";
 import type { DistributionMode, IndividualExpenseInput, MemberInput, PayslipResult } from "@/lib/types";
 import { MemberRow } from "./MemberRow";
+import { MemberCard } from "./MemberCard";
+import { Button } from "@/components/ui/button";
 
 type Lang = "de" | "en";
 
@@ -102,30 +104,33 @@ export function MembersTable({
   }, [individualExpenses]);
 
   return (
-    <div className="glass p-6 space-y-4">
+    <div className="glass p-6 space-y-4" role="region" aria-labelledby="members-heading">
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-display">{t.members}</h3>
-        <button className="btn" onClick={onAddMember}>{t.addMember}</button>
+        <h3 id="members-heading" className="text-xl font-display">{t.members}</h3>
+        <Button onClick={onAddMember} aria-label={t.addMember}>{t.addMember}</Button>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-base">
+
+      {/* Desktop Table View - hidden on mobile */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="min-w-full text-base" aria-label={t.members} aria-describedby="members-heading">
+          <caption className="sr-only">{t.members}</caption>
           <thead className="text-white/60 border-b border-white/10">
             <tr className="whitespace-nowrap">
-              <th className="py-3 px-3 text-left">{t.handle}</th>
-              {showRole && <th className="py-3 px-3 text-left">{t.role}</th>}
-              <th className="py-3 px-3 text-left">{t.revenueLabel}</th>
-              <th className="py-3 px-3 text-left">{t.investmentLabel}</th>
-              <th className="py-3 px-3 text-left">{t.expensesLabel}</th>
-              <th className="py-3 px-3 text-left">{t.taxesLabel}</th>
-              <th className="py-3 px-3 text-left">{t.profitShareCol}</th>
-              <th className="py-3 px-3 text-left">{t.netAfterFeesCol}</th>
-              <th className="py-3 px-3 text-left">{t.percentShare}</th>
-              <th className="py-3 px-3 text-left">{t.fixedBonus}</th>
-              <th className="py-3 px-3 text-left">{t.fixedPayout}</th>
-              <th />
+              <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.handle}</th>
+              {showRole && <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.role}</th>}
+              <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.revenueLabel}</th>
+              <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.investmentLabel}</th>
+              <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.expensesLabel}</th>
+              <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.taxesLabel}</th>
+              <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.profitShareCol}</th>
+              <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.netAfterFeesCol}</th>
+              <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.percentShare}</th>
+              <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.fixedBonus}</th>
+              <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.fixedPayout}</th>
+              <th scope="col" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/10">
+          <tbody className="divide-y divide-white/10 [&>tr]:transition-colors [&>tr]:duration-200 [&>tr:hover]:bg-white/[0.02]">
             {members.map((m) => {
               const resultMember = resultMemberMap.get(m.id);
               const memberExpenses = expensesByMember.get(m.id) ?? [];
@@ -151,6 +156,32 @@ export function MembersTable({
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View - shown on mobile, hidden on desktop */}
+      <div className="block md:hidden space-y-4" role="list" aria-label={t.members}>
+        {members.map((m) => {
+          const resultMember = result?.members.find((x) => x.memberId === m.id);
+          return (
+            <MemberCard
+              key={m.id}
+              member={m}
+              showRole={showRole}
+              distributionMode={distributionMode}
+              individualExpenses={individualExpenses}
+              resultMember={resultMember}
+              feeByPayer={feeByPayer}
+              lang={lang}
+              t={t}
+              format={format}
+              updateMember={updateMember}
+              removeMember={removeMember}
+              addIndividualExpense={addIndividualExpense}
+              updateIndividualExpense={updateIndividualExpense}
+              removeIndividualExpense={removeIndividualExpense}
+            />
+          );
+        })}
       </div>
     </div>
   );

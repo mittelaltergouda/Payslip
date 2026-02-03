@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error States Test - ARIA Validation</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #e0e0e0;
+    }
+    h1 { color: #fff; }
+    .test-case {
+      margin: 30px 0;
+      padding: 20px;
+      background: #2a2a2a;
+      border-radius: 8px;
+    }
+    .test-case h3 {
+      margin-top: 0;
+      color: #7c3aed;
+    }
+    input {
+      padding: 10px;
+      border: 2px solid #444;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.05);
+      color: #e0e0e0;
+      font-size: 14px;
+      width: 100%;
+      margin: 10px 0;
+    }
+    input[aria-invalid="true"] {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+    }
+    .hint {
+      font-size: 12px;
+      color: #9ca3af;
+      margin: 5px 0;
+    }
+    .error {
+      font-size: 12px;
+      color: #ef4444;
+      margin: 5px 0;
+      font-weight: 600;
+    }
+    .attribute-display {
+      margin-top: 10px;
+      padding: 10px;
+      background: #1a1a1a;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .pass { color: #10b981; }
+    .fail { color: #ef4444; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Error States Test - ARIA Validation</h1>
+  <p>Testing improved aria-invalid and aria-describedby implementation</p>
+
+  <div class="test-case">
+    <h3>Test 1: Input with only error</h3>
+    <label for="test1">Email Address</label>
+    <input
+      id="test1"
+      type="email"
+      aria-invalid="true"
+      aria-describedby="test1-error"
+    />
+    <p id="test1-error" class="error" role="alert" aria-live="polite">
+      Please enter a valid email address
+    </p>
+    <div class="attribute-display">
+      <strong>Expected:</strong> aria-describedby="test1-error"<br>
+      <strong>Expected:</strong> aria-invalid="true"<br>
+      <span id="test1-result"></span>
+    </div>
+  </div>
+
+  <div class="test-case">
+    <h3>Test 2: Input with hint AND error (combined)</h3>
+    <label for="test2">Password</label>
+    <p id="test2-hint" class="hint">Must be at least 8 characters</p>
+    <input
+      id="test2"
+      type="password"
+      aria-invalid="true"
+      aria-describedby="test2-error test2-hint"
+    />
+    <p id="test2-error" class="error" role="alert" aria-live="polite">
+      Password is too short
+    </p>
+    <div class="attribute-display">
+      <strong>Expected:</strong> aria-describedby="test2-error test2-hint" (error first!)<br>
+      <strong>Expected:</strong> aria-invalid="true"<br>
+      <span id="test2-result"></span>
+    </div>
+  </div>
+
+  <div class="test-case">
+    <h3>Test 3: Input with only hint (no error)</h3>
+    <label for="test3">Username</label>
+    <input
+      id="test3"
+      type="text"
+      aria-describedby="test3-hint"
+    />
+    <p id="test3-hint" class="hint">Choose a unique username</p>
+    <div class="attribute-display">
+      <strong>Expected:</strong> aria-describedby="test3-hint"<br>
+      <strong>Expected:</strong> aria-invalid="false" or not present<br>
+      <span id="test3-result"></span>
+    </div>
+  </div>
+
+  <div class="test-case">
+    <h3>Test 4: Input transitions from error to valid</h3>
+    <label for="test4">Amount</label>
+    <input
+      id="test4"
+      type="number"
+      value="0"
+      oninput="validateAmount(this)"
+    />
+    <p id="test4-hint" class="hint">Enter amount greater than 0</p>
+    <p id="test4-error" class="error" role="alert" aria-live="polite" style="display:none;">
+      Amount must be greater than 0
+    </p>
+    <div class="attribute-display">
+      <strong>Try it:</strong> Enter values above and below 0 to see aria attributes update<br>
+      <span id="test4-result"></span>
+    </div>
+  </div>
+
+  <script>
+    // Validation for Test 4
+    function validateAmount(input) {
+      const value = parseFloat(input.value);
+      const errorEl = document.getElementById('test4-error');
+      const hintEl = document.getElementById('test4-hint');
+
+      if (value <= 0 || isNaN(value)) {
+        input.setAttribute('aria-invalid', 'true');
+        input.setAttribute('aria-describedby', 'test4-error test4-hint');
+        errorEl.style.display = 'block';
+        hintEl.style.display = 'none';
+      } else {
+        input.setAttribute('aria-invalid', 'false');
+        input.setAttribute('aria-describedby', 'test4-hint');
+        errorEl.style.display = 'none';
+        hintEl.style.display = 'block';
+      }
+      checkTest4();
+    }
+
+    // Check test results
+    function checkTest(testId, expectedAttrs) {
+      const input = document.getElementById(testId);
+      const resultEl = document.getElementById(`${testId}-result`);
+      let results = [];
+
+      for (const [attr, expected] of Object.entries(expectedAttrs)) {
+        const actual = input.getAttribute(attr);
+        const match = actual === expected;
+        results.push(`<div class="${match ? 'pass' : 'fail'}">
+          ${match ? '✓' : '✗'} ${attr}: "${actual}"
+        </div>`);
+      }
+
+      resultEl.innerHTML = results.join('');
+    }
+
+    function checkTest4() {
+      const input = document.getElementById('test4');
+      const resultEl = document.getElementById('test4-result');
+      resultEl.innerHTML = `
+        <div>Current aria-invalid: "${input.getAttribute('aria-invalid')}"</div>
+        <div>Current aria-describedby: "${input.getAttribute('aria-describedby')}"</div>
+      `;
+    }
+
+    // Run checks on load
+    window.addEventListener('DOMContentLoaded', () => {
+      checkTest('test1', {
+        'aria-invalid': 'true',
+        'aria-describedby': 'test1-error'
+      });
+
+      checkTest('test2', {
+        'aria-invalid': 'true',
+        'aria-describedby': 'test2-error test2-hint'
+      });
+
+      checkTest('test3', {
+        'aria-describedby': 'test3-hint'
+      });
+
+      validateAmount(document.getElementById('test4'));
+    });
+  </script>
+</body>
+</html>
