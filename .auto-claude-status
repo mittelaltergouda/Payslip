@@ -1,10 +1,10 @@
 {
   "active": true,
-  "spec": "032-reduce-re-render-overhead-with-inline-find-calls-m",
+  "spec": "033-add-database-indexes-for-frequently-queried-foreig",
   "state": "building",
   "subtasks": {
-    "completed": 6,
-    "total": 7,
+    "completed": 8,
+    "total": 9,
     "in_progress": 1,
     "failed": 0
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 7,
-    "started_at": "2026-02-02T23:32:34.511274"
+    "number": 10,
+    "started_at": "2026-02-02T22:00:00.523035"
   },
-  "last_update": "2026-02-02T23:46:33.424555"
+  "last_update": "2026-02-02T22:16:25.074612"
 }

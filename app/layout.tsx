@@ -1,4 +1,4 @@
-﻿import "./globals.css";
+import "./globals.css";
 import type { Metadata } from "next";
 import { ToastProvider } from "@/components/Toast";
 import { Space_Grotesk, Inter } from "next/font/google";
@@ -29,7 +29,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="de" className={`${spaceGrotesk.variable} ${inter.variable}`}>
-      <body>
+      <body className="font-body">
         <ToastProvider>
           {children}
         </ToastProvider>
