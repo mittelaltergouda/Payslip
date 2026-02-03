@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import type { DistributionMode, IndividualExpenseInput, MemberInput, PayslipResult } from "@/lib/types";
 import { MemberRow } from "./MemberRow";
 import { MemberCard } from "./MemberCard";
@@ -85,6 +86,23 @@ export function MembersTable({
   updateIndividualExpense,
   removeIndividualExpense
 }: MembersTableProps) {
+  // Pre-compute member lookup Map to eliminate O(n²) find() calls
+  const resultMemberMap = useMemo(() => {
+    if (!result?.members) {return new Map();}
+    return new Map(result.members.map((rm) => [rm.memberId, rm]));
+  }, [result]);
+
+  // Pre-compute expenses-by-member Map to eliminate O(n²) filter() calls
+  const expensesByMember = useMemo(() => {
+    const map = new Map<string, IndividualExpenseInput[]>();
+    for (const expense of individualExpenses) {
+      const memberId = expense.memberId;
+      const existing = map.get(memberId) ?? [];
+      map.set(memberId, [...existing, expense]);
+    }
+    return map;
+  }, [individualExpenses]);
+
   return (
     <div className="glass p-6 space-y-4" role="region" aria-labelledby="members-heading">
       <div className="flex items-center justify-between">
@@ -114,14 +132,15 @@ export function MembersTable({
           </thead>
           <tbody className="divide-y divide-white/10 [&>tr]:transition-colors [&>tr]:duration-200 [&>tr:hover]:bg-white/[0.02]">
             {members.map((m) => {
-              const resultMember = result?.members.find((x) => x.memberId === m.id);
+              const resultMember = resultMemberMap.get(m.id);
+              const memberExpenses = expensesByMember.get(m.id) ?? [];
               return (
                 <MemberRow
                   key={m.id}
                   member={m}
                   showRole={showRole}
                   distributionMode={distributionMode}
-                  individualExpenses={individualExpenses}
+                  individualExpenses={memberExpenses}
                   resultMember={resultMember}
                   feeByPayer={feeByPayer}
                   lang={lang}
