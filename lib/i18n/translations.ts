@@ -17,6 +17,7 @@ export type Lang = "de" | "en";
  * - Results display labels
  * - Summary and statistics labels
  * - Transfer-related messages
+ * - Share functionality labels
  *
  * Usage:
  * ```tsx
@@ -101,7 +102,15 @@ export const translations: Record<Lang, Record<string, string>> = {
     sessionDeleted: "Session gelöscht",
     exportSuccess: "Sessions exportiert",
     importSuccess: "Importiert",
-    sessions: "Sessions"
+    sessions: "Sessions",
+    share: "Teilen",
+    shareSession: "Session teilen",
+    copyLink: "Link kopieren",
+    linkCopied: "Link kopiert!",
+    shareLink: "Sharelink",
+    readOnlyMode: "Nur-Lesen-Modus",
+    readOnlyNotice: "Diese Session ist schreibgeschützt. Du kannst die Berechnungen ansehen, aber keine Änderungen vornehmen.",
+    sharedSession: "Geteilte Session"
   },
   en: {
     appName: "SC Payslip",
@@ -168,6 +177,14 @@ export const translations: Record<Lang, Record<string, string>> = {
     sessionDeleted: "Session deleted",
     exportSuccess: "Sessions exported",
     importSuccess: "Imported",
-    sessions: "sessions"
+    sessions: "sessions",
+    share: "Share",
+    shareSession: "Share Session",
+    copyLink: "Copy Link",
+    linkCopied: "Link copied!",
+    shareLink: "Share Link",
+    readOnlyMode: "Read-Only Mode",
+    readOnlyNotice: "This session is read-only. You can view the calculations but cannot make changes.",
+    sharedSession: "Shared Session"
   }
 };

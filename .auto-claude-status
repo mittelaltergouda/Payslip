@@ -3,7 +3,7 @@
   "spec": "040-shareable-read-only-links",
   "state": "building",
   "subtasks": {
-    "completed": 4,
+    "completed": 6,
     "total": 10,
     "in_progress": 1,
     "failed": 0
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 6,
+    "number": 8,
     "started_at": "2026-02-03T01:13:31.514242"
   },
-  "last_update": "2026-02-03T01:35:44.972992"
+  "last_update": "2026-02-03T01:52:49.463596"
 }
