@@ -5,6 +5,7 @@ import type { Lang } from "@/lib/i18n/translations";
 import { SummaryStats } from "./SummaryStats";
 import { TransfersList } from "./TransfersList";
 import { generateSummaryCSV, generateDetailedCSV, downloadCSV } from "@/lib/csv/export";
+import { ExportPDFButton } from "./ExportPDFButton";
 
 /**
  * Format a number according to the specified language locale.
@@ -173,6 +174,13 @@ export function ResultsDisplay({
         </div>
         {result && (
           <div className="flex items-center gap-3 flex-wrap">
+            {/* PDF Export Button */}
+            <ExportPDFButton
+              session={session}
+              result={result}
+              lang={lang}
+              currency={currency}
+            />
             {/* Summary CSV Export Button */}
             <button
               type="button"

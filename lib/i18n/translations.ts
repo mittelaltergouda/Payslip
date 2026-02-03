@@ -105,7 +105,12 @@ export const translations: Record<Lang, Record<string, string>> = {
     exportSummary: "Zusammenfassung (CSV)",
     exportDetailed: "Detailliert (CSV)",
     exportSummaryTooltip: "Zusammenfassung als CSV herunterladen",
-    exportDetailedTooltip: "Detaillierte Daten als CSV herunterladen"
+    exportDetailedTooltip: "Detaillierte Daten als CSV herunterladen",
+    exportPdf: "PDF exportieren",
+    exportingPdf: "PDF wird erstellt...",
+    pdfExportSuccess: "PDF erfolgreich exportiert",
+    pdfExportError: "Fehler beim PDF-Export",
+    downloadPdf: "PDF herunterladen"
   },
   en: {
     appName: "SC Payslip",
@@ -176,6 +181,11 @@ export const translations: Record<Lang, Record<string, string>> = {
     exportSummary: "Summary (CSV)",
     exportDetailed: "Detailed (CSV)",
     exportSummaryTooltip: "Download summary as CSV",
-    exportDetailedTooltip: "Download detailed data as CSV"
+    exportDetailedTooltip: "Download detailed data as CSV",
+    exportPdf: "Export PDF",
+    exportingPdf: "Generating PDF...",
+    pdfExportSuccess: "PDF exported successfully",
+    pdfExportError: "PDF export failed",
+    downloadPdf: "Download PDF"
   }
 };
