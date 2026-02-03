@@ -1,4 +1,4 @@
-﻿import "./globals.css";
+import "./globals.css";
 import type { Metadata } from "next";
 import { ToastProvider } from "@/components/Toast";
 import { Space_Grotesk, Inter } from "next/font/google";

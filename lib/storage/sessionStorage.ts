@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { SessionInput, SavedSession, savedSessionSchema } from '../types';
+import type { SessionInput, SavedSession} from '../types';
+import { savedSessionSchema } from '../types';
 import { generateId } from '../id';
 
 // ============================================================================
@@ -126,7 +126,7 @@ function getAllInternal(): SavedSession[] {
     return validSessions.sort((a, b) => {
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
-  } catch (error) {
+  } catch (_error) {
     // If localStorage is corrupt or unavailable, return empty array
     return [];
   }

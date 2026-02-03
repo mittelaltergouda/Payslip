@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { DistributionMode, SessionInput } from "@/lib/types";
+import type { DistributionMode, SessionInput } from "@/lib/types";
 import { ModePreview } from "./ModePreview";
-import { ModePreviewResult } from "@/lib/modePreview";
+import type { ModePreviewResult } from "@/lib/modePreview";
 
 /**
  * Props for the SessionSettings component.
@@ -188,7 +188,7 @@ export function SessionSettings({
               <ModePreview
                 mode={hoveredMode}
                 preview={modePreviews[hoveredMode]}
-                visible={true}
+                visible
                 currency={session.currency}
                 className="top-full mt-2"
               />

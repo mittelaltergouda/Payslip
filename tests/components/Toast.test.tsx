@@ -440,7 +440,7 @@ describe('ToastItem - Close Button', () => {
   });
 
   it('should render close icon with correct size', () => {
-    const { container } = render(
+    render(
       <ToastProvider>
         <TestComponent />
       </ToastProvider>

@@ -1,15 +1,9 @@
 import React from 'react';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemberRow } from './MemberRow';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DistributionMode, IndividualExpenseInput, MemberBreakdown, MemberInput } from '@/lib/types';
-
-// Mock translations
-const mockTranslationsDE = {
-  remove: 'Entfernen',
-  addExpense: '+ Ausgabe',
-};
+import type { IndividualExpenseInput, MemberBreakdown, MemberInput } from '@/lib/types';
 
 const mockTranslationsEN = {
   remove: 'Remove',
@@ -108,7 +102,7 @@ describe('MemberRow - Initial Rendering', () => {
         <tbody>
           <MemberRow
             member={sampleMember}
-            showRole={true}
+            showRole
             distributionMode="EQUAL"
             individualExpenses={[]}
             resultMember={sampleResultMember}
@@ -450,7 +444,7 @@ describe('MemberRow - User Interactions', () => {
         <tbody>
           <MemberRow
             member={sampleMember}
-            showRole={true}
+            showRole
             distributionMode="EQUAL"
             individualExpenses={[]}
             resultMember={sampleResultMember}
@@ -914,7 +908,7 @@ describe('MemberRow - Edge Cases', () => {
         <tbody>
           <MemberRow
             member={memberWithoutRole}
-            showRole={true}
+            showRole
             distributionMode="EQUAL"
             individualExpenses={[]}
             resultMember={sampleResultMember}
@@ -1008,15 +1002,9 @@ describe('MemberRow - Edge Cases', () => {
   });
 
   it('should filter expenses for the correct member', () => {
-    const otherMemberExpenses: IndividualExpenseInput[] = [
-      {
-        id: 'expense-3',
-        memberId: 'member-2',
-        label: 'Other Member Expense',
-        amount: 1000,
-      },
-      ...sampleIndividualExpenses,
-    ];
+    // MemberRow now expects pre-filtered expenses from MembersTable
+    // So we pass only the expenses for this member (not other members' expenses)
+    const memberOnlyExpenses = sampleIndividualExpenses.filter((e) => e.memberId === 'member-1');
 
     render(
       <table>
@@ -1025,7 +1013,7 @@ describe('MemberRow - Edge Cases', () => {
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
-            individualExpenses={otherMemberExpenses}
+            individualExpenses={memberOnlyExpenses}
             resultMember={sampleResultMember}
             feeByPayer={{}}
             lang="en"
@@ -1037,9 +1025,10 @@ describe('MemberRow - Edge Cases', () => {
       </table>
     );
 
-    // Should only show expenses for member-1, not member-2
+    // Should only show expenses for member-1 (since we passed pre-filtered expenses)
     expect(screen.getByDisplayValue('Fuel')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Repairs')).toBeInTheDocument();
+    // Other member's expense is not in the pre-filtered list, so shouldn't be rendered
     expect(screen.queryByDisplayValue('Other Member Expense')).not.toBeInTheDocument();
   });
 });

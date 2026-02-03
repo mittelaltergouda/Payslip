@@ -1,6 +1,6 @@
 "use client";
 
-import { Lang } from "@/lib/i18n/translations";
+import type { Lang } from "@/lib/i18n/translations";
 
 /**
  * Props for the LanguageSwitcher component.

@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { exportAll, importAll } from "@/lib/storage/sessionStorage";
-import { Lang } from "@/lib/i18n/translations";
+import type { Lang } from "@/lib/i18n/translations";
 
 /**
  * Props for the SessionActions component
@@ -37,6 +37,22 @@ type SessionActionsProps = {
   onSessionsImported?: () => void;
 };
 
+// Translation strings
+const translations = {
+  de: {
+    exportAll: "Exportieren",
+    importSessions: "Importieren",
+    exportTooltip: "Alle Sessions als JSON herunterladen",
+    importTooltip: "Sessions aus JSON-Datei importieren",
+  },
+  en: {
+    exportAll: "Export All",
+    importSessions: "Import",
+    exportTooltip: "Download all sessions as JSON",
+    importTooltip: "Import sessions from JSON file",
+  },
+};
+
 /**
  * SessionActions Component
  *
@@ -66,23 +82,6 @@ export function SessionActions({
   onSessionsImported,
 }: SessionActionsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Translation strings
-  const translations = {
-    de: {
-      exportAll: "Exportieren",
-      importSessions: "Importieren",
-      exportTooltip: "Alle Sessions als JSON herunterladen",
-      importTooltip: "Sessions aus JSON-Datei importieren",
-    },
-    en: {
-      exportAll: "Export All",
-      importSessions: "Import",
-      exportTooltip: "Download all sessions as JSON",
-      importTooltip: "Import sessions from JSON file",
-    },
-  };
-
   const t = translations[lang];
 
   /**
@@ -241,7 +240,7 @@ export function SessionActions({
         ref={fileInputRef}
         type="file"
         accept="application/json,.json"
-        onChange={handleFileChange}
+        onChange={(e) => void handleFileChange(e)}
         className="hidden"
         aria-hidden="true"
       />
