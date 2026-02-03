@@ -3,7 +3,7 @@
   "spec": "041-session-history-view",
   "state": "building",
   "subtasks": {
-    "completed": 1,
+    "completed": 3,
     "total": 7,
     "in_progress": 1,
     "failed": 0
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 3,
+    "number": 5,
     "started_at": "2026-02-03T01:13:27.230469"
   },
-  "last_update": "2026-02-03T01:23:58.162364"
+  "last_update": "2026-02-03T01:31:20.870415"
 }
