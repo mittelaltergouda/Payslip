@@ -34,6 +34,12 @@ export interface SessionListProps {
   };
 
   /**
+   * Optional callback invoked when the user confirms deletion of a session.
+   * Called with the session ID as the parameter.
+   */
+  onDelete?: (sessionId: string) => void;
+
+  /**
    * Optional CSS class name for additional styling.
    */
   className?: string;
@@ -82,6 +88,7 @@ export function SessionList({
   sessions,
   lang,
   translations: t,
+  onDelete,
   className = "",
 }: SessionListProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -145,6 +152,7 @@ export function SessionList({
               key={session.id}
               session={session}
               lang={lang}
+              onDelete={onDelete}
               translations={{
                 members: t.members,
                 revenueLabel: t.revenueLabel,

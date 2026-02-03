@@ -7,6 +7,7 @@ import type { SessionListItemData } from "@/components/SessionListItem";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import type { Lang } from "@/lib/i18n/translations";
 import { translations } from "@/lib/i18n/translations";
+import { useToast } from "@/components/Toast";
 
 /**
  * Sessions page displays a list of all saved sessions with filtering and search.
@@ -17,10 +18,12 @@ import { translations } from "@/lib/i18n/translations";
  * - Supports filtering by session type
  * - Supports search by session name
  * - Allows navigation to individual sessions
+ * - Allows deletion of sessions with confirmation
  */
 export default function SessionsPage() {
   const [lang, setLang] = useState<Lang>("de");
   const t = translations[lang];
+  const { showToast } = useToast();
 
   const [sessions, setSessions] = useState<SessionListItemData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,6 +53,29 @@ export default function SessionsPage() {
 
     void fetchSessions();
   }, []);
+
+  // Handle session deletion
+  const handleDelete = async (sessionId: string) => {
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete session: ${response.status}`);
+      }
+
+      // Remove session from state immediately
+      setSessions((prev) => prev.filter((session) => session.id !== sessionId));
+
+      // Show success message
+      showToast(t.sessionDeleted, "success");
+    } catch (err) {
+      // Show error message
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete session";
+      showToast(errorMessage, "error");
+    }
+  };
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-10 space-y-10">
@@ -91,6 +117,7 @@ export default function SessionsPage() {
         <SessionList
           sessions={sessions}
           lang={lang}
+          onDelete={handleDelete}
           translations={{
             members: t.members,
             revenueLabel: t.revenueLabel,

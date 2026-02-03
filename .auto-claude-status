@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "043-export-to-pdf-payslip",
+  "spec": "042-session-deletion-with-confirmation",
   "state": "building",
   "subtasks": {
-    "completed": 1,
-    "total": 9,
+    "completed": 3,
+    "total": 5,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "PDF Export Implementation",
+    "current": "Implementation",
     "id": null,
-    "total": 7
+    "total": 5
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 3,
-    "started_at": "2026-02-03T01:52:48.514968"
+    "number": 5,
+    "started_at": "2026-02-03T23:55:56.552225"
   },
-  "last_update": "2026-02-03T01:59:00.569813"
+  "last_update": "2026-02-04T00:10:21.337308"
 }
