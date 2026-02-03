@@ -16,6 +16,8 @@ import { SessionHistory } from "./SessionHistory";
 import { SessionActions } from "./SessionActions";
 import { useToast } from "./Toast";
 import { getAll, deleteSession as deleteStoredSession } from "@/lib/storage/sessionStorage";
+import { ShareButton } from "./ShareButton";
+import { generateId } from "@/lib/id";
 
 const rndId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -30,6 +32,7 @@ function format(amount: number, lang: Lang) {
 
 function buildInitialSession(): SessionInput {
   return {
+    id: generateId(),
     name: "SC Session",
     type: "TRADING",
     currency: "aUEC",
@@ -298,6 +301,17 @@ export function SessionWizard({ initialLang = "de" }: Props) {
               onImportError={(error) => showToast(error, "error")}
               onSessionsImported={refreshSessionList}
             />
+
+            {session.id && result && (
+              <ShareButton
+                sessionId={session.id}
+                lang={lang}
+                onShareSuccess={() =>
+                  showToast(t.shareLinkCopied || "Share link copied to clipboard!", "success")
+                }
+                onShareError={(error) => showToast(error, "error")}
+              />
+            )}
           </div>
         </div>
       </div>
