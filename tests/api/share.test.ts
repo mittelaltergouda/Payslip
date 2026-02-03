@@ -11,7 +11,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { calculatePayslip } from "@/lib/calc";
 import { Prisma } from "@prisma/client";
-import type { SessionInput, Payslip } from "@/lib/types";
+import type { Payslip } from "@/lib/types";
 
 // Mock Prisma client
 vi.mock("@/lib/prisma", () => ({
