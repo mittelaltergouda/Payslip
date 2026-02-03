@@ -55,6 +55,8 @@ model Member {
   session      Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   individual   IndividualExpense[]
   shared       SharedExpenseParticipant[]
+
+  @@index([sessionId])
 }
 
 model SharedExpense {
@@ -65,6 +67,8 @@ model SharedExpense {
 
   session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   members   SharedExpenseParticipant[]
+
+  @@index([sessionId])
 }
 
 model SharedExpenseParticipant {
@@ -75,6 +79,8 @@ model SharedExpenseParticipant {
   member          Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@id([sharedExpenseId, memberId])
+  @@index([sharedExpenseId])
+  @@index([memberId])
 }
 
 model IndividualExpense {
@@ -86,6 +92,9 @@ model IndividualExpense {
 
   session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   member    Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([memberId])
 }
 
 model ExportToken {
@@ -95,4 +104,6 @@ model ExportToken {
   expiresAt DateTime?
 
   session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
 }

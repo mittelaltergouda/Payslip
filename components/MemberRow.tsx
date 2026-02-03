@@ -133,7 +133,8 @@ export function MemberRow({
   updateIndividualExpense,
   removeIndividualExpense
 }: MemberRowProps) {
-  const exp = individualExpenses.filter((e) => e.memberId === member.id);
+  // individualExpenses is now pre-filtered by MembersTable, no need to filter again
+  const exp = individualExpenses;
   const expSum = exp.reduce((s, e) => s + e.amount, 0);
   const netAfterFees = (resultMember?.finalNet ?? 0) - (feeByPayer[member.id!] ?? 0);
 
