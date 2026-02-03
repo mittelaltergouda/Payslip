@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Share Page Verification</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .checklist {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .check-item {
+            margin: 10px 0;
+            padding: 8px;
+            background: white;
+            border-left: 4px solid #ddd;
+        }
+        .check-item input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+        .check-item.checked {
+            border-left-color: #4CAF50;
+            opacity: 0.7;
+        }
+        h1 {
+            color: #333;
+        }
+        h2 {
+            color: #666;
+            margin-top: 30px;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .warning {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .viewport-info {
+            display: inline-block;
+            background: #333;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>📱 Mobile Share Page Verification</h1>
+
+    <div class="info">
+        <strong>Viewport Target:</strong> <span class="viewport-info">375px × 667px</span> (iPhone SE)
+    </div>
+
+    <h2>Setup Instructions</h2>
+    <div class="checklist">
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                Start dev server: <code>npm run dev</code>
+            </label>
+        </div>
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                Create a test session with sample data
+            </label>
+        </div>
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                Click "Share" button to generate share link
+            </label>
+        </div>
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                Copy share URL from clipboard
+            </label>
+        </div>
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                Open DevTools (F12) and enable device toolbar (Ctrl+Shift+M)
+            </label>
+        </div>
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                Set viewport to 375px × 667px
+            </label>
+        </div>
+    </div>
+
+    <h2>Layout Verification</h2>
+    <div class="checklist">
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                <strong>No page-level horizontal scroll</strong> - main content fits within 375px
+            </label>
+        </div>
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                <strong>Table is scrollable</strong> - members table can scroll horizontally within container
+            </label>
+        </div>
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                <strong>Headers wrap properly</strong> - session name, type, and date are visible
+            </label>
+        </div>
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                <strong>"Read-only share link" text is visible</strong>
+            </label>
+        </div>
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                <strong>Grid stacks vertically</strong> - summary and transfers are in single column
+            </label>
+        </div>
+    </div>
+
+    <h2>Table Content Verification</h2>
+    <div class="checklist">
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                All 7 columns are accessible via horizontal scroll: Handle, Revenue, Investment, Expenses, Taxes, Profit Share, Net After Fees
+            </label>
+        </div>
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                Numbers display with proper formatting (e.g., 1,500,000)
+            </label>
+        </div>
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                No text overlap or cutoff in table cells
+            </label>
+        </div>
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                Color coding works (green for positive, red for negative net amounts)
+            </label>
+        </div>
+    </div>
+
+    <h2>Touch & Interaction</h2>
+    <div class="checklist">
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                Table scrolls smoothly with click-drag or swipe gesture
+            </label>
+        </div>
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                No console errors in DevTools
+            </label>
+        </div>
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                Page renders correctly (no broken layouts)
+            </label>
+        </div>
+    </div>
+
+    <h2>Additional Viewports</h2>
+    <div class="warning">
+        <strong>Test on additional mobile sizes to ensure broad compatibility:</strong>
+    </div>
+    <div class="checklist">
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                360px (Small Android) - layout works
+            </label>
+        </div>
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                390px (iPhone 12/13) - layout works
+            </label>
+        </div>
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                414px (iPhone Plus) - layout works
+            </label>
+        </div>
+    </div>
+
+    <h2>Final Check</h2>
+    <div class="checklist">
+        <div class="check-item">
+            <label>
+                <input type="checkbox" onchange="toggleCheck(this)">
+                <strong>✅ All checks passed - Mobile responsiveness verified!</strong>
+            </label>
+        </div>
+    </div>
+
+    <div class="info" style="margin-top: 30px;">
+        <strong>📄 Detailed Instructions:</strong> See <code>MOBILE_VERIFICATION.md</code> for comprehensive verification steps and troubleshooting.
+    </div>
+
+    <script>
+        function toggleCheck(checkbox) {
+            const item = checkbox.closest('.check-item');
+            if (checkbox.checked) {
+                item.classList.add('checked');
+            } else {
+                item.classList.remove('checked');
+            }
+        }
+    </script>
+</body>
+</html>

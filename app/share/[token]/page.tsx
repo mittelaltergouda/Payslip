@@ -186,7 +186,7 @@ export default async function SharePage({
   const totalFees = payslip.suggestedTransfers.reduce((sum, tr) => sum + tr.feeAmount, 0);
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-10 space-y-6">
+    <main className="max-w-7xl mx-auto px-4 py-10 space-y-6 min-w-0">
       {/* Header */}
       <div className="glass p-6 space-y-2">
         <div className="flex items-center justify-between flex-wrap gap-4">
@@ -203,14 +203,14 @@ export default async function SharePage({
       </div>
 
       {/* Results Display - Read-only */}
-      <div className="glass p-6 space-y-4">
+      <div className="glass p-6 space-y-4 min-w-0">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <h3 className="text-xl font-display">{t.results}</h3>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2 min-w-0">
           {/* Left column: Summary stats and member results table */}
-          <div className="space-y-4">
+          <div className="space-y-4 min-w-0">
             <SummaryStats
               result={payslip}
               totalRevenue={totalRevenue}
@@ -225,8 +225,8 @@ export default async function SharePage({
             {/* Members results table */}
             <div className="space-y-2">
               <h4 className="font-semibold text-white/80">{t.members}</h4>
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-base">
+              <div className="overflow-x-auto -mx-2 px-2">
+                <table className="w-full text-base">
                   <thead className="text-white/60 border-b border-white/10">
                     <tr className="whitespace-nowrap">
                       <th className="py-3 px-3 text-left">{t.handle}</th>
