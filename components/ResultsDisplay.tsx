@@ -4,6 +4,7 @@ import type { PayslipResult, SessionInput} from "@/lib/types";
 import type { Lang } from "@/lib/i18n/translations";
 import { SummaryStats } from "./SummaryStats";
 import { TransfersList } from "./TransfersList";
+import { ExportPDFButton } from "./ExportPDFButton";
 
 /**
  * Format a number according to the specified language locale.
@@ -116,6 +117,14 @@ export function ResultsDisplay({
           <h3 className="text-xl font-display">{t.results}</h3>
           {error && <span className="text-red-400 text-sm">{error}</span>}
         </div>
+        {result && (
+          <ExportPDFButton
+            session={session}
+            result={result}
+            lang={lang}
+            currency={currency}
+          />
+        )}
       </div>
 
       {result && (
