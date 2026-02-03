@@ -1,15 +1,15 @@
 {
   "active": true,
-  "spec": "035-move-static-translation-map-outside-component-to-a",
+  "spec": "044-export-to-csv",
   "state": "building",
   "subtasks": {
-    "completed": 4,
-    "total": 5,
+    "completed": 3,
+    "total": 6,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Full Test Suite Verification",
+    "current": "Testing & Verification",
     "id": null,
     "total": 3
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 6,
-    "started_at": "2026-02-02T21:59:58.061782"
+    "number": 3,
+    "started_at": "2026-02-03T20:16:59.383492"
   },
-  "last_update": "2026-02-02T22:16:55.558449"
+  "last_update": "2026-02-03T20:21:58.323172"
 }
