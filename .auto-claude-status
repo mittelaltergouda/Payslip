@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "041-session-history-view",
+  "spec": "043-export-to-pdf-payslip",
   "state": "building",
   "subtasks": {
-    "completed": 5,
-    "total": 7,
+    "completed": 1,
+    "total": 9,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Navigation Integration",
+    "current": "PDF Export Implementation",
     "id": null,
-    "total": 1
+    "total": 7
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 7,
-    "started_at": "2026-02-03T01:13:27.230469"
+    "number": 3,
+    "started_at": "2026-02-03T01:52:48.514968"
   },
-  "last_update": "2026-02-03T01:41:53.885506"
+  "last_update": "2026-02-03T01:59:00.569813"
 }

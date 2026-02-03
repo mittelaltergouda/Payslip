@@ -101,7 +101,12 @@ export const translations: Record<Lang, Record<string, string>> = {
     sessionDeleted: "Session gelöscht",
     exportSuccess: "Sessions exportiert",
     importSuccess: "Importiert",
-    sessions: "Sessions"
+    sessions: "Sessions",
+    exportPdf: "PDF exportieren",
+    exportingPdf: "PDF wird erstellt...",
+    pdfExportSuccess: "PDF erfolgreich exportiert",
+    pdfExportError: "Fehler beim PDF-Export",
+    downloadPdf: "PDF herunterladen"
   },
   en: {
     appName: "SC Payslip",
@@ -168,6 +173,11 @@ export const translations: Record<Lang, Record<string, string>> = {
     sessionDeleted: "Session deleted",
     exportSuccess: "Sessions exported",
     importSuccess: "Imported",
-    sessions: "sessions"
+    sessions: "sessions",
+    exportPdf: "Export PDF",
+    exportingPdf: "Generating PDF...",
+    pdfExportSuccess: "PDF exported successfully",
+    pdfExportError: "PDF export failed",
+    downloadPdf: "Download PDF"
   }
 };
