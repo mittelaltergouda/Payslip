@@ -101,7 +101,11 @@ export const translations: Record<Lang, Record<string, string>> = {
     sessionDeleted: "Session gelöscht",
     exportSuccess: "Sessions exportiert",
     importSuccess: "Importiert",
-    sessions: "Sessions"
+    sessions: "Sessions",
+    exportSummary: "Zusammenfassung (CSV)",
+    exportDetailed: "Detailliert (CSV)",
+    exportSummaryTooltip: "Zusammenfassung als CSV herunterladen",
+    exportDetailedTooltip: "Detaillierte Daten als CSV herunterladen"
   },
   en: {
     appName: "SC Payslip",
@@ -168,6 +172,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     sessionDeleted: "Session deleted",
     exportSuccess: "Sessions exported",
     importSuccess: "Imported",
-    sessions: "sessions"
+    sessions: "sessions",
+    exportSummary: "Summary (CSV)",
+    exportDetailed: "Detailed (CSV)",
+    exportSummaryTooltip: "Download summary as CSV",
+    exportDetailedTooltip: "Download detailed data as CSV"
   }
 };
