@@ -1,10 +1,10 @@
 import React from "react";
-import { render, screen, fireEvent, within } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { SessionList } from "./SessionList";
 import type { SessionListProps } from "./SessionList";
 import type { SessionListItemData } from "./SessionListItem";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 
 // Mock translations
 const mockTranslationsDE = {
