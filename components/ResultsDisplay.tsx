@@ -1,7 +1,6 @@
 "use client";
 
 import type { PayslipResult, SessionInput} from "@/lib/types";
-import { MemberInput } from "@/lib/types";
 import type { Lang } from "@/lib/i18n/translations";
 import { SummaryStats } from "./SummaryStats";
 import { TransfersList } from "./TransfersList";

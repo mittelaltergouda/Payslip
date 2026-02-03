@@ -108,7 +108,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
       // Ctrl+S: Manual save
       if (e.ctrlKey && e.key === "s") {
         e.preventDefault();
-        manualSave();
+        void manualSave();
         showToast(t.sessionSaved || "Session saved", "success");
       }
       // Ctrl+O: Open history

@@ -1,4 +1,4 @@
-import { format, formatCurrency, formatPercent, formatCompact, Lang } from './format';
+import { format, formatCurrency, formatPercent, formatCompact } from './format';
 
 // Test cases for format() - Basic number formatting with thousand separators
 

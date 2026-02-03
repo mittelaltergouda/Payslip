@@ -4,9 +4,6 @@ import type {
   PayslipResult,
 } from '../types';
 import {
-  NormalizedSessionInput,
-} from './types';
-import {
   validateSessionInput,
   validateNormalizedSession,
 } from './validation';
@@ -26,11 +23,6 @@ import {
 import {
   calculateSummaryStatistics,
 } from './statistics';
-import {
-  applyTransferTaxes,
-  calculateGrossAmount,
-  calculateFeeAmount,
-} from './tax';
 
 // Re-export types for external use
 export type { SessionInput, PayslipResult, MemberBreakdown, Transfer } from '../types';

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useAutoSave, UseAutoSaveReturn } from '../../hooks/useAutoSave';
+import { useAutoSave } from '../../hooks/useAutoSave';
 import type { SessionInput } from '../../lib/types';
 import * as sessionStorage from '../../lib/storage/sessionStorage';
 

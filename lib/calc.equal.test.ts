@@ -1,6 +1,5 @@
 import type { SessionInput} from './calc';
-import { calculatePayslip, applyTransferTaxes, calculateGrossAmount, calculateFeeAmount, calculateSummaryStatistics } from './calc';
-import { Transfer, MemberBreakdown } from './types';
+import { calculatePayslip } from './calc';
 
 // Test cases for EQUAL distribution mode
 

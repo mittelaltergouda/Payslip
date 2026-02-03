@@ -28,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="de" className={${" "}}>
+    <html lang="de" className={`${spaceGrotesk.variable} ${inter.variable}`}>
       <body>
         <ToastProvider>
           {children}
