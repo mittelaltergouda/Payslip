@@ -113,7 +113,7 @@ export function DeleteSessionDialog({
           <DialogTitle>{t.confirmDelete}</DialogTitle>
           <DialogDescription>
             {/* Confirmation message with session name */}
-            Are you sure you want to delete &quot;{sessionName}&quot;? This action cannot be undone.
+            {t.deleteConfirmMessage.replace('{sessionName}', sessionName)}
           </DialogDescription>
         </DialogHeader>
 
