@@ -1,0 +1,4 @@
+
+> sc-payslip@0.1.0 test:e2e
+> playwright test
+

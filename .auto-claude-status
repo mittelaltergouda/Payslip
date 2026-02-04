@@ -11,7 +11,7 @@
   "phase": {
     "current": "Integration & E2E Testing",
     "id": null,
-    "total": 3
+    "total": 7
   },
   "workers": {
     "active": 0,
