@@ -153,3 +153,104 @@ export function formatCompact(amount: number, lang: Lang): string {
 
   return `${sign}${formattedValue}${suffix}`;
 }
+
+/**
+ * Formats an integer with locale-specific thousand separators.
+ * Truncates any decimal portion before formatting, since this is
+ * intended for integer-only input fields.
+ *
+ * @param value - The integer value to format
+ * @param lang - The locale language ('de' for German, 'en' for English)
+ * @returns Formatted integer string with appropriate thousand separators
+ *
+ * @example
+ * formatInteger(100000, 'de')  // "100.000"
+ * formatInteger(100000, 'en')  // "100,000"
+ * formatInteger(1234567, 'de') // "1.234.567"
+ * formatInteger(0, 'de')       // "0"
+ * formatInteger(-500, 'en')    // "-500"
+ */
+export function formatInteger(value: number, lang: Lang): string {
+  return Math.trunc(value).toLocaleString(lang === "de" ? "de-DE" : "en-US");
+}
+
+/**
+ * Parses a formatted integer string back to a number, stripping locale-specific
+ * thousand separators and truncating any decimal portion.
+ *
+ * Handles multiple input formats:
+ * - German formatted: "100.000" → 100000, "1.234.567" → 1234567
+ * - English formatted: "1,234,567" → 1234567
+ * - Mixed format with decimals: "1,234.56" → 1234, "1.234,56" → 1234
+ * - Plain decimals: "123.45" → 123 (truncated)
+ * - Negative values: "-500" → -500
+ * - Empty or invalid input: "" → 0
+ *
+ * @param str - The formatted string to parse
+ * @returns The parsed integer value, or 0 for empty/invalid input
+ *
+ * @example
+ * parseFormattedInteger("100.000")     // 100000 (German thousand separator)
+ * parseFormattedInteger("1,234,567")   // 1234567 (English thousand separator)
+ * parseFormattedInteger("123.45")      // 123 (decimal truncated)
+ * parseFormattedInteger("")            // 0
+ * parseFormattedInteger("-500")        // -500
+ */
+export function parseFormattedInteger(str: string): number {
+  const trimmed = str.trim();
+  if (!trimmed || trimmed === '-') return 0;
+
+  // Strip all characters except digits, dots, commas, and minus sign
+  const sanitized = trimmed.replace(/[^\d.,-]/g, '');
+  if (!sanitized || sanitized === '-') return 0;
+
+  // Count separator occurrences
+  const dotCount = (sanitized.match(/\./g) || []).length;
+  const commaCount = (sanitized.match(/,/g) || []).length;
+
+  let normalized: string;
+
+  if (dotCount > 1 && commaCount === 0) {
+    // Multiple dots, no commas → dots are thousand separators (German: 1.234.567)
+    normalized = sanitized.replace(/\./g, '');
+  } else if (commaCount > 1 && dotCount === 0) {
+    // Multiple commas, no dots → commas are thousand separators
+    normalized = sanitized.replace(/,/g, '');
+  } else if (dotCount >= 1 && commaCount >= 1) {
+    // Both present: the last separator is the decimal separator
+    const lastDot = sanitized.lastIndexOf('.');
+    const lastComma = sanitized.lastIndexOf(',');
+    if (lastDot > lastComma) {
+      // English format: 1,234.56 → commas are thousands, dot is decimal
+      normalized = sanitized.replace(/,/g, '');
+    } else {
+      // German format: 1.234,56 → dots are thousands, comma is decimal
+      normalized = sanitized.replace(/\./g, '').replace(',', '.');
+    }
+  } else if (dotCount === 1 && commaCount === 0) {
+    // Single dot: thousand separator if pattern is N.NNN, otherwise decimal
+    if (/^-?\d{1,3}\.\d{3}$/.test(sanitized)) {
+      // Matches German thousand pattern (e.g., "100.000", "1.234")
+      normalized = sanitized.replace('.', '');
+    } else {
+      // Decimal separator (e.g., "123.45", "1.5")
+      normalized = sanitized;
+    }
+  } else if (commaCount === 1 && dotCount === 0) {
+    // Single comma: thousand separator if pattern is N,NNN, otherwise decimal
+    if (/^-?\d{1,3},\d{3}$/.test(sanitized)) {
+      // Matches English thousand pattern (e.g., "1,000")
+      normalized = sanitized.replace(',', '');
+    } else {
+      // German decimal comma (e.g., "1,5") → convert to dot
+      normalized = sanitized.replace(',', '.');
+    }
+  } else {
+    // No separators, just digits and possibly minus
+    normalized = sanitized;
+  }
+
+  const parsed = parseFloat(normalized);
+  if (isNaN(parsed)) return 0;
+  return Math.trunc(parsed);
+}
