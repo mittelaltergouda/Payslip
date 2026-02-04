@@ -15,7 +15,7 @@ function format(amount: number, lang: Lang): string {
  */
 export interface SummaryStatsProps {
   /**
-   * The calculated payslip result containing net profit and optional summary statistics.
+   * The calculated payslip result containing net profit.
    */
   result: PayslipResult;
 
@@ -61,9 +61,8 @@ export interface SummaryStatsProps {
 }
 
 /**
- * SummaryStats component displays the overall session statistics including:
- * - Summary section: Revenue, Investment, Expenses, Net Profit, Taxes, and Net Profit After Tax
- * - Statistics section (optional): Min/Max/Avg payouts, transfer counts, and highest/lowest earners
+ * SummaryStats component displays the overall session summary including:
+ * - Revenue, Investment, Expenses, Net Profit, Taxes, and Net Profit After Tax
  *
  * The Net Profit After Tax is color-coded: green (neon) for positive values, red for negative.
  *
@@ -125,34 +124,6 @@ export function SummaryStats({
           {format(netAfterTax, lang)} {currency}
         </span>
       </div>
-
-      {result.summaryStatistics && (
-        <div className="space-y-2 mt-4">
-          <h4 className="font-semibold text-white/80">{t.statistics}</h4>
-          <div
-            className="grid grid-cols-2 gap-3 text-sm"
-            role="status"
-            aria-live="polite"
-            aria-atomic="true"
-            aria-label={t.statistics || "Detailed statistics"}
-          >
-            <span className="text-white/70">{t.minPayout}</span>
-            <span>{format(result.summaryStatistics.minPayout, lang)} {currency}</span>
-            <span className="text-white/70">{t.maxPayout}</span>
-            <span>{format(result.summaryStatistics.maxPayout, lang)} {currency}</span>
-            <span className="text-white/70">{t.avgPayout}</span>
-            <span>{format(result.summaryStatistics.averagePayout, lang)} {currency}</span>
-            <span className="text-white/70">{t.transferCount}</span>
-            <span>{result.summaryStatistics.totalTransfers}</span>
-            <span className="text-white/70">{t.largestTransfer}</span>
-            <span>{format(result.summaryStatistics.largestTransfer, lang)} {currency}</span>
-            <span className="text-white/70">{t.highestEarner}</span>
-            <span>{result.summaryStatistics.highestEarner}</span>
-            <span className="text-white/70">{t.lowestEarner}</span>
-            <span>{result.summaryStatistics.lowestEarner}</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
