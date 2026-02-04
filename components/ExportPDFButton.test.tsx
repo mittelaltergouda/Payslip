@@ -236,12 +236,12 @@ describe('ExportPDFButton - PDF Generation', () => {
     // Mock URL methods
     mockCreateObjectURL = vi.fn().mockReturnValue('blob:mock-url');
     mockRevokeObjectURL = vi.fn();
-    global.URL.createObjectURL = mockCreateObjectURL;
-    global.URL.revokeObjectURL = mockRevokeObjectURL;
+    global.URL.createObjectURL = mockCreateObjectURL as unknown as typeof URL.createObjectURL;
+    global.URL.revokeObjectURL = mockRevokeObjectURL as unknown as typeof URL.revokeObjectURL;
 
     // Mock link click
     mockClick = vi.fn();
-    HTMLAnchorElement.prototype.click = mockClick;
+    HTMLAnchorElement.prototype.click = mockClick as unknown as typeof HTMLAnchorElement.prototype.click;
 
     // Mock PDF generation
     vi.mocked(pdfGenerator.generatePDF).mockReturnValue(
@@ -419,12 +419,12 @@ describe('ExportPDFButton - Error Handling', () => {
 
     originalCreateObjectURL = URL.createObjectURL;
     originalRevokeObjectURL = URL.revokeObjectURL;
-    global.URL.createObjectURL = vi.fn().mockReturnValue('blob:mock-url');
-    global.URL.revokeObjectURL = vi.fn();
+    global.URL.createObjectURL = vi.fn().mockReturnValue('blob:mock-url') as unknown as typeof URL.createObjectURL;
+    global.URL.revokeObjectURL = vi.fn() as unknown as typeof URL.revokeObjectURL;
 
     // Mock link click
     mockClick = vi.fn();
-    HTMLAnchorElement.prototype.click = mockClick;
+    HTMLAnchorElement.prototype.click = mockClick as unknown as typeof HTMLAnchorElement.prototype.click;
 
     // Mock generatePDFFilename for non-error cases
     vi.mocked(pdfGenerator.generatePDFFilename).mockReturnValue('test-session.pdf');
@@ -529,12 +529,12 @@ describe('ExportPDFButton - Currency Handling', () => {
 
     originalCreateObjectURL = URL.createObjectURL;
     originalRevokeObjectURL = URL.revokeObjectURL;
-    global.URL.createObjectURL = vi.fn().mockReturnValue('blob:mock-url');
-    global.URL.revokeObjectURL = vi.fn();
+    global.URL.createObjectURL = vi.fn().mockReturnValue('blob:mock-url') as unknown as typeof URL.createObjectURL;
+    global.URL.revokeObjectURL = vi.fn() as unknown as typeof URL.revokeObjectURL;
 
     // Mock link click
     mockClick = vi.fn();
-    HTMLAnchorElement.prototype.click = mockClick;
+    HTMLAnchorElement.prototype.click = mockClick as unknown as typeof HTMLAnchorElement.prototype.click;
 
     vi.mocked(pdfGenerator.generatePDF).mockReturnValue(
       new Blob(['test'], { type: 'application/pdf' })
