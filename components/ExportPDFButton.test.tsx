@@ -15,45 +15,47 @@ vi.mock('@/lib/pdf/generator', () => ({
 // Mock session data for testing
 const mockSession: SessionInput = {
   name: 'Test Session',
+  type: 'TRADING',
+  distributionMode: 'EQUAL',
   members: [
-    { name: 'Alice', fixedPayout: null, percentPayout: null },
-    { name: 'Bob', fixedPayout: null, percentPayout: null },
+    { handle: 'Alice', fixedPayout: null, percentShare: null },
+    { handle: 'Bob', fixedPayout: null, percentShare: null },
   ],
-  expenses: [],
-  revenue: 1000,
+  sharedExpenses: [],
+  totalRevenue: 1000,
   taxRate: 4.25,
 };
 
 // Mock result data for testing
 const mockResult: PayslipResult = {
-  totalRevenue: 1000,
-  totalExpenses: 0,
-  netRevenue: 1000,
-  totalFixedPayouts: 0,
-  remainingPool: 1000,
+  saleRevenue: 1000,
+  netProfit: 1000,
+  taxRateApplied: 4.25,
   members: [
     {
-      name: 'Alice',
-      share: 500,
-      fixedPayout: 0,
-      percentPayout: 0,
-      variableShare: 500,
+      memberId: '1',
+      handle: 'Alice',
+      revenue: 500,
+      investment: 0,
       expenses: 0,
-      taxPaid: 0,
-      finalPayout: 500,
+      sharedExpenses: 0,
+      individualExpenses: 0,
+      profitShare: 500,
+      finalNet: 500,
     },
     {
-      name: 'Bob',
-      share: 500,
-      fixedPayout: 0,
-      percentPayout: 0,
-      variableShare: 500,
+      memberId: '2',
+      handle: 'Bob',
+      revenue: 500,
+      investment: 0,
       expenses: 0,
-      taxPaid: 0,
-      finalPayout: 500,
+      sharedExpenses: 0,
+      individualExpenses: 0,
+      profitShare: 500,
+      finalNet: 500,
     },
   ],
-  transfers: [],
+  suggestedTransfers: [],
 };
 
 describe('ExportPDFButton - Basic Rendering', () => {
