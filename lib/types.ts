@@ -141,3 +141,28 @@ export const savedSessionSchema = z.object({
 });
 
 export type SavedSession = z.infer<typeof savedSessionSchema>;
+
+// Zod schemas for crew preset management
+
+export type PresetMember = {
+  handle: string;
+  role?: string;
+  percentShare?: number | null;
+};
+
+const presetMemberSchema = z.object({
+  handle: z.string(),
+  role: z.string().optional(),
+  percentShare: z.number().nullable().optional(),
+});
+
+export const crewPresetSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  members: z.array(presetMemberSchema),
+  distributionMode: z.enum(["EQUAL", "PERCENT", "ADJUSTABLE"]).optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type CrewPreset = z.infer<typeof crewPresetSchema>;
