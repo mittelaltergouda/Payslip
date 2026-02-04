@@ -155,7 +155,7 @@ export function SessionSettings({
 
             {isModeDropdownOpen && (
               <div
-                className="absolute z-10 w-full bg-night border border-white/20 rounded-lg mt-1 shadow-lg overflow-hidden"
+                className="absolute z-50 w-full bg-night border border-white/20 rounded-lg mt-1 shadow-lg overflow-hidden"
                 role="listbox"
               >
                 {(["EQUAL", "PERCENT", "ADJUSTABLE"] as DistributionMode[]).map(
