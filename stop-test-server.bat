@@ -1,21 +1,19 @@
 @echo off
-REM Script to stop Next.js dev server by killing Node.js processes
-REM ================================================================
+REM Script to stop all running Node.js processes
+REM ========================================================
 
-echo Stopping Next.js development server...
+echo Stopping all Node.js processes...
 echo.
 
-REM Kill all Node.js processes forcefully
-taskkill /F /IM node.exe 2>nul
+REM Kill all running Node.js processes forcefully
+taskkill /F /IM node.exe >nul 2>&1
 
-REM Check if any processes were killed
-if %errorlevel% equ 0 (
-    echo Node.js processes terminated successfully.
+REM Check if any processes were found and killed
+if %ERRORLEVEL% equ 0 (
+    echo All Node.js processes have been stopped.
 ) else (
-    echo No Node.js processes were running.
+    echo No running Node.js processes found.
 )
 
-REM Keep batch window visible
 echo.
-echo Done. Press any key to close this window.
 pause
