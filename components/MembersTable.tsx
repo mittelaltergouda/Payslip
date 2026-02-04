@@ -12,8 +12,8 @@ type Lang = "de" | "en";
  * MembersTable component displays the table of all session members with their inputs and results.
  *
  * Renders a table with columns for member details (handle, role), financial inputs (revenue, investment),
- * expenses, results (taxes, profit share, net after fees), and distribution settings (percent share,
- * fixed bonus, fixed payout). Each row is rendered using the MemberRow component.
+ * expenses, and distribution settings (percent share, fixed bonus, fixed payout). Each row is rendered
+ * using the MemberRow component.
  *
  * @example
  * ```tsx
@@ -121,9 +121,6 @@ export function MembersTable({
               <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.revenueLabel}</th>
               <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.investmentLabel}</th>
               <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.expensesLabel}</th>
-              <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.taxesLabel}</th>
-              <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.profitShareCol}</th>
-              <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.netAfterFeesCol}</th>
               <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.percentShare}</th>
               <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.fixedBonus}</th>
               <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.fixedPayout}</th>

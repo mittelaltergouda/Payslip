@@ -1,6 +1,6 @@
 "use client";
 
-import { DistributionMode, IndividualExpenseInput, MemberBreakdown, MemberInput } from "@/lib/types";
+import type { DistributionMode, IndividualExpenseInput, MemberBreakdown, MemberInput } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -111,8 +111,8 @@ export function MemberCard({
   showRole,
   distributionMode,
   individualExpenses,
-  resultMember,
-  feeByPayer,
+  _resultMember,
+  _feeByPayer,
   lang,
   t,
   format,
