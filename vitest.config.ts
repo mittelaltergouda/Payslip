@@ -12,6 +12,10 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
     include: ["**/*.test.ts", "**/*.test.tsx"],
+    exclude: [
+      "**/node_modules/**",
+      "**/.auto-claude/worktrees/**"
+    ],
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "json", "json-summary"],
