@@ -605,12 +605,12 @@ describe('downloadCSV - Browser Download', () => {
     // Mock URL methods
     mockCreateObjectURL = vi.fn().mockReturnValue('blob:mock-csv-url');
     mockRevokeObjectURL = vi.fn();
-    global.URL.createObjectURL = mockCreateObjectURL;
-    global.URL.revokeObjectURL = mockRevokeObjectURL;
+    global.URL.createObjectURL = mockCreateObjectURL as unknown as typeof URL.createObjectURL;
+    global.URL.revokeObjectURL = mockRevokeObjectURL as unknown as typeof URL.revokeObjectURL;
 
     // Mock link click
     mockClick = vi.fn();
-    HTMLAnchorElement.prototype.click = mockClick;
+    HTMLAnchorElement.prototype.click = mockClick as unknown as typeof HTMLAnchorElement.prototype.click;
 
     // Spy on document.body methods
     appendChildSpy = vi.spyOn(document.body, 'appendChild');

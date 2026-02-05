@@ -146,8 +146,8 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    expect(screen.getByText('Eingabe')).toBeInTheDocument();
-    expect(screen.getByText('+ Mitglied')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Eingabe' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '+ Mitglied' })).toBeInTheDocument();
   });
 
   it('should render the component with English translations', () => {
@@ -166,8 +166,8 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
-    expect(screen.getByText('+ Member')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '+ Member' })).toBeInTheDocument();
   });
 
   it('should render all column headers', () => {
@@ -186,16 +186,17 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    expect(screen.getByText('Handle')).toBeInTheDocument();
-    expect(screen.getByText('Revenue')).toBeInTheDocument();
-    expect(screen.getByText('Investment')).toBeInTheDocument();
-    expect(screen.getByText('Expenses')).toBeInTheDocument();
-    expect(screen.getByText('Taxes')).toBeInTheDocument();
-    expect(screen.getByText('Profit Share')).toBeInTheDocument();
-    expect(screen.getByText('Net After Fees')).toBeInTheDocument();
-    expect(screen.getByText('% Share')).toBeInTheDocument();
-    expect(screen.getByText('Fixed Bonus')).toBeInTheDocument();
-    expect(screen.getByText('Fixed Payout')).toBeInTheDocument();
+    // Column headers appear in both desktop table and mobile card views
+    expect(screen.getAllByText('Handle').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Revenue').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Investment').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Expenses').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Taxes').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Profit Share').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Net After Fees').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('% Share').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Fixed Bonus').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Fixed Payout').length).toBeGreaterThanOrEqual(1);
   });
 
   it('should render role column header when showRole is true', () => {
@@ -214,7 +215,7 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    expect(screen.getByText('Role')).toBeInTheDocument();
+    expect(screen.getAllByText('Role').length).toBeGreaterThanOrEqual(1);
   });
 
   it('should not render role column header when showRole is false', () => {
@@ -252,11 +253,12 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    const pilotInput = screen.getByDisplayValue('Pilot');
-    expect(pilotInput).toBeInTheDocument();
+    // Members appear in both desktop rows and mobile cards
+    const pilotInputs = screen.getAllByDisplayValue('Pilot');
+    expect(pilotInputs.length).toBeGreaterThanOrEqual(1);
 
-    const escortInput = screen.getByDisplayValue('Escort');
-    expect(escortInput).toBeInTheDocument();
+    const escortInputs = screen.getAllByDisplayValue('Escort');
+    expect(escortInputs.length).toBeGreaterThanOrEqual(1);
   });
 
   it('should render empty table when no members', () => {
@@ -275,7 +277,7 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
     expect(screen.queryByDisplayValue('Pilot')).not.toBeInTheDocument();
   });
 });
@@ -333,10 +335,11 @@ describe('MembersTable - User Interactions', () => {
     );
 
     // Verify member data is rendered (MemberRow receives correct props)
-    expect(screen.getByDisplayValue('Pilot')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Captain')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Escort')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Fighter')).toBeInTheDocument();
+    // Members appear in both desktop rows and mobile cards
+    expect(screen.getAllByDisplayValue('Pilot').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByDisplayValue('Captain').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByDisplayValue('Escort').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByDisplayValue('Fighter').length).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -370,8 +373,8 @@ describe('MembersTable - Data Display', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Pilot')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
+    expect(screen.getAllByDisplayValue('Pilot').length).toBeGreaterThanOrEqual(1);
   });
 
   it('should render with empty feeByPayer object', () => {
@@ -390,7 +393,7 @@ describe('MembersTable - Data Display', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
   });
 
   it('should render individual expenses for members', () => {
@@ -409,7 +412,7 @@ describe('MembersTable - Data Display', () => {
       />
     );
 
-    expect(screen.getByDisplayValue('Fuel')).toBeInTheDocument();
+    expect(screen.getAllByDisplayValue('Fuel').length).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -443,7 +446,7 @@ describe('MembersTable - Distribution Modes', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
   });
 
   it('should render in PERCENT mode', () => {
@@ -462,7 +465,7 @@ describe('MembersTable - Distribution Modes', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
   });
 
   it('should render in ADJUSTABLE mode', () => {
@@ -481,6 +484,6 @@ describe('MembersTable - Distribution Modes', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
   });
 });
