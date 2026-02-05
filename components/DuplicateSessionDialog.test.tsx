@@ -46,7 +46,7 @@ describe("DuplicateSessionDialog - Basic Rendering", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Mining Run #42"
         onConfirm={mockOnConfirm}
@@ -65,7 +65,7 @@ describe("DuplicateSessionDialog - Basic Rendering", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Trading Run Alpha"
         onConfirm={mockOnConfirm}
@@ -85,7 +85,7 @@ describe("DuplicateSessionDialog - Basic Rendering", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -108,7 +108,7 @@ describe("DuplicateSessionDialog - Basic Rendering", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -130,7 +130,7 @@ describe("DuplicateSessionDialog - Checkbox Behavior", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -150,7 +150,7 @@ describe("DuplicateSessionDialog - Checkbox Behavior", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -182,7 +182,7 @@ describe("DuplicateSessionDialog - Checkbox Behavior", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -211,7 +211,7 @@ describe("DuplicateSessionDialog - Checkbox Behavior", () => {
 
     const { rerender } = render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -242,7 +242,7 @@ describe("DuplicateSessionDialog - Checkbox Behavior", () => {
     // Reopen the dialog
     rerender(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -264,7 +264,7 @@ describe("DuplicateSessionDialog - Confirm Action", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -289,7 +289,7 @@ describe("DuplicateSessionDialog - Confirm Action", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -319,7 +319,7 @@ describe("DuplicateSessionDialog - Confirm Action", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -347,7 +347,7 @@ describe("DuplicateSessionDialog - Cancel Action", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -372,7 +372,7 @@ describe("DuplicateSessionDialog - Cancel Action", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -398,7 +398,7 @@ describe("DuplicateSessionDialog - Close Behavior", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -423,7 +423,7 @@ describe("DuplicateSessionDialog - Close Behavior", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -452,7 +452,7 @@ describe("DuplicateSessionDialog - Translations", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -475,7 +475,7 @@ describe("DuplicateSessionDialog - Translations", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -500,7 +500,7 @@ describe("DuplicateSessionDialog - Accessibility", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -520,7 +520,7 @@ describe("DuplicateSessionDialog - Accessibility", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -540,7 +540,7 @@ describe("DuplicateSessionDialog - Accessibility", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -560,7 +560,7 @@ describe("DuplicateSessionDialog - Accessibility", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -582,7 +582,7 @@ describe("DuplicateSessionDialog - Edge Cases", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName=""
         onConfirm={mockOnConfirm}
@@ -604,7 +604,7 @@ describe("DuplicateSessionDialog - Edge Cases", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName={longName}
         onConfirm={mockOnConfirm}
@@ -624,7 +624,7 @@ describe("DuplicateSessionDialog - Edge Cases", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName={specialName}
         onConfirm={mockOnConfirm}
@@ -643,7 +643,7 @@ describe("DuplicateSessionDialog - Edge Cases", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
@@ -674,7 +674,7 @@ describe("DuplicateSessionDialog - Edge Cases", () => {
 
     render(
       <DuplicateSessionDialog
-        isOpen={true}
+        isOpen
         onOpenChange={mockOnOpenChange}
         sessionName="Test Session"
         onConfirm={mockOnConfirm}
