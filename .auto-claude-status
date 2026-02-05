@@ -1,17 +1,17 @@
 {
   "active": true,
-  "spec": "044-export-to-csv",
+  "spec": "054-alle-eingabe-felder-sollten-die-vorbelegte-0-oder-",
   "state": "building",
   "subtasks": {
     "completed": 5,
-    "total": 6,
+    "total": 11,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Testing & Verification",
+    "current": "Update Desktop View (MemberRow)",
     "id": null,
-    "total": 7
+    "total": 1
   },
   "workers": {
     "active": 0,
@@ -19,7 +19,7 @@
   },
   "session": {
     "number": 5,
-    "started_at": "2026-02-03T20:16:59.383492"
+    "started_at": "2026-02-05T20:13:15.270921"
   },
-  "last_update": "2026-02-03T20:27:47.871744"
+  "last_update": "2026-02-05T20:23:35.437654"
 }

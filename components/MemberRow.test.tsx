@@ -163,9 +163,9 @@ describe('MemberRow - Initial Rendering', () => {
       </table>
     );
 
-    const revenueInput = screen.getByDisplayValue('10000');
+    const revenueInput = screen.getByDisplayValue('10,000');
     expect(revenueInput).toBeInTheDocument();
-    expect(revenueInput).toHaveAttribute('type', 'number');
+    expect(revenueInput).toHaveAttribute('type', 'text');
   });
 
   it('should render investment input with correct value', () => {
@@ -188,9 +188,9 @@ describe('MemberRow - Initial Rendering', () => {
       </table>
     );
 
-    const investmentInput = screen.getByDisplayValue('2000');
+    const investmentInput = screen.getByDisplayValue('2,000');
     expect(investmentInput).toBeInTheDocument();
-    expect(investmentInput).toHaveAttribute('type', 'number');
+    expect(investmentInput).toHaveAttribute('type', 'text');
   });
 
   it('should render individual expenses', () => {
@@ -484,7 +484,7 @@ describe('MemberRow - User Interactions', () => {
       </table>
     );
 
-    const revenueInput = screen.getByDisplayValue('10000');
+    const revenueInput = screen.getByDisplayValue('10,000');
     fireEvent.change(revenueInput, { target: { value: '15000' } });
 
     expect(mockCallbacks.updateMember).toHaveBeenCalledWith('member-1', { revenue: 15000 });
@@ -510,7 +510,7 @@ describe('MemberRow - User Interactions', () => {
       </table>
     );
 
-    const investmentInput = screen.getByDisplayValue('2000');
+    const investmentInput = screen.getByDisplayValue('2,000');
     fireEvent.change(investmentInput, { target: { value: '3000' } });
 
     expect(mockCallbacks.updateMember).toHaveBeenCalledWith('member-1', { investment: 3000 });
@@ -588,7 +588,7 @@ describe('MemberRow - User Interactions', () => {
       </table>
     );
 
-    const fixedPayoutInput = screen.getByDisplayValue('5000');
+    const fixedPayoutInput = screen.getByDisplayValue('5,000');
     fireEvent.change(fixedPayoutInput, { target: { value: '6000' } });
 
     expect(mockCallbacks.updateMember).toHaveBeenCalledWith('member-1', { fixedPayout: 6000 });
@@ -855,7 +855,7 @@ describe('MemberRow - Distribution Modes', () => {
       </table>
     );
 
-    const fixedPayoutInput = screen.getByDisplayValue('5000');
+    const fixedPayoutInput = screen.getByDisplayValue('5,000');
     expect(fixedPayoutInput).toBeDisabled();
   });
 
@@ -879,7 +879,7 @@ describe('MemberRow - Distribution Modes', () => {
       </table>
     );
 
-    const fixedPayoutInput = screen.getByDisplayValue('5000');
+    const fixedPayoutInput = screen.getByDisplayValue('5,000');
     expect(fixedPayoutInput).not.toBeDisabled();
   });
 });
