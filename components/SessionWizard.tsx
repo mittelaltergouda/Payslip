@@ -15,7 +15,8 @@ import { SaveStatusIndicator } from "./SaveStatusIndicator";
 import { SessionHistory } from "./SessionHistory";
 import { SessionActions } from "./SessionActions";
 import { useToast } from "./Toast";
-import { getAll, deleteSession as deleteStoredSession } from "@/lib/storage/sessionStorage";
+import { getAll, deleteSession as deleteStoredSession, duplicate as duplicateSession } from "@/lib/storage/sessionStorage";
+import { DuplicateSessionDialog } from "./DuplicateSessionDialog";
 import { Button } from "./ui/button";
 import { FormField } from "./ui/form-field";
 
@@ -60,6 +61,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
   // Session management state
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [savedSessions, setSavedSessions] = useState<SavedSession[]>([]);
+  const [duplicateDialogSession, setDuplicateDialogSession] = useState<SavedSession | null>(null);
 
   // Auto-save and toast hooks
   const { saveStatus, manualSave, error: saveError } = useAutoSave(session, true);
@@ -159,6 +161,33 @@ export function SessionWizard({ initialLang = "de" }: Props) {
       }
     },
     [showToast, refreshSessionList, t.sessionDeleted]
+  );
+
+  // Handle duplicate button click - opens the dialog
+  const handleDuplicateClick = useCallback((savedSession: SavedSession) => {
+    setDuplicateDialogSession(savedSession);
+  }, []);
+
+  // Handle duplicate confirmation from dialog
+  const handleDuplicateConfirm = useCallback(
+    (copyExpenses: boolean) => {
+      if (!duplicateDialogSession) { return; }
+
+      const result = duplicateSession(duplicateDialogSession.id, copyExpenses);
+      if (result.success && result.data) {
+        setSession(result.data.session);
+        setDuplicateDialogSession(null);
+        setIsHistoryOpen(false);
+        refreshSessionList();
+        showToast(
+          `${t.duplicateSuccess || "Session duplicated"}: ${result.data.session.name}`,
+          "success"
+        );
+      } else {
+        showToast(result.error || "Failed to duplicate session", "error");
+      }
+    },
+    [duplicateDialogSession, refreshSessionList, showToast, t.duplicateSuccess]
   );
 
   // Handle session name update
@@ -351,16 +380,35 @@ export function SessionWizard({ initialLang = "de" }: Props) {
         sessions={savedSessions}
         onLoad={handleLoadSession}
         onDelete={handleDeleteSession}
+        onDuplicate={handleDuplicateClick}
         lang={lang}
         translations={{
           sessionHistory: t.sessionHistory || "Session History",
           noSessions: t.noSessions || "No saved sessions",
           loadSession: t.loadSession || "Load",
           deleteSession: t.deleteSession || "Delete",
+          duplicateSession: t.duplicateSession || "Duplicate",
           confirmDelete: t.confirmDelete || "Confirm Delete",
           cancel: t.cancel || "Cancel",
           createdAt: t.createdAt || "Created",
           updatedAt: t.updatedAt || "Updated",
+        }}
+      />
+
+      {/* Duplicate Session Dialog */}
+      <DuplicateSessionDialog
+        isOpen={duplicateDialogSession !== null}
+        onOpenChange={(open) => {
+          if (!open) { setDuplicateDialogSession(null); }
+        }}
+        sessionName={duplicateDialogSession?.session.name || ""}
+        onConfirm={handleDuplicateConfirm}
+        translations={{
+          duplicateSessionTitle: t.duplicateSessionTitle || "Duplicate Session",
+          duplicateSessionDescription: t.duplicateSessionDescription || "Create a copy of this session",
+          copyExpenses: t.copyExpenses || "Copy expenses",
+          duplicateSession: t.duplicateSession || "Duplicate",
+          cancel: t.cancel || "Cancel",
         }}
       />
     </div>
