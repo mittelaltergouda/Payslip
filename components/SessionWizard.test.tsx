@@ -103,11 +103,11 @@ describe('SessionWizard - Initial Rendering', () => {
     expect(eingabeTexts.length).toBeGreaterThan(0);
     expect(screen.getByText('+ Mitglied')).toBeInTheDocument();
 
-    const handleInputs = screen.getAllByDisplayValue('Pilot');
-    expect(handleInputs.length).toBeGreaterThan(0);
+    const player1Inputs = screen.getAllByDisplayValue('Player 1');
+    expect(player1Inputs.length).toBeGreaterThan(0);
 
-    const escortInputs = screen.getAllByDisplayValue('Escort');
-    expect(escortInputs.length).toBeGreaterThan(0);
+    const player2Inputs = screen.getAllByDisplayValue('Player 2');
+    expect(player2Inputs.length).toBeGreaterThan(0);
   });
 
   it('should render results section', () => {
@@ -244,40 +244,75 @@ describe('SessionWizard - Distribution Mode', () => {
 });
 
 describe('SessionWizard - Member Management', () => {
-  it('should add a new member when + Mitglied button is clicked', () => {
+  it('should add a new member when + Mitglied button is clicked with sequential handle', () => {
     renderWithToast(<SessionWizard />);
 
     const addButton = screen.getByRole('button', { name: '+ Mitglied' });
     fireEvent.click(addButton);
 
-    const crewInputs = screen.getAllByDisplayValue('Crew');
-    expect(crewInputs.length).toBeGreaterThan(0);
+    // Third member should be 'Player 3'
+    const player3Inputs = screen.getAllByDisplayValue('Player 3');
+    expect(player3Inputs.length).toBeGreaterThan(0);
+  });
+
+  it('should generate sequential Player N handles when adding multiple members', () => {
+    renderWithToast(<SessionWizard />);
+
+    const addButton = screen.getByRole('button', { name: '+ Mitglied' });
+
+    // Add multiple members
+    fireEvent.click(addButton); // Player 3
+    fireEvent.click(addButton); // Player 4
+    fireEvent.click(addButton); // Player 5
+
+    expect(screen.getAllByDisplayValue('Player 3').length).toBeGreaterThan(0);
+    expect(screen.getAllByDisplayValue('Player 4').length).toBeGreaterThan(0);
+    expect(screen.getAllByDisplayValue('Player 5').length).toBeGreaterThan(0);
+  });
+
+  it('should start at Player 1 when adding a member after all members are removed', () => {
+    renderWithToast(<SessionWizard />);
+
+    // Remove all members
+    const deleteButtons = screen.getAllByTitle('Entfernen');
+    fireEvent.click(deleteButtons[0]); // Remove Player 1
+
+    // Get updated delete buttons (the list has changed)
+    const remainingDeleteButtons = screen.getAllByTitle('Entfernen');
+    fireEvent.click(remainingDeleteButtons[0]); // Remove Player 2
+
+    // Now add a new member - should be Player 1
+    const addButton = screen.getByRole('button', { name: '+ Mitglied' });
+    fireEvent.click(addButton);
+
+    const player1Inputs = screen.getAllByDisplayValue('Player 1');
+    expect(player1Inputs.length).toBeGreaterThan(0);
   });
 
   it('should remove a member when delete button is clicked', () => {
     renderWithToast(<SessionWizard />);
 
-    const pilotInputs = screen.getAllByDisplayValue('Pilot');
-    expect(pilotInputs.length).toBeGreaterThan(0);
+    const player1Inputs = screen.getAllByDisplayValue('Player 1');
+    expect(player1Inputs.length).toBeGreaterThan(0);
 
     const deleteButtons = screen.getAllByTitle('Entfernen');
     const memberDeleteButtons = deleteButtons.slice(0, 2);
 
     fireEvent.click(memberDeleteButtons[0]);
 
-    const remainingPilotInputs = screen.queryAllByDisplayValue('Pilot');
-    expect(remainingPilotInputs.length).toBe(0);
+    const remainingPlayer1Inputs = screen.queryAllByDisplayValue('Player 1');
+    expect(remainingPlayer1Inputs.length).toBe(0);
   });
 
   it('should update member handle when input is changed', () => {
     renderWithToast(<SessionWizard />);
 
-    const handleInputs = screen.getAllByDisplayValue('Pilot');
-    const pilotInput = handleInputs[0] as HTMLInputElement;
+    const handleInputs = screen.getAllByDisplayValue('Player 1');
+    const player1Input = handleInputs[0] as HTMLInputElement;
 
-    fireEvent.change(pilotInput, { target: { value: 'Captain' } });
+    fireEvent.change(player1Input, { target: { value: 'Captain' } });
 
-    expect(pilotInput.value).toBe('Captain');
+    expect(player1Input.value).toBe('Captain');
   });
 
   it('should update member revenue when input is changed', () => {
@@ -311,8 +346,8 @@ describe('SessionWizard - Member Management', () => {
 
     fireEvent.click(roleCheckbox);
 
-    expect(screen.getAllByDisplayValue('Trader').length).toBeGreaterThan(0);
-    expect(screen.getAllByDisplayValue('Escort').length).toBeGreaterThan(0);
+    expect(screen.getAllByDisplayValue('Pilot').length).toBeGreaterThan(0);
+    expect(screen.getAllByDisplayValue('Crew').length).toBeGreaterThan(0);
   });
 });
 
@@ -418,16 +453,16 @@ describe('SessionWizard - Reset Functionality', () => {
   it('should reset to initial state when Reset button is clicked', () => {
     renderWithToast(<SessionWizard />);
 
-    const handleInputs = screen.getAllByDisplayValue('Pilot');
-    const pilotInput = handleInputs[0] as HTMLInputElement;
-    fireEvent.change(pilotInput, { target: { value: 'Captain' } });
-    expect(pilotInput.value).toBe('Captain');
+    const handleInputs = screen.getAllByDisplayValue('Player 1');
+    const player1Input = handleInputs[0] as HTMLInputElement;
+    fireEvent.change(player1Input, { target: { value: 'Captain' } });
+    expect(player1Input.value).toBe('Captain');
 
     const resetButton = screen.getByRole('button', { name: 'Reset' });
     fireEvent.click(resetButton);
 
-    const resetPilotInputs = screen.getAllByDisplayValue('Pilot');
-    expect(resetPilotInputs.length).toBeGreaterThan(0);
+    const resetPlayer1Inputs = screen.getAllByDisplayValue('Player 1');
+    expect(resetPlayer1Inputs.length).toBeGreaterThan(0);
   });
 
   it('should reset distribution mode to EQUAL on reset', () => {
@@ -648,23 +683,23 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should not crash with empty member handle', () => {
       renderWithToast(<SessionWizard />);
 
-      const handleInputs = screen.getAllByDisplayValue('Pilot');
-      const pilotInput = handleInputs[0] as HTMLInputElement;
+      const handleInputs = screen.getAllByDisplayValue('Player 1');
+      const player1Input = handleInputs[0] as HTMLInputElement;
 
-      fireEvent.change(pilotInput, { target: { value: '' } });
+      fireEvent.change(player1Input, { target: { value: '' } });
 
-      expect(pilotInput).toBeInTheDocument();
+      expect(player1Input).toBeInTheDocument();
     });
 
     it('should not crash with whitespace-only member handle', () => {
       renderWithToast(<SessionWizard />);
 
-      const handleInputs = screen.getAllByDisplayValue('Pilot');
-      const pilotInput = handleInputs[0] as HTMLInputElement;
+      const handleInputs = screen.getAllByDisplayValue('Player 1');
+      const player1Input = handleInputs[0] as HTMLInputElement;
 
-      fireEvent.change(pilotInput, { target: { value: '   ' } });
+      fireEvent.change(player1Input, { target: { value: '   ' } });
 
-      expect(pilotInput).toBeInTheDocument();
+      expect(player1Input).toBeInTheDocument();
     });
   });
 
@@ -694,7 +729,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
       fireEvent.click(memberDeleteButtons[1]);
 
-      const remainingMembers = screen.getAllByDisplayValue(/Pilot|Escort|Crew/);
+      const remainingMembers = screen.getAllByDisplayValue(/Player 1|Player 2/);
       expect(remainingMembers.length).toBeGreaterThan(0);
       expect(screen.getByText('Gesamt')).toBeInTheDocument();
     });
@@ -955,9 +990,9 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should preserve member data after toggling role visibility', () => {
       renderWithToast(<SessionWizard />);
 
-      const handleInputs = screen.getAllByDisplayValue('Pilot');
-      const pilotInput = handleInputs[0] as HTMLInputElement;
-      fireEvent.change(pilotInput, { target: { value: 'Captain' } });
+      const handleInputs = screen.getAllByDisplayValue('Player 1');
+      const player1Input = handleInputs[0] as HTMLInputElement;
+      fireEvent.change(player1Input, { target: { value: 'Captain' } });
 
       const roleCheckbox = screen.getByRole('checkbox', {
         name: /Rollen anzeigen/i
@@ -1041,8 +1076,8 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
       expect(getCurrentDistributionMode()).toBe('EQUAL');
       expect(taxCheckbox).toBeChecked();
-      const pilotInputs = screen.getAllByDisplayValue('Pilot');
-      expect(pilotInputs.length).toBeGreaterThan(0);
+      const player1Inputs = screen.getAllByDisplayValue('Player 1');
+      expect(player1Inputs.length).toBeGreaterThan(0);
     });
   });
 });
