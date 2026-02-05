@@ -123,8 +123,8 @@ describe('SessionHistory - Initial Rendering', () => {
       />
     );
 
-    // Dialog component renders a close button with "Close" text for screen readers
-    const closeButton = screen.getByRole('button', { name: /close$/i });
+    // SessionHistory component renders a close button with aria-label "Close sidebar"
+    const closeButton = screen.getByRole('button', { name: /close sidebar/i });
     expect(closeButton).toBeInTheDocument();
   });
 
@@ -196,8 +196,8 @@ describe('SessionHistory - Empty State', () => {
 
     // Load button should not be present
     expect(screen.queryByText('Load')).not.toBeInTheDocument();
-    // Dialog close button is always present
-    expect(screen.getByRole('button', { name: /close$/i })).toBeInTheDocument();
+    // Close sidebar button is always present
+    expect(screen.getByRole('button', { name: /close sidebar/i })).toBeInTheDocument();
   });
 });
 
@@ -647,7 +647,7 @@ describe('SessionHistory - Close Functionality', () => {
       />
     );
 
-    const closeButton = screen.getByRole('button', { name: /close$/i });
+    const closeButton = screen.getByRole('button', { name: /close sidebar/i });
     fireEvent.click(closeButton);
 
     expect(mockOnClose).toHaveBeenCalledTimes(1);
@@ -692,16 +692,17 @@ describe('SessionHistory - Close Functionality', () => {
       />
     );
 
-    // Dialog component renders with portal, making click-outside behavior
-    // handled by Radix UI Dialog primitive. This is well-tested in Radix UI.
-    // We verify the dialog renders and our handleOpenChange is properly wired.
-    // Escape key (tested separately) and close button both trigger onClose.
-    const dialogTitle = screen.getByText('Session History');
-    expect(dialogTitle).toBeInTheDocument();
+    // SessionHistory uses custom sidebar implementation with mousedown listener
+    // Click on backdrop (outside sidebar) should trigger onClose
+    const backdrop = document.querySelector('.fixed.inset-0.bg-black\\/50');
+    expect(backdrop).toBeInTheDocument();
 
-    // Verify dialog structure exists (dialog role indicates proper setup)
-    const dialog = dialogTitle.closest('[role="dialog"]');
-    expect(dialog).toBeInTheDocument();
+    // Trigger mousedown on backdrop
+    if (backdrop) {
+      fireEvent.mouseDown(backdrop);
+    }
+
+    expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
   it('should not call onClose when clicking inside the sidebar', () => {
@@ -806,11 +807,11 @@ describe('SessionHistory - Accessibility', () => {
       />
     );
 
-    // Dialog component uses screen reader text for accessibility
-    const closeButton = screen.getByRole('button', { name: /close$/i });
+    // SessionHistory component uses aria-label for accessibility
+    const closeButton = screen.getByRole('button', { name: /close sidebar/i });
     expect(closeButton).toBeInTheDocument();
-    // Verify the button has proper accessible name (from sr-only text)
-    expect(closeButton).toHaveAccessibleName('Close');
+    // Verify the button has proper accessible name
+    expect(closeButton).toHaveAccessibleName('Close sidebar');
   });
 
   it('should render session names as headings for better structure', () => {

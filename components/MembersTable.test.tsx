@@ -146,7 +146,8 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    expect(screen.getByText('Eingabe')).toBeInTheDocument();
+    // Use heading role to find the specific h3 element (caption also has same text)
+    expect(screen.getByRole('heading', { name: 'Eingabe' })).toBeInTheDocument();
     expect(screen.getByText('+ Mitglied')).toBeInTheDocument();
   });
 
@@ -166,7 +167,8 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
+    // Use heading role to find the specific h3 element (caption also has same text)
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
     expect(screen.getByText('+ Member')).toBeInTheDocument();
   });
 
@@ -186,16 +188,17 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    expect(screen.getByText('Handle')).toBeInTheDocument();
-    expect(screen.getByText('Revenue')).toBeInTheDocument();
-    expect(screen.getByText('Investment')).toBeInTheDocument();
-    expect(screen.getByText('Expenses')).toBeInTheDocument();
-    expect(screen.getByText('Taxes')).toBeInTheDocument();
-    expect(screen.getByText('Profit Share')).toBeInTheDocument();
-    expect(screen.getByText('Net After Fees')).toBeInTheDocument();
-    expect(screen.getByText('% Share')).toBeInTheDocument();
-    expect(screen.getByText('Fixed Bonus')).toBeInTheDocument();
-    expect(screen.getByText('Fixed Payout')).toBeInTheDocument();
+    // Use columnheader role to find table headers specifically
+    expect(screen.getByRole('columnheader', { name: 'Handle' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Revenue' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Investment' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Expenses' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Taxes' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Profit Share' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Net After Fees' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: '% Share' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Fixed Bonus' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Fixed Payout' })).toBeInTheDocument();
   });
 
   it('should render role column header when showRole is true', () => {
@@ -214,7 +217,7 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    expect(screen.getByText('Role')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Role' })).toBeInTheDocument();
   });
 
   it('should not render role column header when showRole is false', () => {
@@ -252,11 +255,12 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    const pilotInput = screen.getByDisplayValue('Pilot');
-    expect(pilotInput).toBeInTheDocument();
+    // Get all inputs with these values (may be in table or card view)
+    const pilotInputs = screen.getAllByDisplayValue('Pilot');
+    expect(pilotInputs.length).toBeGreaterThan(0);
 
-    const escortInput = screen.getByDisplayValue('Escort');
-    expect(escortInput).toBeInTheDocument();
+    const escortInputs = screen.getAllByDisplayValue('Escort');
+    expect(escortInputs.length).toBeGreaterThan(0);
   });
 
   it('should render empty table when no members', () => {
@@ -275,7 +279,8 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
+    // Use heading role to find the specific h3 element (caption also has same text)
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
     expect(screen.queryByDisplayValue('Pilot')).not.toBeInTheDocument();
   });
 });
@@ -333,10 +338,11 @@ describe('MembersTable - User Interactions', () => {
     );
 
     // Verify member data is rendered (MemberRow receives correct props)
-    expect(screen.getByDisplayValue('Pilot')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Captain')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Escort')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Fighter')).toBeInTheDocument();
+    // Use getAllByDisplayValue since there may be multiple views (table + card)
+    expect(screen.getAllByDisplayValue('Pilot').length).toBeGreaterThan(0);
+    expect(screen.getAllByDisplayValue('Captain').length).toBeGreaterThan(0);
+    expect(screen.getAllByDisplayValue('Escort').length).toBeGreaterThan(0);
+    expect(screen.getAllByDisplayValue('Fighter').length).toBeGreaterThan(0);
   });
 });
 
@@ -370,8 +376,10 @@ describe('MembersTable - Data Display', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Pilot')).toBeInTheDocument();
+    // Use heading role to find the specific h3 element (caption also has same text)
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
+    // Use getAllByDisplayValue since there may be multiple views (table + card)
+    expect(screen.getAllByDisplayValue('Pilot').length).toBeGreaterThan(0);
   });
 
   it('should render with empty feeByPayer object', () => {
@@ -390,7 +398,8 @@ describe('MembersTable - Data Display', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
+    // Use heading role to find the specific h3 element (caption also has same text)
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
   });
 
   it('should render individual expenses for members', () => {
@@ -409,7 +418,8 @@ describe('MembersTable - Data Display', () => {
       />
     );
 
-    expect(screen.getByDisplayValue('Fuel')).toBeInTheDocument();
+    // Use getAllByDisplayValue since there may be multiple views (table + card)
+    expect(screen.getAllByDisplayValue('Fuel').length).toBeGreaterThan(0);
   });
 });
 
@@ -443,7 +453,8 @@ describe('MembersTable - Distribution Modes', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
+    // Use heading role to find the specific h3 element (caption also has same text)
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
   });
 
   it('should render in PERCENT mode', () => {
@@ -462,7 +473,8 @@ describe('MembersTable - Distribution Modes', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
+    // Use heading role to find the specific h3 element (caption also has same text)
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
   });
 
   it('should render in ADJUSTABLE mode', () => {
@@ -481,6 +493,7 @@ describe('MembersTable - Distribution Modes', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
+    // Use heading role to find the specific h3 element (caption also has same text)
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
   });
 });

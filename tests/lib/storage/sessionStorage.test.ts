@@ -95,12 +95,15 @@ describe('sessionStorage - save()', () => {
     expect(result.data?.session.id).toBe('existing-id');
   });
 
-  it('should update an existing session by ID', () => {
+  it('should update an existing session by ID', async () => {
     const session1 = createTestSession({ id: 'session-1', name: 'First Version' });
     const result1 = sessionStorage.save(session1);
 
     expect(result1.success).toBe(true);
     const createdAt = result1.data?.createdAt;
+
+    // Wait a small amount to ensure updatedAt timestamp will be different
+    await new Promise(resolve => setTimeout(resolve, 10));
 
     // Update the session
     const session2 = createTestSession({ id: 'session-1', name: 'Updated Version' });
