@@ -110,7 +110,21 @@ export const translations: Record<Lang, Record<string, string>> = {
     exportingPdf: "PDF wird erstellt...",
     pdfExportSuccess: "PDF erfolgreich exportiert",
     pdfExportError: "Fehler beim PDF-Export",
-    downloadPdf: "PDF herunterladen"
+    downloadPdf: "PDF herunterladen",
+    crewPresets: "Crew Vorlagen",
+    saveCrewPreset: "Crew speichern",
+    loadCrewPreset: "Crew laden",
+    managePresets: "Vorlagen verwalten",
+    presetName: "Vorlagen-Name",
+    presetNamePlaceholder: "Name der Vorlage eingeben",
+    noPresets: "Keine Vorlagen gespeichert",
+    presetSaved: "Vorlage gespeichert",
+    presetLoaded: "Vorlage geladen",
+    presetDeleted: "Vorlage gelöscht",
+    presetUpdated: "Vorlage aktualisiert",
+    confirmDeletePreset: "Vorlage wirklich löschen?",
+    saveCurrentCrew: "Aktuelle Crew speichern",
+    presetMembers: "Mitglieder"
   },
   en: {
     appName: "SC Payslip",
@@ -186,6 +200,20 @@ export const translations: Record<Lang, Record<string, string>> = {
     exportingPdf: "Generating PDF...",
     pdfExportSuccess: "PDF exported successfully",
     pdfExportError: "PDF export failed",
-    downloadPdf: "Download PDF"
+    downloadPdf: "Download PDF",
+    crewPresets: "Crew Presets",
+    saveCrewPreset: "Save Crew",
+    loadCrewPreset: "Load Crew",
+    managePresets: "Manage Presets",
+    presetName: "Preset Name",
+    presetNamePlaceholder: "Enter preset name",
+    noPresets: "No saved presets",
+    presetSaved: "Preset saved",
+    presetLoaded: "Preset loaded",
+    presetDeleted: "Preset deleted",
+    presetUpdated: "Preset updated",
+    confirmDeletePreset: "Delete this preset?",
+    saveCurrentCrew: "Save Current Crew",
+    presetMembers: "Members"
   }
 };
