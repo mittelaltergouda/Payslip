@@ -110,7 +110,12 @@ export const translations: Record<Lang, Record<string, string>> = {
     exportingPdf: "PDF wird erstellt...",
     pdfExportSuccess: "PDF erfolgreich exportiert",
     pdfExportError: "Fehler beim PDF-Export",
-    downloadPdf: "PDF herunterladen"
+    downloadPdf: "PDF herunterladen",
+    duplicateSession: "Duplizieren",
+    duplicateSessionTitle: "Session duplizieren",
+    duplicateSessionDescription: "Eine Kopie dieser Session erstellen",
+    copyExpenses: "Ausgaben kopieren",
+    duplicateSuccess: "Session dupliziert"
   },
   en: {
     appName: "SC Payslip",
@@ -186,6 +191,11 @@ export const translations: Record<Lang, Record<string, string>> = {
     exportingPdf: "Generating PDF...",
     pdfExportSuccess: "PDF exported successfully",
     pdfExportError: "PDF export failed",
-    downloadPdf: "Download PDF"
+    downloadPdf: "Download PDF",
+    duplicateSession: "Duplicate",
+    duplicateSessionTitle: "Duplicate Session",
+    duplicateSessionDescription: "Create a copy of this session",
+    copyExpenses: "Copy expenses",
+    duplicateSuccess: "Session duplicated"
   }
 };
