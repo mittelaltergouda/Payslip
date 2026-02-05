@@ -208,7 +208,7 @@ describe('SessionWizard - Distribution Mode', () => {
 
     selectDistributionMode('Prozent');
 
-    const percentInputs = screen.getAllByRole('spinbutton').filter(input => {
+    const percentInputs = screen.getAllByRole('textbox').filter(input => {
       const value = (input as HTMLInputElement).value;
       return value === '50';
     });
@@ -219,7 +219,7 @@ describe('SessionWizard - Distribution Mode', () => {
   it('should disable percent share inputs in EQUAL mode', () => {
     renderWithToast(<SessionWizard />);
 
-    const allInputs = screen.getAllByRole('spinbutton');
+    const allInputs = screen.getAllByRole('textbox');
     const percentShareInputs = allInputs.slice(-6);
 
     const disabledPercentInputs = percentShareInputs.filter(input =>
@@ -234,7 +234,7 @@ describe('SessionWizard - Distribution Mode', () => {
 
     selectDistributionMode('Anpassbar');
 
-    const allInputs = screen.getAllByRole('spinbutton');
+    const allInputs = screen.getAllByRole('textbox');
     const fixedPayoutInputs = allInputs.slice(-2);
 
     fixedPayoutInputs.forEach(input => {
@@ -318,7 +318,7 @@ describe('SessionWizard - Member Management', () => {
   it('should update member revenue when input is changed', () => {
     renderWithToast(<SessionWizard />);
 
-    const numberInputs = screen.getAllByRole('spinbutton');
+    const numberInputs = screen.getAllByRole('textbox');
     const revenueInput = numberInputs[0] as HTMLInputElement;
 
     fireEvent.change(revenueInput, { target: { value: '1000' } });
@@ -329,7 +329,7 @@ describe('SessionWizard - Member Management', () => {
   it('should update member investment when input is changed', () => {
     renderWithToast(<SessionWizard />);
 
-    const numberInputs = screen.getAllByRole('spinbutton');
+    const numberInputs = screen.getAllByRole('textbox');
     const investmentInput = numberInputs[1] as HTMLInputElement;
 
     fireEvent.change(investmentInput, { target: { value: '500' } });
@@ -474,7 +474,7 @@ describe('SessionWizard - Individual Expenses', () => {
     const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
     fireEvent.click(addExpenseButtons[0]);
 
-    const allInputs = screen.getAllByRole('spinbutton');
+    const allInputs = screen.getAllByRole('textbox');
     const expenseAmountInputs = allInputs.filter(input => {
       const parent = input.closest('td');
       return parent?.textContent?.includes('🗑');
@@ -614,7 +614,7 @@ describe('SessionWizard - Results Display', () => {
   it('should update calculations when member revenue is changed', () => {
     renderWithToast(<SessionWizard />);
 
-    const numberInputs = screen.getAllByRole('spinbutton');
+    const numberInputs = screen.getAllByRole('textbox');
     const revenueInput = numberInputs[0] as HTMLInputElement;
 
     fireEvent.change(revenueInput, { target: { value: '1000' } });
@@ -643,7 +643,7 @@ describe('SessionWizard - Integration Scenarios', () => {
     const addButton = screen.getByRole('button', { name: '+ Mitglied' });
     fireEvent.click(addButton);
 
-    const numberInputs = screen.getAllByRole('spinbutton');
+    const numberInputs = screen.getAllByRole('textbox');
     const firstRevenueInput = numberInputs[0] as HTMLInputElement;
     fireEvent.change(firstRevenueInput, { target: { value: '5000' } });
 
@@ -655,7 +655,7 @@ describe('SessionWizard - Integration Scenarios', () => {
 
     selectDistributionMode('Prozent');
 
-    const numberInputs = screen.getAllByRole('spinbutton');
+    const numberInputs = screen.getAllByRole('textbox');
     const revenueInput = numberInputs[0] as HTMLInputElement;
     fireEvent.change(revenueInput, { target: { value: '2000' } });
 
@@ -667,7 +667,7 @@ describe('SessionWizard - Integration Scenarios', () => {
   it('should handle adding and removing expenses with calculations', () => {
     renderWithToast(<SessionWizard />);
 
-    const numberInputs = screen.getAllByRole('spinbutton');
+    const numberInputs = screen.getAllByRole('textbox');
     const revenueInput = numberInputs[0] as HTMLInputElement;
     fireEvent.change(revenueInput, { target: { value: '1000' } });
 
@@ -697,7 +697,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should not crash when attempting negative revenue input', () => {
       renderWithToast(<SessionWizard />);
 
-      const numberInputs = screen.getAllByRole('spinbutton');
+      const numberInputs = screen.getAllByRole('textbox');
       const revenueInput = numberInputs[0] as HTMLInputElement;
 
       fireEvent.change(revenueInput, { target: { value: '-1000' } });
@@ -708,7 +708,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should not crash when attempting negative investment input', () => {
       renderWithToast(<SessionWizard />);
 
-      const numberInputs = screen.getAllByRole('spinbutton');
+      const numberInputs = screen.getAllByRole('textbox');
       const investmentInput = numberInputs[1] as HTMLInputElement;
 
       fireEvent.change(investmentInput, { target: { value: '-500' } });
@@ -722,7 +722,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
       fireEvent.click(addExpenseButtons[0]);
 
-      const allInputs = screen.getAllByRole('spinbutton');
+      const allInputs = screen.getAllByRole('textbox');
       const expenseAmountInputs = allInputs.filter(input => {
         const parent = input.closest('td');
         return parent?.textContent?.includes('🗑');
@@ -735,13 +735,14 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
         expect(expenseAmountInput).toBeInTheDocument();
       }
 
-      expect(screen.queryByText('Payout')).toBeInTheDocument();
+      // "Payout" appears in multiple places - just verify the app still renders
+      expect(screen.getAllByText('Payout').length).toBeGreaterThan(0);
     });
 
     it('should handle zero revenue input', () => {
       renderWithToast(<SessionWizard />);
 
-      const numberInputs = screen.getAllByRole('spinbutton');
+      const numberInputs = screen.getAllByRole('textbox');
       const revenueInput = numberInputs[0] as HTMLInputElement;
 
       fireEvent.change(revenueInput, { target: { value: '0' } });
@@ -753,7 +754,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should handle very large numbers without crashing', () => {
       renderWithToast(<SessionWizard />);
 
-      const numberInputs = screen.getAllByRole('spinbutton');
+      const numberInputs = screen.getAllByRole('textbox');
       const revenueInput = numberInputs[0] as HTMLInputElement;
 
       fireEvent.change(revenueInput, { target: { value: '999999999' } });
@@ -764,7 +765,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should handle empty string input for revenue', () => {
       renderWithToast(<SessionWizard />);
 
-      const numberInputs = screen.getAllByRole('spinbutton');
+      const numberInputs = screen.getAllByRole('textbox');
       const revenueInput = numberInputs[0] as HTMLInputElement;
 
       fireEvent.change(revenueInput, { target: { value: '' } });
@@ -845,7 +846,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       const memberDeleteButtons = deleteButtons.slice(0, 2);
       fireEvent.click(memberDeleteButtons[1]);
 
-      const numberInputs = screen.getAllByRole('spinbutton');
+      const numberInputs = screen.getAllByRole('textbox');
       const revenueInput = numberInputs[0] as HTMLInputElement;
       fireEvent.change(revenueInput, { target: { value: '0' } });
 
@@ -858,7 +859,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should handle investment greater than revenue', () => {
       renderWithToast(<SessionWizard />);
 
-      const numberInputs = screen.getAllByRole('spinbutton');
+      const numberInputs = screen.getAllByRole('textbox');
       const revenueInput = numberInputs[0] as HTMLInputElement;
       const investmentInput = numberInputs[1] as HTMLInputElement;
 
@@ -871,14 +872,14 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should handle expenses exceeding revenue', () => {
       renderWithToast(<SessionWizard />);
 
-      const numberInputs = screen.getAllByRole('spinbutton');
+      const numberInputs = screen.getAllByRole('textbox');
       const revenueInput = numberInputs[0] as HTMLInputElement;
       fireEvent.change(revenueInput, { target: { value: '100' } });
 
       const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
       fireEvent.click(addExpenseButtons[0]);
 
-      const allInputs = screen.getAllByRole('spinbutton');
+      const allInputs = screen.getAllByRole('textbox');
       const expenseAmountInputs = allInputs.filter(input => {
         const parent = input.closest('td');
         return parent?.textContent?.includes('🗑');
@@ -895,7 +896,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should handle zero revenue with non-zero investment', () => {
       renderWithToast(<SessionWizard />);
 
-      const numberInputs = screen.getAllByRole('spinbutton');
+      const numberInputs = screen.getAllByRole('textbox');
       const revenueInput = numberInputs[0] as HTMLInputElement;
       const investmentInput = numberInputs[1] as HTMLInputElement;
 
@@ -908,7 +909,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should handle multiple expenses exceeding total revenue', () => {
       renderWithToast(<SessionWizard />);
 
-      const numberInputs = screen.getAllByRole('spinbutton');
+      const numberInputs = screen.getAllByRole('textbox');
       const revenueInput = numberInputs[0] as HTMLInputElement;
       fireEvent.change(revenueInput, { target: { value: '100' } });
 
@@ -924,7 +925,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should handle decimal values in revenue input', () => {
       renderWithToast(<SessionWizard />);
 
-      const numberInputs = screen.getAllByRole('spinbutton');
+      const numberInputs = screen.getAllByRole('textbox');
       const revenueInput = numberInputs[0] as HTMLInputElement;
 
       fireEvent.change(revenueInput, { target: { value: '1000.50' } });
@@ -939,7 +940,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
       selectDistributionMode('Prozent');
 
-      const allInputs = screen.getAllByRole('spinbutton');
+      const allInputs = screen.getAllByRole('textbox');
       const percentInputs = allInputs.filter(input => {
         const value = (input as HTMLInputElement).value;
         return value === '50' || value === '0';
@@ -958,7 +959,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
       selectDistributionMode('Prozent');
 
-      const allInputs = screen.getAllByRole('spinbutton');
+      const allInputs = screen.getAllByRole('textbox');
       const percentInputs = allInputs.filter(input => {
         const value = (input as HTMLInputElement).value;
         return value === '50' || value === '0';
@@ -978,7 +979,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
       selectDistributionMode('Anpassbar');
 
-      const allInputs = screen.getAllByRole('spinbutton');
+      const allInputs = screen.getAllByRole('textbox');
       const revenueInput = allInputs[0] as HTMLInputElement;
       fireEvent.change(revenueInput, { target: { value: '1000' } });
 
@@ -1101,7 +1102,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should handle scenario with all zero values', () => {
       renderWithToast(<SessionWizard />);
 
-      const numberInputs = screen.getAllByRole('spinbutton');
+      const numberInputs = screen.getAllByRole('textbox');
       numberInputs.forEach(input => {
         fireEvent.change(input, { target: { value: '0' } });
       });
@@ -1113,7 +1114,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should handle member with only investment and no revenue', () => {
       renderWithToast(<SessionWizard />);
 
-      const numberInputs = screen.getAllByRole('spinbutton');
+      const numberInputs = screen.getAllByRole('textbox');
       const revenueInput = numberInputs[0] as HTMLInputElement;
       const investmentInput = numberInputs[1] as HTMLInputElement;
 
@@ -1126,14 +1127,14 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should handle member with only expenses and no revenue', () => {
       renderWithToast(<SessionWizard />);
 
-      const numberInputs = screen.getAllByRole('spinbutton');
+      const numberInputs = screen.getAllByRole('textbox');
       const revenueInput = numberInputs[0] as HTMLInputElement;
       fireEvent.change(revenueInput, { target: { value: '0' } });
 
       const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
       fireEvent.click(addExpenseButtons[0]);
 
-      const allInputs = screen.getAllByRole('spinbutton');
+      const allInputs = screen.getAllByRole('textbox');
       const expenseAmountInputs = allInputs.filter(input => {
         const parent = input.closest('td');
         return parent?.textContent?.includes('🗑');
@@ -1153,7 +1154,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       const addButton = screen.getByRole('button', { name: '+ Mitglied' });
       fireEvent.click(addButton);
 
-      const numberInputs = screen.getAllByRole('spinbutton');
+      const numberInputs = screen.getAllByRole('textbox');
       fireEvent.change(numberInputs[0], { target: { value: '5000' } });
 
       selectDistributionMode('Prozent');

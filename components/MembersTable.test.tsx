@@ -252,11 +252,12 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    const pilotInput = screen.getByDisplayValue('Pilot');
-    expect(pilotInput).toBeInTheDocument();
+    // Values appear in both desktop and mobile views
+    const pilotInputs = screen.getAllByDisplayValue('Pilot');
+    expect(pilotInputs.length).toBeGreaterThan(0);
 
-    const escortInput = screen.getByDisplayValue('Escort');
-    expect(escortInput).toBeInTheDocument();
+    const escortInputs = screen.getAllByDisplayValue('Escort');
+    expect(escortInputs.length).toBeGreaterThan(0);
   });
 
   it('should render empty table when no members', () => {
@@ -275,7 +276,7 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
     expect(screen.queryByDisplayValue('Pilot')).not.toBeInTheDocument();
   });
 });
@@ -333,10 +334,11 @@ describe('MembersTable - User Interactions', () => {
     );
 
     // Verify member data is rendered (MemberRow receives correct props)
-    expect(screen.getByDisplayValue('Pilot')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Captain')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Escort')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Fighter')).toBeInTheDocument();
+    // Values appear in both desktop and mobile views
+    expect(screen.getAllByDisplayValue('Pilot').length).toBeGreaterThan(0);
+    expect(screen.getAllByDisplayValue('Captain').length).toBeGreaterThan(0);
+    expect(screen.getAllByDisplayValue('Escort').length).toBeGreaterThan(0);
+    expect(screen.getAllByDisplayValue('Fighter').length).toBeGreaterThan(0);
   });
 });
 
@@ -370,8 +372,8 @@ describe('MembersTable - Data Display', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Pilot')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
+    expect(screen.getAllByDisplayValue('Pilot').length).toBeGreaterThan(0);
   });
 
   it('should render with empty feeByPayer object', () => {
@@ -390,7 +392,7 @@ describe('MembersTable - Data Display', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
   });
 
   it('should render individual expenses for members', () => {
@@ -409,7 +411,8 @@ describe('MembersTable - Data Display', () => {
       />
     );
 
-    expect(screen.getByDisplayValue('Fuel')).toBeInTheDocument();
+    // Fuel appears in both desktop and mobile views
+    expect(screen.getAllByDisplayValue('Fuel').length).toBeGreaterThan(0);
   });
 });
 
@@ -443,7 +446,7 @@ describe('MembersTable - Distribution Modes', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
   });
 
   it('should render in PERCENT mode', () => {
@@ -462,7 +465,7 @@ describe('MembersTable - Distribution Modes', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
   });
 
   it('should render in ADJUSTABLE mode', () => {
@@ -481,6 +484,6 @@ describe('MembersTable - Distribution Modes', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
   });
 });
