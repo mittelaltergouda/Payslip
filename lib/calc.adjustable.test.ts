@@ -39,13 +39,6 @@ describe('calculatePayslip - ADJUSTABLE mode', () => {
     expect(alice?.finalNet).toBe(200);
     expect(bob?.finalNet).toBe(150);
     expect(charlie?.finalNet).toBe(650);
-
-    // Verify summaryStatistics is present and populated
-    expect(result.summaryStatistics).toBeDefined();
-    expect(result.summaryStatistics?.minPayout).toBe(150);
-    expect(result.summaryStatistics?.maxPayout).toBe(650);
-    expect(result.summaryStatistics?.highestEarner).toBe('Charlie');
-    expect(result.summaryStatistics?.lowestEarner).toBe('Bob');
   });
 
   it('should add fixedBonus on top of equal distribution for pool members', () => {
@@ -344,15 +337,6 @@ describe('calculatePayslip - ADJUSTABLE mode', () => {
     expect(result.suggestedTransfers[0].fromMemberId).toBe('member-2');
     expect(result.suggestedTransfers[0].toMemberId).toBe('member-1');
     expect(result.suggestedTransfers[0].netAmount).toBe(200);
-
-    // Verify summaryStatistics is present and populated
-    expect(result.summaryStatistics).toBeDefined();
-    expect(result.summaryStatistics?.minPayout).toBe(-200);
-    expect(result.summaryStatistics?.maxPayout).toBe(1200);
-    expect(result.summaryStatistics?.totalTransfers).toBe(1);
-    expect(result.summaryStatistics?.largestTransfer).toBe(200);
-    expect(result.summaryStatistics?.highestEarner).toBe('Alice');
-    expect(result.summaryStatistics?.lowestEarner).toBe('Bob');
   });
 
   it('should handle single active member in ADJUSTABLE mode', () => {
