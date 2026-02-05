@@ -3,6 +3,7 @@
 import { DistributionMode, IndividualExpenseInput, MemberBreakdown, MemberInput } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 
 type Lang = "de" | "en";
 
@@ -169,22 +170,22 @@ export function MemberCard({
 
         <div>
           <label className="block text-xs text-white/60 mb-1" htmlFor={`revenue-${member.id}`}>{t.revenueLabel}</label>
-          <Input
+          <NumericInput
             id={`revenue-${member.id}`}
-            type="number"
             value={member.revenue ?? 0}
-            onChange={(e) => updateMember(member.id!, { revenue: Number(e.target.value) })}
+            onValueChange={(value) => updateMember(member.id!, { revenue: value })}
+            lang={lang}
             aria-label={`${t.revenueLabel} ${t.for || "for"} ${member.handle}`}
           />
         </div>
 
         <div>
           <label className="block text-xs text-white/60 mb-1" htmlFor={`investment-${member.id}`}>{t.investmentLabel}</label>
-          <Input
+          <NumericInput
             id={`investment-${member.id}`}
-            type="number"
             value={member.investment ?? 0}
-            onChange={(e) => updateMember(member.id!, { investment: Number(e.target.value) })}
+            onValueChange={(value) => updateMember(member.id!, { investment: value })}
+            lang={lang}
             aria-label={`${t.investmentLabel} ${t.for || "for"} ${member.handle}`}
           />
         </div>
@@ -201,11 +202,11 @@ export function MemberCard({
               onChange={(ev) => updateIndividualExpense(e.id!, { label: ev.target.value })}
               aria-label={`${t.expensesLabel} ${t.label || "label"} ${t.for || "for"} ${member.handle}`}
             />
-            <Input
-              type="number"
+            <NumericInput
               className="w-24"
               value={e.amount}
-              onChange={(ev) => updateIndividualExpense(e.id!, { amount: Number(ev.target.value) })}
+              onValueChange={(value) => updateIndividualExpense(e.id!, { amount: value })}
+              lang={lang}
               aria-label={`${t.expensesLabel} ${t.amount || "amount"} ${t.for || "for"} ${member.handle}`}
             />
             <Button
@@ -267,14 +268,14 @@ export function MemberCard({
 
         <div>
           <label className="block text-xs text-white/60 mb-1" htmlFor={`percent-share-${member.id}`}>{t.percentShare}</label>
-          <Input
+          <NumericInput
             id={`percent-share-${member.id}`}
-            type="number"
             value={member.percentShare ?? 0}
             disabled={distributionMode === "EQUAL"}
-            onChange={(e) =>
-              updateMember(member.id!, { percentShare: Number(e.target.value) })
+            onValueChange={(value) =>
+              updateMember(member.id!, { percentShare: value })
             }
+            lang={lang}
             aria-label={`${t.percentShare} ${t.for || "for"} ${member.handle}`}
             aria-disabled={distributionMode === "EQUAL"}
           />
@@ -282,14 +283,14 @@ export function MemberCard({
 
         <div>
           <label className="block text-xs text-white/60 mb-1" htmlFor={`fixed-bonus-${member.id}`}>{t.fixedBonus}</label>
-          <Input
+          <NumericInput
             id={`fixed-bonus-${member.id}`}
-            type="number"
             value={(member as any).fixedBonus ?? 0}
             disabled={distributionMode !== "ADJUSTABLE"}
-            onChange={(e) =>
-              updateMember(member.id!, { fixedBonus: Number(e.target.value) as any })
+            onValueChange={(value) =>
+              updateMember(member.id!, { fixedBonus: value as any })
             }
+            lang={lang}
             aria-label={`${t.fixedBonus} ${t.for || "for"} ${member.handle}`}
             aria-disabled={distributionMode !== "ADJUSTABLE"}
           />
@@ -297,14 +298,14 @@ export function MemberCard({
 
         <div>
           <label className="block text-xs text-white/60 mb-1" htmlFor={`fixed-payout-${member.id}`}>{t.fixedPayout}</label>
-          <Input
+          <NumericInput
             id={`fixed-payout-${member.id}`}
-            type="number"
             value={member.fixedPayout ?? 0}
             disabled={distributionMode !== "ADJUSTABLE"}
-            onChange={(e) =>
-              updateMember(member.id!, { fixedPayout: Number(e.target.value) })
+            onValueChange={(value) =>
+              updateMember(member.id!, { fixedPayout: value })
             }
+            lang={lang}
             aria-label={`${t.fixedPayout} ${t.for || "for"} ${member.handle}`}
             aria-disabled={distributionMode !== "ADJUSTABLE"}
           />
