@@ -1235,16 +1235,16 @@ describe('SessionWizard - Session Management', () => {
       manualSave: mockManualSave,
       error: null
     });
-    vi.spyOn(useAutoSaveModule, 'useAutoSave').mockImplementation(mockUseAutoSave);
+    vi.spyOn(useAutoSaveModule, 'useAutoSave').mockImplementation(mockUseAutoSave as unknown as typeof useAutoSaveModule.useAutoSave);
 
     // Mock localStorage service functions
     mockGetAll = vi.fn().mockReturnValue(mockSavedSessions);
     mockDeleteSession = vi.fn().mockReturnValue({ success: true });
     mockSave = vi.fn().mockReturnValue({ success: true });
 
-    vi.spyOn(sessionStorage, 'getAll').mockImplementation(mockGetAll);
-    vi.spyOn(sessionStorage, 'deleteSession').mockImplementation(mockDeleteSession);
-    vi.spyOn(sessionStorage, 'save').mockImplementation(mockSave);
+    vi.spyOn(sessionStorage, 'getAll').mockImplementation(mockGetAll as unknown as typeof sessionStorage.getAll);
+    vi.spyOn(sessionStorage, 'deleteSession').mockImplementation(mockDeleteSession as unknown as typeof sessionStorage.deleteSession);
+    vi.spyOn(sessionStorage, 'save').mockImplementation(mockSave as unknown as typeof sessionStorage.save);
   });
 
   describe('Session Name Input', () => {

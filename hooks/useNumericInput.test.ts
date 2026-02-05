@@ -17,10 +17,10 @@ vi.mock('../lib/format', () => ({
   },
   parseFormattedInteger: (str: string) => {
     const trimmed = str.trim();
-    if (!trimmed || trimmed === '-') return 0;
+    if (!trimmed || trimmed === '-') {return 0;}
     // Simple implementation for tests - strip non-digits except minus
     const cleaned = trimmed.replace(/[^\d-]/g, '');
-    if (!cleaned || cleaned === '-') return 0;
+    if (!cleaned || cleaned === '-') {return 0;}
     return parseInt(cleaned, 10) || 0;
   },
 }));

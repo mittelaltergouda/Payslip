@@ -198,11 +198,11 @@ export function formatInteger(value: number, lang: Lang): string {
  */
 export function parseFormattedInteger(str: string): number {
   const trimmed = str.trim();
-  if (!trimmed || trimmed === '-') return 0;
+  if (!trimmed || trimmed === '-') {return 0;}
 
   // Strip all characters except digits, dots, commas, and minus sign
   const sanitized = trimmed.replace(/[^\d.,-]/g, '');
-  if (!sanitized || sanitized === '-') return 0;
+  if (!sanitized || sanitized === '-') {return 0;}
 
   // Count separator occurrences
   const dotCount = (sanitized.match(/\./g) || []).length;
@@ -251,6 +251,6 @@ export function parseFormattedInteger(str: string): number {
   }
 
   const parsed = parseFloat(normalized);
-  if (isNaN(parsed)) return 0;
+  if (isNaN(parsed)) {return 0;}
   return Math.trunc(parsed);
 }

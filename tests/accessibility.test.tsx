@@ -64,7 +64,7 @@ describe("Accessibility Tests - UI Components", () => {
     });
 
     it("should have no accessibility violations - loading state", async () => {
-      const { container } = render(<Button loading>Loading</Button>);
+      const { container } = render(<Button isLoading>Loading</Button>);
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
@@ -115,7 +115,6 @@ describe("Accessibility Tests - UI Components", () => {
         <FormField
           id="username"
           label="Username"
-          placeholder="Enter username"
         />
       );
       const results = await axe(container);
@@ -127,7 +126,6 @@ describe("Accessibility Tests - UI Components", () => {
         <FormField
           id="email"
           label="Email"
-          placeholder="Enter email"
           error="Invalid email address"
         />
       );
@@ -140,7 +138,6 @@ describe("Accessibility Tests - UI Components", () => {
         <FormField
           id="password"
           label="Password"
-          placeholder="Enter password"
           hint="Must be at least 8 characters"
         />
       );
@@ -153,7 +150,6 @@ describe("Accessibility Tests - UI Components", () => {
         <FormField
           id="required-field"
           label="Required Field"
-          placeholder="Enter value"
           required
         />
       );

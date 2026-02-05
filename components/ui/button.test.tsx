@@ -536,7 +536,7 @@ describe("Button - Edge Cases", () => {
   });
 
   it("should handle empty string as children", () => {
-    render(<Button>{""}</Button>);
+    render(<Button />);
 
     const button = screen.getByRole("button");
     // Button contains animation wrappers, but no text content

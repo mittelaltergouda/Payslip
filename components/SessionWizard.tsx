@@ -248,7 +248,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
       </div>
 
       {/* Session name and management controls */}
-      <div className="glass p-6 space-y-4" role="region" aria-label={t.sessionName || "Session Information"}>
+      <div className="glass p-6 space-y-4" role="region" aria-label={t.sessionSettings || "Session Settings"}>
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div className="flex-1 min-w-[250px]">
             <FormField

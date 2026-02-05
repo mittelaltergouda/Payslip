@@ -11,7 +11,7 @@ import {
   DialogDescription,
   DialogClose,
 } from "./dialog";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 
 describe("Dialog - Basic Rendering", () => {
   it("should render dialog trigger", () => {

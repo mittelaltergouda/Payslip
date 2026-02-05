@@ -194,7 +194,7 @@ test.describe('Responsive Design - Layout Adaptation', () => {
 
     const desktopColumns = await page.evaluate(() => {
       const table = document.querySelector('table');
-      if (!table) return 0;
+      if (!table) {return 0;}
 
       const headerRow = table.querySelector('thead tr');
       return headerRow ? headerRow.querySelectorAll('th').length : 0;
@@ -206,10 +206,10 @@ test.describe('Responsive Design - Layout Adaptation', () => {
 
     const mobileColumns = await page.evaluate(() => {
       const table = document.querySelector('table');
-      if (!table) return 0;
+      if (!table) {return 0;}
 
       const headerRow = table.querySelector('thead tr');
-      if (!headerRow) return 0;
+      if (!headerRow) {return 0;}
 
       // Count visible columns (not hidden via CSS)
       const headers = headerRow.querySelectorAll('th');
@@ -236,7 +236,7 @@ test.describe('Responsive Design - Layout Adaptation', () => {
 
     const desktopSpacing = await page.evaluate(() => {
       const container = document.querySelector('main, [class*="container"]');
-      if (!container) return { padding: '0', margin: '0' };
+      if (!container) {return { padding: '0', margin: '0' };}
 
       const styles = window.getComputedStyle(container);
       return {
@@ -251,7 +251,7 @@ test.describe('Responsive Design - Layout Adaptation', () => {
 
     const mobileSpacing = await page.evaluate(() => {
       const container = document.querySelector('main, [class*="container"]');
-      if (!container) return { padding: '0', margin: '0' };
+      if (!container) {return { padding: '0', margin: '0' };}
 
       const styles = window.getComputedStyle(container);
       return {
@@ -383,8 +383,8 @@ test.describe('Responsive Design - Typography and Readability', () => {
     const h2Pixels = parseFloat(h2Size);
 
     // Headings should be at least 18px on mobile (WCAG recommendation)
-    if (h1Pixels > 0) expect(h1Pixels).toBeGreaterThanOrEqual(18);
-    if (h2Pixels > 0) expect(h2Pixels).toBeGreaterThanOrEqual(16);
+    if (h1Pixels > 0) {expect(h1Pixels).toBeGreaterThanOrEqual(18);}
+    if (h2Pixels > 0) {expect(h2Pixels).toBeGreaterThanOrEqual(16);}
   });
 
   test('Body text is readable on mobile', async ({ page }) => {
@@ -410,7 +410,7 @@ test.describe('Responsive Design - Typography and Readability', () => {
     // Check line height
     const lineHeight = await page.evaluate(() => {
       const p = document.querySelector('p, div, span');
-      if (!p) return '0';
+      if (!p) {return '0';}
 
       return window.getComputedStyle(p).lineHeight;
     });
@@ -440,8 +440,8 @@ test.describe('Responsive Design - Typography and Readability', () => {
           const bgColor = styles.backgroundColor;
 
           // Simple check: colors should be defined
-          if (!color || !bgColor) continue;
-          if (color === bgColor) return false; // Same color = no contrast
+          if (!color || !bgColor) {continue;}
+          if (color === bgColor) {return false;} // Same color = no contrast
         }
 
         return true;

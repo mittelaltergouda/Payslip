@@ -99,7 +99,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
       let capturedToken = "";
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.exportToken.create).mockImplementation((args: any) => {
+      (vi.mocked(prisma.exportToken.create).mockImplementation as any)((args: any) => {
         capturedToken = args.data.token;
         return Promise.resolve({
           id: "token-uuid",
@@ -126,7 +126,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
       const generatedTokens: string[] = [];
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.exportToken.create).mockImplementation((args: any) => {
+      (vi.mocked(prisma.exportToken.create).mockImplementation as any)((args: any) => {
         const token = args.data.token;
         generatedTokens.push(token);
         return Promise.resolve({
@@ -295,7 +295,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
       const generatedTokens: string[] = [];
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.exportToken.create).mockImplementation((args: any) => {
+      (vi.mocked(prisma.exportToken.create).mockImplementation as any)((args: any) => {
         const token = args.data.token;
         generatedTokens.push(token);
         return Promise.resolve({
@@ -328,7 +328,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
       const generatedTokens: string[] = [];
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.exportToken.create).mockImplementation((args: any) => {
+      (vi.mocked(prisma.exportToken.create).mockImplementation as any)((args: any) => {
         const token = args.data.token;
         generatedTokens.push(token);
         return Promise.resolve({

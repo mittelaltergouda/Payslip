@@ -5,7 +5,7 @@ import type { SessionSettingsProps } from './SessionSettings';
 import { SessionSettings } from './SessionSettings';
 import type { SessionInput, DistributionMode } from '@/lib/types';
 import type { ModePreviewResult } from '@/lib/modePreview';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 // Mock the ModePreview component
 vi.mock('./ModePreview', () => ({

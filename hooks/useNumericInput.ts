@@ -111,7 +111,7 @@ export function useNumericInput({
    * Handle focus event - clears field if value is 0
    */
   const handleFocus = useCallback(() => {
-    if (disabled) return;
+    if (disabled) {return;}
     setIsFocused(true);
   }, [disabled]);
 
@@ -119,7 +119,7 @@ export function useNumericInput({
    * Handle blur event - restores 0 if empty and formats display
    */
   const handleBlur = useCallback(() => {
-    if (disabled) return;
+    if (disabled) {return;}
     setIsFocused(false);
     // Note: displayValue is already handled by useMemo based on isFocused state
     // If the current value is already correct, no onChange needed
@@ -130,7 +130,7 @@ export function useNumericInput({
    */
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (disabled) return;
+      if (disabled) {return;}
 
       const inputValue = e.target.value;
 

@@ -146,8 +146,8 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    expect(screen.getByText('Eingabe')).toBeInTheDocument();
-    expect(screen.getByText('+ Mitglied')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Eingabe' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /\+ Mitglied/i })).toBeInTheDocument();
   });
 
   it('should render the component with English translations', () => {
@@ -166,8 +166,8 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    expect(screen.getByText('Members')).toBeInTheDocument();
-    expect(screen.getByText('+ Member')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /\+ Member/i })).toBeInTheDocument();
   });
 
   it('should render all column headers', () => {
@@ -186,16 +186,16 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    expect(screen.getByText('Handle')).toBeInTheDocument();
-    expect(screen.getByText('Revenue')).toBeInTheDocument();
-    expect(screen.getByText('Investment')).toBeInTheDocument();
-    expect(screen.getByText('Expenses')).toBeInTheDocument();
-    expect(screen.getByText('Taxes')).toBeInTheDocument();
-    expect(screen.getByText('Profit Share')).toBeInTheDocument();
-    expect(screen.getByText('Net After Fees')).toBeInTheDocument();
-    expect(screen.getByText('% Share')).toBeInTheDocument();
-    expect(screen.getByText('Fixed Bonus')).toBeInTheDocument();
-    expect(screen.getByText('Fixed Payout')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Handle' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Revenue' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Investment' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Expenses' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Taxes' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Profit Share' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Net After Fees' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: '% Share' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Fixed Bonus' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Fixed Payout' })).toBeInTheDocument();
   });
 
   it('should render role column header when showRole is true', () => {
@@ -214,7 +214,7 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    expect(screen.getByText('Role')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Role' })).toBeInTheDocument();
   });
 
   it('should not render role column header when showRole is false', () => {

@@ -177,7 +177,7 @@ describe("Checkbox - Click Handling", () => {
   it("should work as controlled component", () => {
     const ControlledCheckbox = () => {
       const [checked, setChecked] = React.useState(false);
-      return <Checkbox checked={checked} onCheckedChange={setChecked} aria-label="Test checkbox" />;
+      return <Checkbox checked={checked} onCheckedChange={(value) => setChecked(value === true)} aria-label="Test checkbox" />;
     };
 
     render(<ControlledCheckbox />);
@@ -304,7 +304,7 @@ describe("Checkbox - Accessibility", () => {
   it("should update aria-checked when state changes", () => {
     const ControlledCheckbox = () => {
       const [checked, setChecked] = React.useState(false);
-      return <Checkbox checked={checked} onCheckedChange={setChecked} aria-label="Test checkbox" />;
+      return <Checkbox checked={checked} onCheckedChange={(value) => setChecked(value === true)} aria-label="Test checkbox" />;
     };
 
     render(<ControlledCheckbox />);

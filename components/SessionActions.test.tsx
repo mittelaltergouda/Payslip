@@ -113,13 +113,13 @@ describe('SessionActions - Export Functionality', () => {
     // Mock URL methods
     mockCreateObjectURL = vi.fn().mockReturnValue('blob:mock-url');
     mockRevokeObjectURL = vi.fn();
-    global.URL.createObjectURL = mockCreateObjectURL;
-    global.URL.revokeObjectURL = mockRevokeObjectURL;
+    global.URL.createObjectURL = mockCreateObjectURL as unknown as typeof URL.createObjectURL;
+    global.URL.revokeObjectURL = mockRevokeObjectURL as unknown as typeof URL.revokeObjectURL;
 
     // Mock link click
     mockClick = vi.fn();
     const _originalClick = HTMLAnchorElement.prototype.click;
-    HTMLAnchorElement.prototype.click = mockClick;
+    HTMLAnchorElement.prototype.click = mockClick as unknown as typeof HTMLAnchorElement.prototype.click;
 
     // Mock exportAll
     vi.mocked(sessionStorage.exportAll).mockReturnValue('{"sessions":[]}');

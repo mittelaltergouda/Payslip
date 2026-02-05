@@ -661,7 +661,7 @@ describe('ResultsDisplay - CSV Export Functionality', () => {
   it('should call generateSummaryCSV when summary button is clicked', () => {
     const sessionWithName: SessionInput = {
       ...mockSession,
-      sessionName: 'Test Trading Session',
+      name: 'Test Trading Session',
     };
 
     render(
@@ -689,7 +689,7 @@ describe('ResultsDisplay - CSV Export Functionality', () => {
   it('should call generateDetailedCSV when detailed button is clicked', () => {
     const sessionWithName: SessionInput = {
       ...mockSession,
-      sessionName: 'Test Trading Session',
+      name: 'Test Trading Session',
     };
 
     render(
@@ -755,7 +755,7 @@ describe('ResultsDisplay - CSV Export Functionality', () => {
   it('should use custom currency when provided for summary export', () => {
     const sessionWithName: SessionInput = {
       ...mockSession,
-      sessionName: 'Test Session',
+      name: 'Test Session',
     };
 
     render(
@@ -779,7 +779,7 @@ describe('ResultsDisplay - CSV Export Functionality', () => {
   it('should use custom currency when provided for detailed export', () => {
     const sessionWithName: SessionInput = {
       ...mockSession,
-      sessionName: 'Test Session',
+      name: 'Test Session',
     };
 
     render(
@@ -803,7 +803,7 @@ describe('ResultsDisplay - CSV Export Functionality', () => {
   it('should use "Untitled Session" as default session name for summary export', () => {
     const sessionWithoutName: SessionInput = {
       ...mockSession,
-      sessionName: undefined,
+      name: '',
     };
 
     render(
@@ -830,7 +830,7 @@ describe('ResultsDisplay - CSV Export Functionality', () => {
   it('should use "Untitled Session" as default session name for detailed export', () => {
     const sessionWithoutName: SessionInput = {
       ...mockSession,
-      sessionName: undefined,
+      name: '',
     };
 
     render(
@@ -1042,7 +1042,7 @@ describe('ResultsDisplay - CSV Export Edge Cases', () => {
   it('should handle export with empty session name', () => {
     const sessionWithEmptyName: SessionInput = {
       ...mockSession,
-      sessionName: '',
+      name: '',
     };
 
     render(
@@ -1134,7 +1134,7 @@ describe('ResultsDisplay - CSV Export Edge Cases', () => {
   it('should handle export with special characters in session name', () => {
     const sessionWithSpecialChars: SessionInput = {
       ...mockSession,
-      sessionName: 'Test "Session" with, commas & quotes',
+      name: 'Test "Session" with, commas & quotes',
     };
 
     render(
