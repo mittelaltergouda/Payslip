@@ -36,6 +36,12 @@ export interface SessionHistoryProps {
   onDelete: (sessionId: string) => void;
 
   /**
+   * Callback function called when the user clicks the Duplicate button.
+   * Receives the selected session as a parameter.
+   */
+  onDuplicate: (session: SavedSession) => void;
+
+  /**
    * Current language for date formatting.
    */
   lang: Lang;
@@ -48,6 +54,7 @@ export interface SessionHistoryProps {
     noSessions: string;
     loadSession: string;
     deleteSession: string;
+    duplicateSession: string;
     confirmDelete: string;
     cancel: string;
     createdAt: string;
@@ -79,6 +86,7 @@ export function SessionHistory({
   sessions,
   onLoad,
   onDelete,
+  onDuplicate,
   lang,
   translations,
 }: SessionHistoryProps) {
@@ -238,8 +246,29 @@ export function SessionHistory({
                         {translations.loadSession}
                       </button>
                       <button
+                        onClick={() => onDuplicate(savedSession)}
+                        className="btn bg-white/10 hover:bg-white/20 text-white/80"
+                        aria-label={translations.duplicateSession}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </button>
+                      <button
                         onClick={() => handleDeleteClick(savedSession.id)}
                         className="btn bg-white/10 hover:bg-white/20 text-white/80"
+                        aria-label={translations.deleteSession}
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
