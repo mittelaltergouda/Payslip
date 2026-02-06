@@ -252,6 +252,134 @@ export function importAll(jsonData: string): StorageResult<{ count: number }> {
 }
 
 /**
+ * Duplicates an existing session with new IDs for all entities.
+ * Creates a copy with "(Copy)" appended to the name.
+ *
+ * @param sessionId - The ID of the session to duplicate
+ * @param copyExpenses - Whether to copy expenses to the new session (default: false)
+ * @returns StorageResult with the duplicated session data
+ *
+ * @example
+ * const result = duplicate("session-123", true);
+ * if (result.success) {
+ *   console.log(`Duplicated session: ${result.data.session.name}`);
+ * }
+ */
+export function duplicate(
+  sessionId: string,
+  copyExpenses: boolean = false
+): StorageResult<SavedSession> {
+  try {
+    // Get all existing sessions
+    const sessions = getAllInternal();
+
+    // Find the session to duplicate
+    const originalSaved = sessions.find((s) => s.id === sessionId);
+
+    if (!originalSaved) {
+      return {
+        success: false,
+        error: 'Session not found',
+      };
+    }
+
+    const original = originalSaved.session;
+
+    // Generate new session ID
+    const newSessionId = generateId();
+    const now = new Date().toISOString();
+
+    // Create new name with "(Copy)" suffix, truncate if needed
+    const maxNameLength = 128;
+    const copySuffix = ' (Copy)';
+    let newName = original.name;
+    if (newName.length + copySuffix.length > maxNameLength) {
+      newName = newName.slice(0, maxNameLength - copySuffix.length);
+    }
+    newName = newName + copySuffix;
+
+    // Create member ID mapping: oldId -> newId
+    const memberIdMap = new Map<string, string>();
+    const newMembers = original.members.map((member) => {
+      const newMemberId = generateId();
+      if (member.id) {
+        memberIdMap.set(member.id, newMemberId);
+      }
+      return { ...member, id: newMemberId };
+    });
+
+    // Copy expenses if requested
+    let newSharedExpenses = undefined;
+    let newIndividualExpenses = undefined;
+
+    if (copyExpenses) {
+      // Copy shared expenses with new IDs (participantIds skipped for v1)
+      if (original.sharedExpenses && original.sharedExpenses.length > 0) {
+        newSharedExpenses = original.sharedExpenses.map((expense) => ({
+          ...expense,
+          id: generateId(),
+          // Clear participantIds for v1 to avoid complex remapping
+          participantIds: undefined,
+        }));
+      }
+
+      // Copy individual expenses with new IDs and remapped memberIds
+      if (original.individualExpenses && original.individualExpenses.length > 0) {
+        newIndividualExpenses = original.individualExpenses.map((expense) => ({
+          ...expense,
+          id: generateId(),
+          memberId: memberIdMap.get(expense.memberId) ?? expense.memberId,
+        }));
+      }
+    }
+
+    // Create the duplicated session
+    const duplicatedSession = {
+      id: newSessionId,
+      name: newName,
+      type: original.type,
+      currency: original.currency,
+      totalRevenue: original.totalRevenue,
+      distributionMode: original.distributionMode,
+      taxEnabled: original.taxEnabled,
+      taxRate: original.taxRate,
+      members: newMembers,
+      sharedExpenses: newSharedExpenses,
+      individualExpenses: newIndividualExpenses,
+    };
+
+    // Save the duplicated session
+    const savedSession: SavedSession = {
+      id: newSessionId,
+      session: duplicatedSession,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    sessions.push(savedSession);
+
+    // Save to localStorage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+
+    return {
+      success: true,
+      data: savedSession,
+    };
+  } catch (error) {
+    if (error instanceof Error && error.name === 'QuotaExceededError') {
+      return {
+        success: false,
+        error: 'Storage quota exceeded. Please export and delete old sessions.',
+      };
+    }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to duplicate session',
+    };
+  }
+}
+
+/**
  * Clears all saved sessions from localStorage.
  * USE WITH CAUTION: This operation cannot be undone.
  *

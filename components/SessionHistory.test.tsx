@@ -43,6 +43,7 @@ const mockTranslationsDE = {
   noSessions: 'No saved sessions',
   loadSession: 'Load',
   deleteSession: 'Delete',
+  duplicateSession: 'Duplicate',
   confirmDelete: 'Are you sure you want to delete this session?',
   cancel: 'Cancel',
   createdAt: 'Created',
@@ -54,6 +55,7 @@ const mockTranslationsEN = {
   noSessions: 'No saved sessions',
   loadSession: 'Load',
   deleteSession: 'Delete',
+  duplicateSession: 'Duplicate',
   confirmDelete: 'Are you sure you want to delete this session?',
   cancel: 'Cancel',
   createdAt: 'Created',
@@ -65,6 +67,7 @@ describe('SessionHistory - Initial Rendering', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     const { container } = render(
       <SessionHistory
@@ -73,6 +76,7 @@ describe('SessionHistory - Initial Rendering', () => {
         sessions={[]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -85,6 +89,7 @@ describe('SessionHistory - Initial Rendering', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -93,6 +98,7 @@ describe('SessionHistory - Initial Rendering', () => {
         sessions={[]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -110,6 +116,7 @@ describe('SessionHistory - Initial Rendering', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -118,6 +125,7 @@ describe('SessionHistory - Initial Rendering', () => {
         sessions={[]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -132,6 +140,7 @@ describe('SessionHistory - Initial Rendering', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     const translationsDE = {
       ...mockTranslationsDE,
@@ -146,6 +155,7 @@ describe('SessionHistory - Initial Rendering', () => {
         sessions={[]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="de"
         translations={translationsDE}
       />
@@ -161,6 +171,7 @@ describe('SessionHistory - Empty State', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -169,6 +180,7 @@ describe('SessionHistory - Empty State', () => {
         sessions={[]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -181,6 +193,7 @@ describe('SessionHistory - Empty State', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -189,6 +202,7 @@ describe('SessionHistory - Empty State', () => {
         sessions={[]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -206,6 +220,7 @@ describe('SessionHistory - Display Sessions', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -214,6 +229,7 @@ describe('SessionHistory - Display Sessions', () => {
         sessions={[mockSession1, mockSession2]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -227,6 +243,7 @@ describe('SessionHistory - Display Sessions', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -235,6 +252,7 @@ describe('SessionHistory - Display Sessions', () => {
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -252,6 +270,7 @@ describe('SessionHistory - Display Sessions', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -260,6 +279,7 @@ describe('SessionHistory - Display Sessions', () => {
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -274,6 +294,7 @@ describe('SessionHistory - Display Sessions', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -282,6 +303,7 @@ describe('SessionHistory - Display Sessions', () => {
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="de"
         translations={mockTranslationsDE}
       />
@@ -297,6 +319,7 @@ describe('SessionHistory - Display Sessions', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -305,6 +328,7 @@ describe('SessionHistory - Display Sessions', () => {
         sessions={[mockSession1, mockSession2]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -318,6 +342,7 @@ describe('SessionHistory - Display Sessions', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -326,6 +351,7 @@ describe('SessionHistory - Display Sessions', () => {
         sessions={[mockSession1, mockSession2]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -345,6 +371,7 @@ describe('SessionHistory - Load Session', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -353,6 +380,7 @@ describe('SessionHistory - Load Session', () => {
         sessions={[mockSession1, mockSession2]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -369,6 +397,7 @@ describe('SessionHistory - Load Session', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -377,6 +406,7 @@ describe('SessionHistory - Load Session', () => {
         sessions={[mockSession1, mockSession2]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -393,6 +423,7 @@ describe('SessionHistory - Load Session', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -401,6 +432,7 @@ describe('SessionHistory - Load Session', () => {
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -418,6 +450,7 @@ describe('SessionHistory - Delete Session', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -426,6 +459,7 @@ describe('SessionHistory - Delete Session', () => {
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -450,6 +484,7 @@ describe('SessionHistory - Delete Session', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -458,6 +493,7 @@ describe('SessionHistory - Delete Session', () => {
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -485,6 +521,7 @@ describe('SessionHistory - Delete Session', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -493,6 +530,7 @@ describe('SessionHistory - Delete Session', () => {
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -521,6 +559,7 @@ describe('SessionHistory - Delete Session', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -529,6 +568,7 @@ describe('SessionHistory - Delete Session', () => {
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -560,6 +600,7 @@ describe('SessionHistory - Delete Session', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -568,6 +609,7 @@ describe('SessionHistory - Delete Session', () => {
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -594,6 +636,7 @@ describe('SessionHistory - Delete Session', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -602,6 +645,7 @@ describe('SessionHistory - Delete Session', () => {
         sessions={[mockSession1, mockSession2]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -634,6 +678,7 @@ describe('SessionHistory - Close Functionality', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -642,6 +687,7 @@ describe('SessionHistory - Close Functionality', () => {
         sessions={[]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -657,6 +703,7 @@ describe('SessionHistory - Close Functionality', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -665,6 +712,7 @@ describe('SessionHistory - Close Functionality', () => {
         sessions={[]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -679,6 +727,7 @@ describe('SessionHistory - Close Functionality', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -687,6 +736,7 @@ describe('SessionHistory - Close Functionality', () => {
         sessions={[]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -709,6 +759,7 @@ describe('SessionHistory - Close Functionality', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -717,6 +768,7 @@ describe('SessionHistory - Close Functionality', () => {
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -733,6 +785,7 @@ describe('SessionHistory - Close Functionality', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -741,6 +794,7 @@ describe('SessionHistory - Close Functionality', () => {
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -770,6 +824,7 @@ describe('SessionHistory - Close Functionality', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -778,6 +833,7 @@ describe('SessionHistory - Close Functionality', () => {
         sessions={[]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -794,6 +850,7 @@ describe('SessionHistory - Accessibility', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -802,6 +859,7 @@ describe('SessionHistory - Accessibility', () => {
         sessions={[]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -818,6 +876,7 @@ describe('SessionHistory - Accessibility', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -826,6 +885,7 @@ describe('SessionHistory - Accessibility', () => {
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -840,6 +900,7 @@ describe('SessionHistory - Accessibility', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -848,6 +909,7 @@ describe('SessionHistory - Accessibility', () => {
         sessions={[]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -863,6 +925,7 @@ describe('SessionHistory - Edge Cases', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     const sessionWithInvalidDate: SavedSession = {
       ...mockSession1,
@@ -877,6 +940,7 @@ describe('SessionHistory - Edge Cases', () => {
         sessions={[sessionWithInvalidDate]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -890,6 +954,7 @@ describe('SessionHistory - Edge Cases', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     const sessionWithLongName: SavedSession = {
       ...mockSession1,
@@ -906,6 +971,7 @@ describe('SessionHistory - Edge Cases', () => {
         sessions={[sessionWithLongName]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -918,6 +984,7 @@ describe('SessionHistory - Edge Cases', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     const session1 = { ...mockSession1, id: 'session-1a' };
     const session2 = { ...mockSession1, id: 'session-1b' };
@@ -929,6 +996,7 @@ describe('SessionHistory - Edge Cases', () => {
         sessions={[session1, session2]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />
@@ -950,6 +1018,7 @@ describe('SessionHistory - Edge Cases', () => {
     const mockOnClose = vi.fn();
     const mockOnLoad = vi.fn();
     const mockOnDelete = vi.fn();
+    const mockOnDuplicate = vi.fn();
 
     render(
       <SessionHistory
@@ -958,6 +1027,7 @@ describe('SessionHistory - Edge Cases', () => {
         sessions={[mockSession1]}
         onLoad={mockOnLoad}
         onDelete={mockOnDelete}
+        onDuplicate={mockOnDuplicate}
         lang="en"
         translations={mockTranslationsEN}
       />

@@ -1436,11 +1436,10 @@ describe('SessionWizard - Session Management', () => {
         expect(loadButtons.length).toBeGreaterThan(0);
       });
 
-      // Find all buttons and locate the delete button (it's the one with SVG icon, no text, next to Load button)
-      const allButtons = screen.getAllByRole('button');
-      // Delete button should be after the first Load button
-      const loadButtonIndex = allButtons.findIndex(btn => btn.textContent?.match(/^(Laden|Load)$/));
-      const deleteButton = allButtons[loadButtonIndex + 1];
+      // Find delete button by aria-label (it's next to Load and Duplicate buttons)
+      // Use getAllByRole since there may be multiple sessions with delete buttons
+      const deleteButtons = screen.getAllByRole('button', { name: /Löschen|Delete Session/i });
+      const deleteButton = deleteButtons[0];
 
       fireEvent.click(deleteButton);
 
@@ -1678,10 +1677,10 @@ describe('SessionWizard - Session Management', () => {
         expect(loadButtons.length).toBeGreaterThan(0);
       });
 
-      // Find delete button (it's the one with SVG icon, no text, next to Load button)
-      const allButtons = screen.getAllByRole('button');
-      const loadButtonIndex = allButtons.findIndex(btn => btn.textContent?.match(/^(Laden|Load)$/));
-      const deleteButton = allButtons[loadButtonIndex + 1];
+      // Find delete button by aria-label (it's next to Load and Duplicate buttons)
+      // Use getAllByRole since there may be multiple sessions with delete buttons
+      const deleteButtons = screen.getAllByRole('button', { name: /Löschen|Delete Session/i });
+      const deleteButton = deleteButtons[0];
 
       fireEvent.click(deleteButton);
 
