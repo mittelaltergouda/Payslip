@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { Input, InputProps } from "./input";
+import type { InputProps } from "./input";
+import { Input } from "./input";
 
 /**
  * Props for the FormField component.
@@ -138,9 +139,6 @@ export const FormField = React.forwardRef<HTMLInputElement, FormFieldProps>(
     // Generate IDs for hint and error for ARIA associations
     const hintId = hint ? `${id}-hint` : undefined;
     const errorId = error ? `${id}-error` : undefined;
-
-    // Construct aria-describedby from available hint/error
-    const ariaDescribedBy = [hintId, errorId].filter(Boolean).join(" ") || undefined;
 
     return (
       <div className={cn("flex flex-col gap-1.5", className)}>

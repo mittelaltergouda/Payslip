@@ -1,6 +1,7 @@
 "use client";
 
 import type { DistributionMode, IndividualExpenseInput, MemberBreakdown, MemberInput } from "@/lib/types";
+import { NumericInput } from "@/components/ui/numeric-input";
 
 type Lang = "de" | "en";
 
@@ -153,19 +154,19 @@ export function MemberRow({
         </td>
       )}
       <td className="py-3 px-3 w-[300px]">
-        <input
-          type="number"
+        <NumericInput
           className="input w-full"
           value={member.revenue ?? 0}
-          onChange={(e) => updateMember(member.id!, { revenue: Number(e.target.value) })}
+          onValueChange={(v) => updateMember(member.id!, { revenue: v })}
+          lang={lang}
         />
       </td>
       <td className="py-3 px-3 w-[300px]">
-        <input
-          type="number"
+        <NumericInput
           className="input w-full"
           value={member.investment ?? 0}
-          onChange={(e) => updateMember(member.id!, { investment: Number(e.target.value) })}
+          onValueChange={(v) => updateMember(member.id!, { investment: v })}
+          lang={lang}
         />
       </td>
       <td className="py-3 px-3">
@@ -177,11 +178,11 @@ export function MemberRow({
                 value={e.label}
                 onChange={(ev) => updateIndividualExpense(e.id!, { label: ev.target.value })}
               />
-              <input
-                type="number"
+              <NumericInput
                 className="input w-24"
                 value={e.amount}
-                onChange={(ev) => updateIndividualExpense(e.id!, { amount: Number(ev.target.value) })}
+                onValueChange={(v) => updateIndividualExpense(e.id!, { amount: v })}
+                lang={lang}
               />
               <button
                 className="text-red-400 text-xl leading-none"
@@ -199,36 +200,30 @@ export function MemberRow({
         </div>
       </td>
       <td className="py-3 px-3 w-[160px]">
-        <input
-          type="number"
+        <NumericInput
           className="input w-full"
           value={member.percentShare ?? 0}
+          onValueChange={(v) => updateMember(member.id!, { percentShare: v })}
+          lang={lang}
           disabled={distributionMode === "EQUAL"}
-          onChange={(e) =>
-            updateMember(member.id!, { percentShare: Number(e.target.value) })
-          }
         />
       </td>
       <td className="py-3 px-3 w-[240px]">
-        <input
-          type="number"
+        <NumericInput
           className="input w-full"
           value={(member as any).fixedBonus ?? 0}
+          onValueChange={(v) => updateMember(member.id!, { fixedBonus: v as any })}
+          lang={lang}
           disabled={distributionMode !== "ADJUSTABLE"}
-          onChange={(e) =>
-            updateMember(member.id!, { fixedBonus: Number(e.target.value) as any })
-          }
         />
       </td>
       <td className="py-3 px-3 w-[240px]">
-        <input
-          type="number"
+        <NumericInput
           className="input w-full"
           value={member.fixedPayout ?? 0}
+          onValueChange={(v) => updateMember(member.id!, { fixedPayout: v })}
+          lang={lang}
           disabled={distributionMode !== "ADJUSTABLE"}
-          onChange={(e) =>
-            updateMember(member.id!, { fixedPayout: Number(e.target.value) })
-          }
         />
       </td>
       <td className="py-3 px-3 text-right">

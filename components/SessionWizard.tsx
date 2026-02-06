@@ -41,8 +41,8 @@ function buildInitialSession(): SessionInput {
     taxEnabled: true,
     taxRate: taxFixed,
     members: [
-      { id: rndId(), handle: "Pilot", role: "Trader", revenue: 0, investment: 0, active: true },
-      { id: rndId(), handle: "Escort", role: "Escort", revenue: 0, investment: 0, active: true }
+      { id: rndId(), handle: "Player 1", role: "Pilot", revenue: 0, investment: 0, active: true },
+      { id: rndId(), handle: "Player 2", role: "Crew", revenue: 0, investment: 0, active: true }
     ],
     individualExpenses: [],
     sharedExpenses: []
@@ -210,13 +210,16 @@ export function SessionWizard({ initialLang = "de" }: Props) {
   };
 
   const addMember = () => {
-    setSession((prev) => ({
-      ...prev,
-      members: [
-        ...prev.members,
-        { id: rndId(), handle: "Crew", role: showRole ? "" : undefined, revenue: 0, investment: 0, active: true }
-      ]
-    }));
+    setSession((prev) => {
+      const newMemberNumber = prev.members.length + 1;
+      return {
+        ...prev,
+        members: [
+          ...prev.members,
+          { id: rndId(), handle: `Player ${newMemberNumber}`, role: "Crew", revenue: 0, investment: 0, active: true }
+        ]
+      };
+    });
   };
 
   const addIndividualExpense = (memberId: string) => {
@@ -281,7 +284,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
       </div>
 
       {/* Session name and management controls */}
-      <div className="glass p-6 space-y-4" role="region" aria-label={t.sessionName || "Session Information"}>
+      <div className="glass p-6 space-y-4" role="region" aria-label={t.sessionSettings || "Session Settings"}>
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div className="flex-1 min-w-[250px]">
             <FormField

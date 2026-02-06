@@ -1,4 +1,4 @@
-import { format, formatCurrency, formatPercent, formatCompact } from './format';
+import { format, formatCurrency, formatPercent, formatCompact, formatInteger, parseFormattedInteger } from './format';
 
 // Test cases for format() - Basic number formatting with thousand separators
 
@@ -278,6 +278,169 @@ describe('formatCompact', () => {
       expect(formatCompact(1551, 'en')).toBe('1.6k');  // 1.551k rounds to 1.6k
       expect(formatCompact(1234567, 'en')).toBe('1.2M'); // 1.234M rounds to 1.2M
       expect(formatCompact(1254567, 'en')).toBe('1.3M'); // 1.254M rounds to 1.3M
+    });
+  });
+});
+
+// Test cases for formatInteger() - Integer formatting with thousand separators
+
+describe('formatInteger', () => {
+  describe('basic formatting', () => {
+    it('should format zero', () => {
+      expect(formatInteger(0, 'en')).toBe('0');
+      expect(formatInteger(0, 'de')).toBe('0');
+    });
+
+    it('should format positive integers with English thousand separators', () => {
+      expect(formatInteger(1234567, 'en')).toBe('1,234,567');
+      expect(formatInteger(1000, 'en')).toBe('1,000');
+      expect(formatInteger(999, 'en')).toBe('999');
+      expect(formatInteger(100000, 'en')).toBe('100,000');
+    });
+
+    it('should format positive integers with German thousand separators', () => {
+      expect(formatInteger(1234567, 'de')).toBe('1.234.567');
+      expect(formatInteger(1000, 'de')).toBe('1.000');
+      expect(formatInteger(999, 'de')).toBe('999');
+      expect(formatInteger(100000, 'de')).toBe('100.000');
+    });
+  });
+
+  describe('large numbers', () => {
+    it('should format very large numbers (999.999.999)', () => {
+      expect(formatInteger(999999999, 'en')).toBe('999,999,999');
+      expect(formatInteger(999999999, 'de')).toBe('999.999.999');
+    });
+
+    it('should format billion-scale numbers', () => {
+      expect(formatInteger(1000000000, 'en')).toBe('1,000,000,000');
+      expect(formatInteger(1000000000, 'de')).toBe('1.000.000.000');
+    });
+  });
+
+  describe('negative numbers', () => {
+    it('should format negative integers correctly', () => {
+      expect(formatInteger(-500, 'en')).toBe('-500');
+      expect(formatInteger(-500, 'de')).toBe('-500');
+      expect(formatInteger(-1234567, 'en')).toBe('-1,234,567');
+      expect(formatInteger(-1234567, 'de')).toBe('-1.234.567');
+    });
+  });
+
+  describe('decimal truncation', () => {
+    it('should truncate decimal portions (not round)', () => {
+      expect(formatInteger(42.7, 'en')).toBe('42');
+      expect(formatInteger(42.9, 'en')).toBe('42');
+      expect(formatInteger(42.1, 'de')).toBe('42');
+      expect(formatInteger(1234.99, 'de')).toBe('1.234');
+    });
+
+    it('should truncate negative decimals correctly', () => {
+      expect(formatInteger(-42.7, 'en')).toBe('-42');
+      expect(formatInteger(-42.9, 'de')).toBe('-42');
+    });
+  });
+});
+
+// Test cases for parseFormattedInteger() - Parsing formatted strings to integers
+
+describe('parseFormattedInteger', () => {
+  describe('empty and invalid input', () => {
+    it('should return 0 for empty string', () => {
+      expect(parseFormattedInteger('')).toBe(0);
+    });
+
+    it('should return 0 for whitespace-only string', () => {
+      expect(parseFormattedInteger('   ')).toBe(0);
+    });
+
+    it('should return 0 for just a minus sign', () => {
+      expect(parseFormattedInteger('-')).toBe(0);
+    });
+
+    it('should return 0 for non-numeric strings', () => {
+      expect(parseFormattedInteger('abc')).toBe(0);
+      expect(parseFormattedInteger('hello world')).toBe(0);
+    });
+  });
+
+  describe('German locale parsing (thousand separator: dot)', () => {
+    it('should parse German formatted thousands', () => {
+      expect(parseFormattedInteger('100.000')).toBe(100000);
+      expect(parseFormattedInteger('1.234.567')).toBe(1234567);
+    });
+
+    it('should parse very large German formatted numbers', () => {
+      expect(parseFormattedInteger('999.999.999')).toBe(999999999);
+    });
+  });
+
+  describe('English locale parsing (thousand separator: comma)', () => {
+    it('should parse English formatted thousands', () => {
+      expect(parseFormattedInteger('100,000')).toBe(100000);
+      expect(parseFormattedInteger('1,234,567')).toBe(1234567);
+    });
+
+    it('should parse very large English formatted numbers', () => {
+      expect(parseFormattedInteger('999,999,999')).toBe(999999999);
+    });
+  });
+
+  describe('decimal rejection (truncation)', () => {
+    it('should truncate decimal portion from plain decimals', () => {
+      expect(parseFormattedInteger('123.45')).toBe(123);
+      expect(parseFormattedInteger('1.5')).toBe(1);
+    });
+
+    it('should truncate German decimal comma', () => {
+      expect(parseFormattedInteger('123,45')).toBe(123);
+      expect(parseFormattedInteger('1,5')).toBe(1);
+    });
+
+    it('should handle mixed format with decimals (English: comma thousands, dot decimal)', () => {
+      expect(parseFormattedInteger('1,234.56')).toBe(1234);
+    });
+
+    it('should handle mixed format with decimals (German: dot thousands, comma decimal)', () => {
+      expect(parseFormattedInteger('1.234,56')).toBe(1234);
+    });
+  });
+
+  describe('negative numbers', () => {
+    it('should parse negative integers', () => {
+      expect(parseFormattedInteger('-500')).toBe(-500);
+      expect(parseFormattedInteger('-1234')).toBe(-1234);
+    });
+
+    it('should parse negative formatted numbers', () => {
+      expect(parseFormattedInteger('-1,234,567')).toBe(-1234567);
+      expect(parseFormattedInteger('-1.234.567')).toBe(-1234567);
+    });
+  });
+
+  describe('paste-with-separators parsing', () => {
+    it('should parse pasted German formatted numbers', () => {
+      expect(parseFormattedInteger('50.000')).toBe(50000);
+      expect(parseFormattedInteger('1.000.000')).toBe(1000000);
+    });
+
+    it('should parse pasted English formatted numbers', () => {
+      expect(parseFormattedInteger('50,000')).toBe(50000);
+      expect(parseFormattedInteger('1,000,000')).toBe(1000000);
+    });
+
+    it('should handle pasted values with extra whitespace', () => {
+      expect(parseFormattedInteger(' 100.000 ')).toBe(100000);
+      expect(parseFormattedInteger('  1,234,567  ')).toBe(1234567);
+    });
+  });
+
+  describe('plain integers', () => {
+    it('should parse plain integers without separators', () => {
+      expect(parseFormattedInteger('0')).toBe(0);
+      expect(parseFormattedInteger('42')).toBe(42);
+      expect(parseFormattedInteger('100000')).toBe(100000);
+      expect(parseFormattedInteger('999999999')).toBe(999999999);
     });
   });
 });

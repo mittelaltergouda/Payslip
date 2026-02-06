@@ -18,11 +18,10 @@ const mockSession: SessionInput = {
   type: 'TRADING',
   distributionMode: 'EQUAL',
   members: [
-    { handle: 'Alice', fixedPayout: null, percentShare: null },
-    { handle: 'Bob', fixedPayout: null, percentShare: null },
+    { id: '1', handle: 'Alice', revenue: 500, investment: 0 },
+    { id: '2', handle: 'Bob', revenue: 500, investment: 0 },
   ],
-  sharedExpenses: [],
-  totalRevenue: 1000,
+  taxEnabled: true,
   taxRate: 4.25,
 };
 

@@ -69,7 +69,7 @@ test.describe('Keyboard Navigation - Tab Order', () => {
       // Get the currently focused element's tag and attributes
       const focusedInfo = await page.evaluate(() => {
         const el = document.activeElement;
-        if (!el) return 'none';
+        if (!el) {return 'none';}
 
         const tag = el.tagName.toLowerCase();
         const type = el.getAttribute('type') || '';
@@ -129,7 +129,7 @@ test.describe('Keyboard Navigation - Tab Order', () => {
       // Check if focused element has visible focus indicator
       const hasFocusIndicator = await page.evaluate(() => {
         const el = document.activeElement;
-        if (!el || el.tagName === 'BODY') return false;
+        if (!el || el.tagName === 'BODY') {return false;}
 
         const styles = window.getComputedStyle(el);
 
@@ -406,7 +406,7 @@ test.describe('Keyboard Navigation - Keyboard Shortcuts', () => {
                (document.activeElement as HTMLInputElement).type === 'text';
       });
 
-      if (isInput) break;
+      if (isInput) {break;}
     }
 
     // Type session name
@@ -457,7 +457,7 @@ test.describe('Keyboard Navigation - Focus Management', () => {
         const focused = document.activeElement;
         const sidebar = document.querySelector('[class*="sidebar"], [class*="history"]');
 
-        if (!sidebar || !focused) return true;
+        if (!sidebar || !focused) {return true;}
 
         // Check if focused element is inside sidebar or is body
         return !sidebar.contains(focused) && focused.tagName !== 'BODY';
@@ -517,8 +517,8 @@ test.describe('Keyboard Navigation - Focus Management', () => {
     expect(uniqueTags.size).toBeGreaterThan(2);
 
     // Verify focus cycles back (after tabbing through all elements)
-    const firstFocused = focusedElements[0];
-    const lastFewFocused = focusedElements.slice(-5);
+    const _firstFocused = focusedElements[0];
+    const _lastFewFocused = focusedElements.slice(-5);
 
     // Either focus cycles or continues to move (no trap)
     expect(focusedElements.length).toBe(20);
@@ -622,7 +622,7 @@ test.describe('Keyboard Navigation - Cross-Browser Verification', () => {
     await page.waitForLoadState('networkidle');
   });
 
-  test('Keyboard navigation works on mobile viewports', async ({ page, viewport }) => {
+  test('Keyboard navigation works on mobile viewports', async ({ page, viewport: _viewport }) => {
     // Even on mobile (touch), keyboard navigation should work (for accessibility)
     await page.keyboard.press('Tab');
     await page.waitForTimeout(200);
