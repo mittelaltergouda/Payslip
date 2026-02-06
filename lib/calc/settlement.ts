@@ -5,7 +5,8 @@
  * balances between members using a greedy matching algorithm.
  *
  * The algorithm:
- * 1. Calculates each member's balance (finalNet - investment)
+ * 1. Calculates each member's balance (finalNet - actualCashPosition)
+ *    where actualCashPosition = revenue - expenses + investment
  * 2. Separates members into debtors (owe money) and creditors (owed money)
  * 3. Greedily matches largest debtor with largest creditor
  * 4. Continues until all balances are settled
@@ -35,7 +36,8 @@ type MemberBalance = {
  * Settles balances between members using a greedy matching algorithm.
  *
  * The algorithm:
- * 1. Calculates each member's balance (finalNet - investment)
+ * 1. Calculates each member's balance (finalNet - actualCashPosition)
+ *    where actualCashPosition = revenue - expenses + investment
  * 2. Separates members into debtors (owe money) and creditors (owed money)
  * 3. Greedily matches largest debtor with largest creditor
  * 4. Continues until all balances are settled
@@ -53,12 +55,13 @@ export function settleBalances(
   // Small epsilon for floating point comparisons
   const EPSILON = 0.01;
 
-  // Calculate balance for each member: finalNet - investment
-  // positive balance = creditor (owed money)
-  // negative balance = debtor (owes money)
+  // Calculate balance for each member: finalNet - actualCashPosition
+  // actualCashPosition = revenue collected - expenses paid + investment returned
+  // positive balance = creditor (owed money, has less than they should)
+  // negative balance = debtor (owes money, has more than they should)
   const balances: MemberBalance[] = memberBreakdowns.map((m) => ({
     memberId: m.memberId,
-    balance: m.finalNet - m.investment,
+    balance: m.finalNet - (m.revenue - m.expenses + m.investment),
   }));
 
   // Separate into debtors and creditors, filtering out zero balances
