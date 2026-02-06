@@ -374,4 +374,53 @@ describe('Settlement/Transfer Generation', () => {
     expect(bobToAlice?.netAmount).toBe(800);
     expect(charlieToAlice?.netAmount).toBe(800);
   });
+
+  it('should generate transfer when one member collects all revenue', () => {
+    // This is the bug scenario: Pilot collects all 1M revenue, has 100k costs
+    // Escort collects nothing - should receive transfer of their share
+    const input: SessionInput = {
+      name: 'Revenue Collection Bug Test',
+      type: 'TRADING',
+      distributionMode: 'EQUAL',
+      totalRevenue: 1000000,
+      taxEnabled: false,
+      members: [
+        { id: 'pilot', handle: 'Pilot', role: 'Pilot', active: true, revenue: 1000000, investment: 0 },
+        { id: 'escort', handle: 'Escort', role: 'Escort', active: true, revenue: 0, investment: 0 }
+      ],
+      individualExpenses: [
+        { memberId: 'pilot', label: 'Fuel', amount: 100000 }
+      ]
+    };
+
+    const result = calculatePayslip(input);
+
+    // netProfit = 1,000,000 - 100,000 = 900,000
+    expect(result.netProfit).toBe(900000);
+
+    const pilot = result.members.find(m => m.memberId === 'pilot');
+    const escort = result.members.find(m => m.memberId === 'escort');
+
+    // Equal distribution: 900,000 / 2 = 450,000 each
+    expect(pilot?.profitShare).toBe(450000);
+    expect(escort?.profitShare).toBe(450000);
+
+    // Pilot finalNet = investment(0) + profitShare(450000) - expenses(100000) = 350,000
+    // Escort finalNet = investment(0) + profitShare(450000) - expenses(0) = 450,000
+    expect(pilot?.finalNet).toBe(350000);
+    expect(escort?.finalNet).toBe(450000);
+
+    // Balance calculation with revenue:
+    // Pilot's actual cash position = revenue(1,000,000) - expenses(100,000) = 900,000
+    // Pilot balance = finalNet(350,000) - actualCash(900,000) = -550,000 (debtor - has 550k more than they should)
+    // Escort's actual cash position = revenue(0) - expenses(0) = 0
+    // Escort balance = finalNet(450,000) - actualCash(0) = 450,000 (creditor - should receive 450k)
+
+    // Pilot should transfer to Escort
+    expect(result.suggestedTransfers.length).toBe(1);
+    const transfer = result.suggestedTransfers[0];
+    expect(transfer.fromMemberId).toBe('pilot');
+    expect(transfer.toMemberId).toBe('escort');
+    expect(transfer.netAmount).toBe(450000);
+  });
 });
