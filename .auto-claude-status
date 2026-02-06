@@ -1,17 +1,17 @@
 {
   "active": true,
-  "spec": "042-session-deletion-with-confirmation",
+  "spec": "044-export-to-csv",
   "state": "building",
   "subtasks": {
-    "completed": 3,
-    "total": 5,
+    "completed": 5,
+    "total": 6,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Implementation",
+    "current": "Testing & Verification",
     "id": null,
-    "total": 5
+    "total": 7
   },
   "workers": {
     "active": 0,
@@ -19,7 +19,7 @@
   },
   "session": {
     "number": 5,
-    "started_at": "2026-02-03T23:55:56.552225"
+    "started_at": "2026-02-03T20:16:59.383492"
   },
-  "last_update": "2026-02-04T00:10:21.337308"
+  "last_update": "2026-02-03T20:27:47.871744"
 }
