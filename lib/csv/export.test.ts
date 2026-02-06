@@ -213,63 +213,6 @@ describe('generateSummaryCSV - Basic Structure', () => {
   });
 });
 
-describe('generateSummaryCSV - Summary Statistics', () => {
-  const mockResultWithStats: PayslipResult = {
-    saleRevenue: 10000,
-    netProfit: 8000,
-    taxRateApplied: 4.5,
-    members: [
-      {
-        memberId: '1',
-        handle: 'Alpha',
-        role: 'Pilot',
-        active: true,
-        revenue: 5000,
-        investment: 0,
-        expenses: 500,
-        sharedExpenses: 300,
-        individualExpenses: 200,
-        profitShare: 4000,
-        finalNet: 4500,
-      },
-    ],
-    suggestedTransfers: [],
-    summaryStatistics: {
-      minPayout: 1000,
-      maxPayout: 5000,
-      averagePayout: 3000,
-      totalTransfers: 2500,
-      largestTransfer: 1500,
-      highestEarner: 'Alpha',
-      lowestEarner: 'Bravo',
-    },
-  };
-
-  it('should include summary statistics when available', () => {
-    const csv = generateSummaryCSV(mockResultWithStats, 'Session', 'aUEC');
-
-    expect(csv).toContain('Summary Statistics');
-    expect(csv).toContain('Min Payout,1000');
-    expect(csv).toContain('Max Payout,5000');
-    expect(csv).toContain('Average Payout,3000');
-    expect(csv).toContain('Total Transfers,2500');
-    expect(csv).toContain('Largest Transfer,1500');
-    expect(csv).toContain('Highest Earner,Alpha');
-    expect(csv).toContain('Lowest Earner,Bravo');
-  });
-
-  it('should not include summary statistics when not available', () => {
-    const resultNoStats: PayslipResult = {
-      ...mockResultWithStats,
-      summaryStatistics: undefined,
-    };
-
-    const csv = generateSummaryCSV(resultNoStats, 'Session', 'aUEC');
-    expect(csv).not.toContain('Summary Statistics');
-    expect(csv).not.toContain('Min Payout');
-  });
-});
-
 describe('generateSummaryCSV - Edge Cases', () => {
   it('should handle empty members array', () => {
     const emptyResult: PayslipResult = {
@@ -480,28 +423,6 @@ describe('generateDetailedCSV - Basic Structure', () => {
     expect(csv).toContain('SUGGESTED TRANSFERS');
     expect(csv).toContain('From,To,Net Amount');
     // Should have headers but no transfer data rows
-  });
-
-  it('should include summary statistics when available', () => {
-    const resultWithStats: PayslipResult = {
-      ...mockResult,
-      summaryStatistics: {
-        minPayout: 1000,
-        maxPayout: 5000,
-        averagePayout: 3000,
-        totalTransfers: 2500,
-        largestTransfer: 1500,
-        highestEarner: 'Alpha',
-        lowestEarner: 'Bravo',
-      },
-    };
-
-    const csv = generateDetailedCSV(resultWithStats, 'Session', 'aUEC');
-
-    expect(csv).toContain('SUMMARY STATISTICS');
-    expect(csv).toContain('Metric,Value');
-    expect(csv).toContain('Min Payout,1000');
-    expect(csv).toContain('Highest Earner,Alpha');
   });
 });
 

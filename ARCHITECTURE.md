@@ -3,7 +3,7 @@
 ## Overview
 - **Stack**: Next.js (App Router) + TypeScript + TailwindCSS.
 - **API**: Next.js Route Handlers (REST), Prisma ORM, PostgreSQL.
-- **Calc Engine**: `/lib/calc/` modular calculation engine with pure functional computation (9 domain-specific modules).
+- **Calc Engine**: `/lib/calc/` modular calculation engine with pure functional computation (8 domain-specific modules).
 - **Frontend**: Landing + Wizard + Result/Payslip in `app/page.tsx` with client component `SessionWizard`.
 - **Persistence**: Prisma Schema in `prisma/schema.prisma`; share links via `ExportToken`.
 
@@ -37,10 +37,9 @@ The calculation engine is organized into domain-specific modules under `lib/calc
 | **expenses.ts** | Shared & individual expense allocation | ~90 | `allocateSharedExpenses`, `allocateIndividualExpenses` |
 | **settlement.ts** | Balance settlement & transfer generation | ~105 | `settleBalances` (greedy matching algorithm) |
 | **tax.ts** | Tax gross-up calculations | ~100 | `applyTransferTaxes`, `calculateGrossAmount`, `calculateFeeAmount` |
-| **statistics.ts** | Summary statistics (min/max/avg payouts) | ~60 | `calculateSummaryStatistics` |
 | **index.ts** | Main orchestrator & public API | ~210 | `calculatePayslip` (main entry point) |
 
-**Total:** ~1050 lines (previously monolithic `calc.ts`)
+**Total:** ~990 lines (previously monolithic `calc.ts`)
 
 The original `lib/calc.ts` now acts as a **barrel export** for backward compatibility, re-exporting from `lib/calc/index.ts`.
 
@@ -63,14 +62,13 @@ The original `lib/calc.ts` now acts as a **barrel export** for backward compatib
 7. **Member Breakdowns** (`index.ts`): `finalNet = investment + profitShare - expenses`
 8. **Settlement** (`settlement.ts`): Greedy matching algorithm pairs largest debtors with largest creditors to minimize transfers
 9. **Tax Gross-Up** (`tax.ts`): `gross = ceil(targetNet / (1 - taxRate))`; fee = gross × taxRate
-10. **Summary Statistics** (`statistics.ts`): Calculates min/max/average payouts, transfer counts, highest/lowest earners
 
 ### Benefits of Modular Structure
 
 **Maintainability:**
 - Each module has a single, well-defined responsibility
 - Easier to locate and modify specific calculation logic
-- Reduced cognitive load when reading code (9 focused modules vs 1 monolithic file)
+- Reduced cognitive load when reading code (8 focused modules vs 1 monolithic file)
 
 **Testability:**
 - Modules can be tested independently with focused unit tests
@@ -97,7 +95,6 @@ The original `lib/calc.ts` now acts as a **barrel export** for backward compatib
 | Change expense splitting logic | `expenses.ts` | Support weighted shared expenses |
 | Modify transfer algorithm | `settlement.ts` | Implement priority-based settlement |
 | Update tax calculation | `tax.ts` | Add tiered tax rates |
-| Add new summary metrics | `statistics.ts` | Calculate median payout |
 | Change calculation flow | `index.ts` | Add pre-distribution hooks |
 
 ## UI Flow

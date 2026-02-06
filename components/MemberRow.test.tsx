@@ -267,113 +267,6 @@ describe('MemberRow - Initial Rendering', () => {
     expect(screen.getByText(`Σ ${formattedSum}`)).toBeInTheDocument();
   });
 
-  it('should display taxes with formatting', () => {
-    render(
-      <table>
-        <tbody>
-          <MemberRow
-            member={sampleMember}
-            showRole={false}
-            distributionMode="EQUAL"
-            individualExpenses={[]}
-            resultMember={sampleResultMember}
-            feeByPayer={{ 'member-1': 420 }}
-            lang="en"
-            t={mockTranslationsEN}
-            format={mockFormat}
-            {...mockCallbacks}
-          />
-        </tbody>
-      </table>
-    );
-
-    const formattedFee = mockFormat(420, 'en');
-    expect(screen.getByText(formattedFee)).toBeInTheDocument();
-  });
-
-  it('should display profit share with formatting', () => {
-    render(
-      <table>
-        <tbody>
-          <MemberRow
-            member={sampleMember}
-            showRole={false}
-            distributionMode="EQUAL"
-            individualExpenses={[]}
-            resultMember={sampleResultMember}
-            feeByPayer={{}}
-            lang="en"
-            t={mockTranslationsEN}
-            format={mockFormat}
-            {...mockCallbacks}
-          />
-        </tbody>
-      </table>
-    );
-
-    const formattedShare = mockFormat(5750, 'en');
-    expect(screen.getByText(formattedShare)).toBeInTheDocument();
-  });
-
-  it('should display net after fees with positive formatting', () => {
-    render(
-      <table>
-        <tbody>
-          <MemberRow
-            member={sampleMember}
-            showRole={false}
-            distributionMode="EQUAL"
-            individualExpenses={[]}
-            resultMember={sampleResultMember}
-            feeByPayer={{ 'member-1': 250 }}
-            lang="en"
-            t={mockTranslationsEN}
-            format={mockFormat}
-            {...mockCallbacks}
-          />
-        </tbody>
-      </table>
-    );
-
-    // finalNet (13250) - fee (250) = 13000
-    const formattedNet = mockFormat(13000, 'en');
-    const netElement = screen.getByText(formattedNet);
-    expect(netElement).toBeInTheDocument();
-    expect(netElement).toHaveClass('text-neon');
-  });
-
-  it('should display net after fees with negative formatting', () => {
-    const negativeResultMember: MemberBreakdown = {
-      ...sampleResultMember,
-      finalNet: -1000,
-    };
-
-    render(
-      <table>
-        <tbody>
-          <MemberRow
-            member={sampleMember}
-            showRole={false}
-            distributionMode="EQUAL"
-            individualExpenses={[]}
-            resultMember={negativeResultMember}
-            feeByPayer={{ 'member-1': 500 }}
-            lang="en"
-            t={mockTranslationsEN}
-            format={mockFormat}
-            {...mockCallbacks}
-          />
-        </tbody>
-      </table>
-    );
-
-    // finalNet (-1000) - fee (500) = -1500
-    const formattedNet = mockFormat(-1500, 'en');
-    const netElement = screen.getByText(formattedNet);
-    expect(netElement).toBeInTheDocument();
-    expect(netElement).toHaveClass('text-red-400');
-  });
-
   it('should render remove member button', () => {
     render(
       <table>
@@ -946,11 +839,8 @@ describe('MemberRow - Edge Cases', () => {
       </table>
     );
 
-    // Should show 0 for profit share when resultMember is undefined
-    const formattedZero = mockFormat(0, 'en');
-    const zeroElements = screen.getAllByText(formattedZero);
-    // Should have multiple $0.00 values (taxes, profit share, net after fees)
-    expect(zeroElements.length).toBeGreaterThan(0);
+    // Component should render without errors even with undefined resultMember
+    expect(screen.getByDisplayValue('Pilot')).toBeInTheDocument();
   });
 
   it('should handle member with no fees', () => {
@@ -973,8 +863,11 @@ describe('MemberRow - Edge Cases', () => {
       </table>
     );
 
-    const formattedZero = mockFormat(0, 'en');
-    expect(screen.getByText(formattedZero)).toBeInTheDocument();
+    // Component should render correctly with empty feeByPayer
+    expect(screen.getByDisplayValue('Pilot')).toBeInTheDocument();
+    // Expense sum should show $0.00
+    const formattedSum = mockFormat(0, 'en');
+    expect(screen.getByText(`Σ ${formattedSum}`)).toBeInTheDocument();
   });
 
   it('should calculate expense sum correctly with no expenses', () => {

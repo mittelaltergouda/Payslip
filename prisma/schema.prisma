@@ -3,34 +3,19 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-enum SessionType {
-  TRADING
-  PIRACY
-  SALVAGE
-  MINING
-  BOUNTY
-  OTHER
-}
-
-enum DistributionMode {
-  EQUAL
-  PERCENT
-  ADJUSTABLE
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model Session {
   id               String              @id @default(uuid())
   name             String
-  type             SessionType
+  type             String              // TRADING, PIRACY, SALVAGE, MINING, BOUNTY, OTHER
   currency         String              @default("aUEC")
   totalRevenue     Int
   taxEnabled       Boolean             @default(true)
-  taxRate          Decimal             @db.Decimal(5, 4) @default(0.005)
-  distributionMode DistributionMode
+  taxRate          Decimal             @default(0.005)
+  distributionMode String              // EQUAL, PERCENT, ADJUSTABLE
   createdAt        DateTime            @default(now())
 
   members           Member[]
@@ -48,7 +33,7 @@ model Member {
 
   revenue      Int      @default(0)
   investment   Int      @default(0)
-  percentShare Decimal? @db.Decimal(6, 3)
+  percentShare Decimal?
   fixedBonus   Int?
   fixedPayout  Int?
 

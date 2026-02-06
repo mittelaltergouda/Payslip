@@ -28,12 +28,6 @@ describe('calculatePayslip - EQUAL mode', () => {
     result.members.forEach(member => {
       expect(member.finalNet).toBeCloseTo(1000 / 3, 2);
     });
-
-    // Verify summaryStatistics is present and populated
-    expect(result.summaryStatistics).toBeDefined();
-    expect(result.summaryStatistics?.minPayout).toBeCloseTo(1000 / 3, 2);
-    expect(result.summaryStatistics?.maxPayout).toBeCloseTo(1000 / 3, 2);
-    expect(result.summaryStatistics?.averagePayout).toBeCloseTo(1000 / 3, 2);
   });
 
   it('should exclude inactive members from equal profit distribution', () => {
@@ -63,12 +57,6 @@ describe('calculatePayslip - EQUAL mode', () => {
     expect(alice?.profitShare).toBe(500);
     expect(bob?.profitShare).toBe(500);
     expect(charlie?.profitShare).toBe(0); // Inactive member gets no profit share
-
-    // Verify summaryStatistics is present and populated
-    expect(result.summaryStatistics).toBeDefined();
-    expect(result.summaryStatistics?.minPayout).toBe(0);
-    expect(result.summaryStatistics?.maxPayout).toBe(500);
-    expect(result.summaryStatistics?.lowestEarner).toBe('Charlie');
   });
 
   it('should handle single active member in EQUAL mode', () => {
@@ -89,14 +77,6 @@ describe('calculatePayslip - EQUAL mode', () => {
     expect(result.netProfit).toBe(1000);
     expect(result.members[0].finalNet).toBe(1000);
     expect(result.members[0].profitShare).toBe(1000);
-
-    // Verify summaryStatistics is present and populated
-    expect(result.summaryStatistics).toBeDefined();
-    expect(result.summaryStatistics?.minPayout).toBe(1000);
-    expect(result.summaryStatistics?.maxPayout).toBe(1000);
-    expect(result.summaryStatistics?.averagePayout).toBe(1000);
-    expect(result.summaryStatistics?.highestEarner).toBe('Alice');
-    expect(result.summaryStatistics?.lowestEarner).toBe('Alice');
   });
 
   it('should return investments to members before equal distribution', () => {

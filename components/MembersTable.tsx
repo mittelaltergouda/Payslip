@@ -12,8 +12,8 @@ type Lang = "de" | "en";
  * MembersTable component displays the table of all session members with their inputs and results.
  *
  * Renders a table with columns for member details (handle, role), financial inputs (revenue, investment),
- * expenses, results (taxes, profit share, net after fees), and distribution settings (percent share,
- * fixed bonus, fixed payout). Each row is rendered using the MemberRow component.
+ * expenses, and distribution settings (percent share, fixed bonus, fixed payout). Each row is rendered
+ * using the MemberRow component.
  *
  * @example
  * ```tsx
@@ -67,6 +67,8 @@ interface MembersTableProps {
   updateIndividualExpense: (id: string, patch: Partial<IndividualExpenseInput>) => void;
   /** Callback to remove an individual expense */
   removeIndividualExpense: (id: string) => void;
+  /** Callback to open the crew preset manager dialog */
+  onOpenPresetManager?: () => void;
 }
 
 export function MembersTable({
@@ -84,7 +86,8 @@ export function MembersTable({
   removeMember,
   addIndividualExpense,
   updateIndividualExpense,
-  removeIndividualExpense
+  removeIndividualExpense,
+  onOpenPresetManager
 }: MembersTableProps) {
   // Pre-compute member lookup Map to eliminate O(n²) find() calls
   const resultMemberMap = useMemo(() => {
@@ -105,9 +108,36 @@ export function MembersTable({
 
   return (
     <div className="glass p-6 space-y-4" role="region" aria-labelledby="members-heading">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h3 id="members-heading" className="text-xl font-display">{t.members}</h3>
-        <Button onClick={onAddMember} aria-label={t.addMember}>{t.addMember}</Button>
+        <div className="flex items-center gap-2">
+          {onOpenPresetManager && (
+            <Button
+              variant="ghost"
+              size="md"
+              onClick={onOpenPresetManager}
+              aria-label={t.crewPresets || "Crew Presets"}
+              title={t.crewPresetsShortcut || "Crew Presets (Ctrl+P)"}
+            >
+              <svg
+                className="w-4 h-4 mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+              {t.crewPresets || "Crew Presets"}
+            </Button>
+          )}
+          <Button onClick={onAddMember} aria-label={t.addMember}>{t.addMember}</Button>
+        </div>
       </div>
 
       {/* Desktop Table View - hidden on mobile */}
@@ -121,9 +151,6 @@ export function MembersTable({
               <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.revenueLabel}</th>
               <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.investmentLabel}</th>
               <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.expensesLabel}</th>
-              <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.taxesLabel}</th>
-              <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.profitShareCol}</th>
-              <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.netAfterFeesCol}</th>
               <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.percentShare}</th>
               <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.fixedBonus}</th>
               <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.fixedPayout}</th>

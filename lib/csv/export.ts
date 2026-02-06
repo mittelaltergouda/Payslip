@@ -106,20 +106,6 @@ export function generateSummaryCSV(
     ]);
   }
 
-  // Summary statistics (if available)
-  if (result.summaryStatistics) {
-    const stats = result.summaryStatistics;
-    rows.push([]); // Empty row for spacing
-    rows.push(["Summary Statistics"]);
-    rows.push(["Min Payout", stats.minPayout]);
-    rows.push(["Max Payout", stats.maxPayout]);
-    rows.push(["Average Payout", stats.averagePayout]);
-    rows.push(["Total Transfers", stats.totalTransfers]);
-    rows.push(["Largest Transfer", stats.largestTransfer]);
-    rows.push(["Highest Earner", stats.highestEarner]);
-    rows.push(["Lowest Earner", stats.lowestEarner]);
-  }
-
   return rowsToCSV(rows);
 }
 
@@ -201,22 +187,6 @@ export function generateDetailedCSV(
       transfer.grossAmount,
       transfer.feeAmount,
     ]);
-  }
-
-  rows.push([]); // Empty row for spacing
-
-  // Section 3: Summary Statistics (if available)
-  if (result.summaryStatistics) {
-    const stats = result.summaryStatistics;
-    rows.push(["SUMMARY STATISTICS"]);
-    rows.push(["Metric", "Value"]);
-    rows.push(["Min Payout", stats.minPayout]);
-    rows.push(["Max Payout", stats.maxPayout]);
-    rows.push(["Average Payout", stats.averagePayout]);
-    rows.push(["Total Transfers", stats.totalTransfers]);
-    rows.push(["Largest Transfer", stats.largestTransfer]);
-    rows.push(["Highest Earner", stats.highestEarner]);
-    rows.push(["Lowest Earner", stats.lowestEarner]);
   }
 
   return rowsToCSV(rows);

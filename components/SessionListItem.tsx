@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import type { SessionType } from "@/lib/types";
 import type { Lang } from "@/lib/format";
 import { formatCompact } from "@/lib/format";
+import { Button } from "@/components/ui/button";
+import { DeleteSessionDialog } from "@/components/DeleteSessionDialog";
 
 /**
  * Session data structure for display in the session list.
@@ -60,7 +63,14 @@ export interface SessionListItemProps {
   translations: {
     members: string;
     revenueLabel: string;
+    deleteSession: string;
   };
+
+  /**
+   * Callback invoked when the user confirms deletion of the session.
+   * Called with the session ID as the parameter.
+   */
+  onDelete?: (sessionId: string) => void;
 }
 
 /**
@@ -105,7 +115,11 @@ export function SessionListItem({
   session,
   lang,
   translations,
+  onDelete,
 }: SessionListItemProps) {
+  // Dialog state management
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
   // Format date for display
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -125,20 +139,45 @@ export function SessionListItem({
   // Get type badge color
   const typeColor = TYPE_COLORS[session.type];
 
+  // Handle delete button click (prevent navigation)
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDeleteDialogOpen(true);
+  };
+
+  // Handle delete confirmation
+  const handleDelete = (sessionId: string) => {
+    onDelete?.(sessionId);
+  };
+
   return (
-    <Link href={`/session/${session.id}`}>
-      <div className="glass p-4 hover:bg-white/10 transition cursor-pointer space-y-3">
-        {/* Header: Name and Type Badge */}
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="font-semibold text-sand text-lg flex-1 break-words">
-            {session.name}
-          </h3>
-          <span
-            className={`px-2 py-1 rounded text-xs font-medium border whitespace-nowrap ${typeColor}`}
-          >
-            {session.type}
-          </span>
-        </div>
+    <>
+      <Link href={`/session/${session.id}`}>
+        <div className="glass p-4 hover:bg-white/10 transition cursor-pointer space-y-3">
+          {/* Header: Name, Type Badge, and Delete Button */}
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="font-semibold text-sand text-lg flex-1 break-words">
+              {session.name}
+            </h3>
+            <div className="flex items-center gap-2">
+              <span
+                className={`px-2 py-1 rounded text-xs font-medium border whitespace-nowrap ${typeColor}`}
+              >
+                {session.type}
+              </span>
+              {onDelete && (
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={handleDeleteClick}
+                  aria-label="Delete session"
+                >
+                  {translations.deleteSession}
+                </Button>
+              )}
+            </div>
+          </div>
 
         {/* Date */}
         <div className="text-sm text-white/60">
@@ -158,5 +197,18 @@ export function SessionListItem({
         </div>
       </div>
     </Link>
+
+    {/* Delete Confirmation Dialog */}
+    {onDelete && (
+      <DeleteSessionDialog
+        sessionId={session.id}
+        sessionName={session.name}
+        lang={lang}
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onDelete={handleDelete}
+      />
+    )}
+  </>
   );
 }

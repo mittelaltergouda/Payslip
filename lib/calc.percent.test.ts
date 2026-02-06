@@ -33,14 +33,6 @@ describe('calculatePayslip - PERCENT mode', () => {
     expect(bob?.profitShare).toBe(400);
     expect(alice?.finalNet).toBe(600);
     expect(bob?.finalNet).toBe(400);
-
-    // Verify summaryStatistics is present and populated
-    expect(result.summaryStatistics).toBeDefined();
-    expect(result.summaryStatistics?.minPayout).toBe(400);
-    expect(result.summaryStatistics?.maxPayout).toBe(600);
-    expect(result.summaryStatistics?.averagePayout).toBe(500);
-    expect(result.summaryStatistics?.highestEarner).toBe('Alice');
-    expect(result.summaryStatistics?.lowestEarner).toBe('Bob');
   });
 
   it('should exclude inactive members from percent profit distribution', () => {

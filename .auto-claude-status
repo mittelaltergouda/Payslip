@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "054-alle-eingabe-felder-sollten-die-vorbelegte-0-oder-",
+  "spec": "053-der-bereich-statistiken-kann-enffernt-werden-diese",
   "state": "building",
   "subtasks": {
-    "completed": 5,
+    "completed": 7,
     "total": 11,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Update Desktop View (MemberRow)",
+    "current": "Update Test Files",
     "id": null,
-    "total": 1
+    "total": 4
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 5,
-    "started_at": "2026-02-05T20:13:15.270921"
+    "number": 4,
+    "started_at": "2026-02-05T20:13:20.584608"
   },
-  "last_update": "2026-02-05T20:23:35.437654"
+  "last_update": "2026-02-05T20:16:57.937556"
 }

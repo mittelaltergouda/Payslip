@@ -15,7 +15,7 @@ export type Lang = "de" | "en";
  * - Distribution mode labels and descriptions
  * - Member table headers and labels
  * - Results display labels
- * - Summary and statistics labels
+ * - Summary labels
  * - Transfer-related messages
  *
  * Usage:
@@ -76,14 +76,6 @@ export const translations: Record<Lang, Record<string, string>> = {
     expensesLabel: "Kosten",
     taxesLabel: "Steuern (Fees)",
     netProfitLabel: "Gewinn (Netto)",
-    statistics: "Statistiken",
-    minPayout: "Min. Auszahlung",
-    maxPayout: "Max. Auszahlung",
-    avgPayout: "Durchschn. Auszahlung",
-    transferCount: "Anzahl Transfers",
-    largestTransfer: "Größter Transfer",
-    highestEarner: "Höchster Verdienst",
-    lowestEarner: "Niedrigster Verdienst",
     sessionName: "Session Name",
     sessionNamePlaceholder: "Session Name eingeben",
     openHistory: "Verlauf öffnen (Strg+O)",
@@ -93,6 +85,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     loadSession: "Laden",
     deleteSession: "Löschen",
     confirmDelete: "Löschen bestätigen",
+    deleteConfirmMessage: "Möchten Sie die Session '{sessionName}' wirklich löschen?",
     cancel: "Abbrechen",
     createdAt: "Erstellt",
     updatedAt: "Aktualisiert",
@@ -110,7 +103,21 @@ export const translations: Record<Lang, Record<string, string>> = {
     exportingPdf: "PDF wird erstellt...",
     pdfExportSuccess: "PDF erfolgreich exportiert",
     pdfExportError: "Fehler beim PDF-Export",
-    downloadPdf: "PDF herunterladen"
+    downloadPdf: "PDF herunterladen",
+    crewPresets: "Crew Vorlagen",
+    saveCrewPreset: "Crew speichern",
+    loadCrewPreset: "Crew laden",
+    managePresets: "Vorlagen verwalten",
+    presetName: "Vorlagen-Name",
+    presetNamePlaceholder: "Name der Vorlage eingeben",
+    noPresets: "Keine Vorlagen gespeichert",
+    presetSaved: "Vorlage gespeichert",
+    presetLoaded: "Vorlage geladen",
+    presetDeleted: "Vorlage gelöscht",
+    presetUpdated: "Vorlage aktualisiert",
+    confirmDeletePreset: "Vorlage wirklich löschen?",
+    saveCurrentCrew: "Aktuelle Crew speichern",
+    presetMembers: "Mitglieder"
   },
   en: {
     appName: "SC Payslip",
@@ -152,14 +159,6 @@ export const translations: Record<Lang, Record<string, string>> = {
     expensesLabel: "Expenses",
     taxesLabel: "Taxes (fees)",
     netProfitLabel: "Profit (Net)",
-    statistics: "Statistics",
-    minPayout: "Min. Payout",
-    maxPayout: "Max. Payout",
-    avgPayout: "Avg. Payout",
-    transferCount: "Transfer Count",
-    largestTransfer: "Largest Transfer",
-    highestEarner: "Highest Earner",
-    lowestEarner: "Lowest Earner",
     sessionName: "Session Name",
     sessionNamePlaceholder: "Enter session name",
     openHistory: "Open History (Ctrl+O)",
@@ -169,6 +168,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     loadSession: "Load",
     deleteSession: "Delete",
     confirmDelete: "Confirm Delete",
+    deleteConfirmMessage: "Are you sure you want to delete the session '{sessionName}'?",
     cancel: "Cancel",
     createdAt: "Created",
     updatedAt: "Updated",
@@ -186,6 +186,20 @@ export const translations: Record<Lang, Record<string, string>> = {
     exportingPdf: "Generating PDF...",
     pdfExportSuccess: "PDF exported successfully",
     pdfExportError: "PDF export failed",
-    downloadPdf: "Download PDF"
+    downloadPdf: "Download PDF",
+    crewPresets: "Crew Presets",
+    saveCrewPreset: "Save Crew",
+    loadCrewPreset: "Load Crew",
+    managePresets: "Manage Presets",
+    presetName: "Preset Name",
+    presetNamePlaceholder: "Enter preset name",
+    noPresets: "No saved presets",
+    presetSaved: "Preset saved",
+    presetLoaded: "Preset loaded",
+    presetDeleted: "Preset deleted",
+    presetUpdated: "Preset updated",
+    confirmDeletePreset: "Delete this preset?",
+    saveCurrentCrew: "Save Current Crew",
+    presetMembers: "Members"
   }
 };
