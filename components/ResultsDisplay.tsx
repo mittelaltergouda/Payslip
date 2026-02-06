@@ -139,7 +139,7 @@ export function ResultsDisplay({
     }
 
     try {
-      const sessionName = session.sessionName || "Untitled Session";
+      const sessionName = session.name || "Untitled Session";
       const csvContent = generateSummaryCSV(result, sessionName, currency);
       downloadCSV(csvContent, "sc-payslip-summary");
     } catch (error) {
@@ -157,7 +157,7 @@ export function ResultsDisplay({
     }
 
     try {
-      const sessionName = session.sessionName || "Untitled Session";
+      const sessionName = session.name || "Untitled Session";
       const csvContent = generateDetailedCSV(result, sessionName, currency);
       downloadCSV(csvContent, "sc-payslip-detailed");
     } catch (error) {
