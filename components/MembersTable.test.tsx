@@ -191,12 +191,13 @@ describe('MembersTable - Initial Rendering', () => {
     expect(screen.getAllByText('Revenue').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Investment').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Expenses').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText('Taxes').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText('Profit Share').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText('Net After Fees').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('% Share').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Fixed Bonus').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Fixed Payout').length).toBeGreaterThanOrEqual(1);
+    // Taxes, Profit Share, Net After Fees columns removed from input section
+    expect(screen.queryByText('Taxes')).not.toBeInTheDocument();
+    expect(screen.queryByText('Profit Share')).not.toBeInTheDocument();
+    expect(screen.queryByText('Net After Fees')).not.toBeInTheDocument();
   });
 
   it('should render role column header when showRole is true', () => {
@@ -234,7 +235,7 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    expect(screen.queryByText('Role')).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Role' })).not.toBeInTheDocument();
   });
 
   it('should render all member rows', () => {
@@ -334,7 +335,6 @@ describe('MembersTable - User Interactions', () => {
       />
     );
 
-    // Verify member data is rendered (MemberRow receives correct props)
     // Members appear in both desktop rows and mobile cards
     expect(screen.getAllByDisplayValue('Pilot').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByDisplayValue('Captain').length).toBeGreaterThanOrEqual(1);

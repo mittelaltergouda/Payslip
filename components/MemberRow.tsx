@@ -89,9 +89,6 @@ interface MemberRowProps {
  * - Revenue: Editable number input for income generated
  * - Investment: Editable number input for capital invested
  * - Expenses: List of editable individual expenses with add/remove controls
- * - Taxes: Display of total transfer fees (read-only)
- * - Profit Share: Display of calculated profit share (read-only)
- * - Net After Fees: Display of final payout amount (color-coded: green for positive, red for negative)
  * - Percent Share: Editable in PERCENT and ADJUSTABLE modes
  * - Fixed Bonus: Editable only in ADJUSTABLE mode
  * - Fixed Payout: Editable only in ADJUSTABLE mode
@@ -122,8 +119,8 @@ export function MemberRow({
   showRole,
   distributionMode,
   individualExpenses,
-  resultMember,
-  feeByPayer,
+  resultMember: _resultMember,
+  feeByPayer: _feeByPayer,
   lang,
   t,
   format,
@@ -136,7 +133,6 @@ export function MemberRow({
   // individualExpenses is now pre-filtered by MembersTable, no need to filter again
   const exp = individualExpenses;
   const expSum = exp.reduce((s, e) => s + e.amount, 0);
-  const netAfterFees = (resultMember?.finalNet ?? 0) - (feeByPayer[member.id!] ?? 0);
 
   return (
     <tr key={member.id} className="align-top">
@@ -201,17 +197,6 @@ export function MemberRow({
           </button>
           <div className="text-xs text-white/60">Σ {format(expSum, lang)}</div>
         </div>
-      </td>
-      <td className="py-3 px-3">
-        {format(feeByPayer[member.id!] ?? 0, lang)}
-      </td>
-      <td className="py-3 px-3">
-        {format(resultMember?.profitShare ?? 0, lang)}
-      </td>
-      <td className="py-3 px-3 font-semibold">
-        <span className={netAfterFees >= 0 ? "text-neon" : "text-red-400"}>
-          {format(netAfterFees, lang)}
-        </span>
       </td>
       <td className="py-3 px-3 w-[160px]">
         <input

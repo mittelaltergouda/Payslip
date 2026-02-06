@@ -1,6 +1,6 @@
 "use client";
 
-import { DistributionMode, IndividualExpenseInput, MemberBreakdown, MemberInput } from "@/lib/types";
+import type { DistributionMode, IndividualExpenseInput, MemberBreakdown, MemberInput } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -111,8 +111,8 @@ export function MemberCard({
   showRole,
   distributionMode,
   individualExpenses,
-  resultMember,
-  feeByPayer,
+  resultMember: _resultMember,
+  feeByPayer: _feeByPayer,
   lang,
   t,
   format,
@@ -124,7 +124,6 @@ export function MemberCard({
 }: MemberCardProps) {
   const exp = individualExpenses.filter((e) => e.memberId === member.id);
   const expSum = exp.reduce((s, e) => s + e.amount, 0);
-  const netAfterFees = (resultMember?.finalNet ?? 0) - (feeByPayer[member.id!] ?? 0);
 
   return (
     <div className="glass p-4 space-y-4" role="article" aria-labelledby={`member-card-${member.id}`}>
@@ -229,35 +228,6 @@ export function MemberCard({
         </Button>
         <div className="text-xs text-white/60" aria-label={`${t.total || "Total"} ${t.expensesLabel}`}>
           Σ {format(expSum, lang)}
-        </div>
-      </div>
-
-      {/* Results Section */}
-      <div className="space-y-2 border-t border-white/10 pt-3" role="group" aria-labelledby={`results-${member.id}`}>
-        <h4 id={`results-${member.id}`} className="text-sm font-semibold text-white/80">{t.results || "Results"}</h4>
-
-        <div className="flex justify-between items-center">
-          <span className="text-xs text-white/60">{t.taxesLabel}</span>
-          <span className="font-mono" aria-label={`${t.taxesLabel} ${t.for || "for"} ${member.handle}: ${format(feeByPayer[member.id!] ?? 0, lang)}`}>
-            {format(feeByPayer[member.id!] ?? 0, lang)}
-          </span>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <span className="text-xs text-white/60">{t.profitShareCol}</span>
-          <span className="font-mono" aria-label={`${t.profitShareCol} ${t.for || "for"} ${member.handle}: ${format(resultMember?.profitShare ?? 0, lang)}`}>
-            {format(resultMember?.profitShare ?? 0, lang)}
-          </span>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <span className="text-xs text-white/60">{t.netAfterFeesCol}</span>
-          <span
-            className={`font-mono font-semibold ${netAfterFees >= 0 ? "text-neon" : "text-red-400"}`}
-            aria-label={`${t.netAfterFeesCol} ${t.for || "for"} ${member.handle}: ${format(netAfterFees, lang)}`}
-          >
-            {format(netAfterFees, lang)}
-          </span>
         </div>
       </div>
 
