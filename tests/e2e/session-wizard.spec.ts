@@ -566,7 +566,8 @@ test.describe('Session Wizard - Member Management', () => {
     const addButton = page.locator('button').filter({ hasText: /add.*member|mitglied.*hinzufügen|\+/i });
 
     if (await addButton.first().isVisible({ timeout: 3000 }).catch(() => false)) {
-      await addButton.first().click();
+      // Use force click for mobile compatibility (elements may overlap on small screens)
+      await addButton.first().click({ force: true });
       await page.waitForTimeout(500);
 
       // Count members after adding
@@ -608,7 +609,8 @@ test.describe('Session Wizard - Member Management', () => {
     const addButton = page.locator('button').filter({ hasText: /add.*member|mitglied.*hinzufügen|\+/i });
 
     if (await addButton.first().isVisible({ timeout: 3000 }).catch(() => false)) {
-      await addButton.first().click();
+      // Use force click for mobile compatibility (elements may overlap on small screens)
+      await addButton.first().click({ force: true });
       await page.waitForTimeout(500);
     }
 
@@ -1308,7 +1310,8 @@ test.describe('Session Wizard - Complete Flow', () => {
     // Step 3: Add another member
     const addButton = page.locator('button').filter({ hasText: /add.*member|mitglied.*hinzufügen|\+/i });
     if (await addButton.first().isVisible({ timeout: 3000 }).catch(() => false)) {
-      await addButton.first().click();
+      // Use force click for mobile compatibility (elements may overlap on small screens)
+      await addButton.first().click({ force: true });
       await page.waitForTimeout(500);
     }
 

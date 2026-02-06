@@ -188,13 +188,16 @@ test.describe('Error States - Invalid Input Handling', () => {
   test('Zero revenue is handled correctly', async ({ page }) => {
     await page.waitForLoadState('networkidle');
 
-    // Find all visible numeric inputs and set them to zero
+    // Find all visible and enabled numeric inputs and set them to zero
     const numericInputs = page.locator('input[inputmode="numeric"]');
     const inputCount = await numericInputs.count();
 
     for (let i = 0; i < inputCount; i++) {
       const input = numericInputs.nth(i);
-      if (await input.isVisible({ timeout: 500 }).catch(() => false)) {
+      const isVisible = await input.isVisible({ timeout: 500 }).catch(() => false);
+      const isEnabled = await input.isEnabled({ timeout: 500 }).catch(() => false);
+
+      if (isVisible && isEnabled) {
         await input.fill('0');
         await page.waitForTimeout(200);
       }
@@ -914,13 +917,16 @@ test.describe('Error States - Edge Cases', () => {
   test('All members with zero revenue calculates correctly', async ({ page }) => {
     await page.waitForLoadState('networkidle');
 
-    // Find all visible numeric inputs and set them to zero
+    // Find all visible and enabled numeric inputs and set them to zero
     const numericInputs = page.locator('input[inputmode="numeric"]');
     const inputCount = await numericInputs.count();
 
     for (let i = 0; i < inputCount; i++) {
       const input = numericInputs.nth(i);
-      if (await input.isVisible({ timeout: 500 }).catch(() => false)) {
+      const isVisible = await input.isVisible({ timeout: 500 }).catch(() => false);
+      const isEnabled = await input.isEnabled({ timeout: 500 }).catch(() => false);
+
+      if (isVisible && isEnabled) {
         await input.fill('0');
         await page.waitForTimeout(100);
       }
