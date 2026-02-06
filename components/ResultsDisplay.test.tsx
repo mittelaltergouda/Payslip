@@ -1,17 +1,18 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { ResultsDisplay } from './ResultsDisplay';
 import type { PayslipResult, SessionInput } from '@/lib/types';
 import { translations } from '@/lib/i18n/translations';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import * as csvExport from '@/lib/csv/export';
+import { describe, it, expect, vi } from 'vitest';
 
-// Mock the CSV export module
-vi.mock('@/lib/csv/export', () => ({
-  generateSummaryCSV: vi.fn(),
-  generateDetailedCSV: vi.fn(),
-  downloadCSV: vi.fn(),
+// Mock the ExportCSVButton component
+vi.mock('./ExportCSVButton', () => ({
+  ExportCSVButton: ({ lang }: { lang: string }) => (
+    <button type="button" data-testid="export-csv-button">
+      {lang === 'de' ? 'CSV exportieren' : 'Export CSV'}
+    </button>
+  ),
 }));
 
 const mockSession: SessionInput = {
