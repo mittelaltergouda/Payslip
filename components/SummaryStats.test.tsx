@@ -43,15 +43,6 @@ const mockResultWithStats: PayslipResult = {
       feeAmount: 5,
     },
   ],
-  summaryStatistics: {
-    minPayout: 9395,
-    maxPayout: 13195,
-    averagePayout: 11295,
-    totalTransfers: 1,
-    largestTransfer: 1005,
-    highestEarner: "Pilot",
-    lowestEarner: "Escort",
-  },
 };
 
 const mockResultWithoutStats: PayslipResult = {
@@ -287,108 +278,6 @@ describe('SummaryStats - Net Profit After Tax Calculation', () => {
     const netAfterTaxElement = screen.getByText('0 aUEC');
     expect(netAfterTaxElement).toHaveClass('text-neon'); // Zero is >= 0, so should be green
     expect(netAfterTaxElement).toHaveClass('font-semibold');
-  });
-});
-
-describe('SummaryStats - Statistics Section', () => {
-  it('should render statistics section when summaryStatistics is provided', () => {
-    render(
-      <SummaryStats
-        result={mockResultWithStats}
-        totalRevenue={15000}
-        totalInvestment={3000}
-        totalExpenses={700}
-        totalFees={5}
-        translations={translations.en}
-        lang="en"
-      />
-    );
-
-    expect(screen.getByText('Statistics')).toBeInTheDocument();
-  });
-
-  it('should not render statistics section when summaryStatistics is undefined', () => {
-    render(
-      <SummaryStats
-        result={mockResultWithoutStats}
-        totalRevenue={15000}
-        totalInvestment={3000}
-        totalExpenses={700}
-        totalFees={5}
-        translations={translations.en}
-        lang="en"
-      />
-    );
-
-    expect(screen.queryByText('Statistics')).not.toBeInTheDocument();
-  });
-
-  it('should render all statistics labels in German', () => {
-    render(
-      <SummaryStats
-        result={mockResultWithStats}
-        totalRevenue={15000}
-        totalInvestment={3000}
-        totalExpenses={700}
-        totalFees={5}
-        translations={translations.de}
-        lang="de"
-      />
-    );
-
-    expect(screen.getByText('Statistiken')).toBeInTheDocument();
-    expect(screen.getByText('Min. Auszahlung')).toBeInTheDocument();
-    expect(screen.getByText('Max. Auszahlung')).toBeInTheDocument();
-    expect(screen.getByText('Durchschn. Auszahlung')).toBeInTheDocument();
-    expect(screen.getByText('Anzahl Transfers')).toBeInTheDocument();
-    expect(screen.getByText('Größter Transfer')).toBeInTheDocument();
-    expect(screen.getByText('Höchster Verdienst')).toBeInTheDocument();
-    expect(screen.getByText('Niedrigster Verdienst')).toBeInTheDocument();
-  });
-
-  it('should render all statistics labels in English', () => {
-    render(
-      <SummaryStats
-        result={mockResultWithStats}
-        totalRevenue={15000}
-        totalInvestment={3000}
-        totalExpenses={700}
-        totalFees={5}
-        translations={translations.en}
-        lang="en"
-      />
-    );
-
-    expect(screen.getByText('Statistics')).toBeInTheDocument();
-    expect(screen.getByText('Min. Payout')).toBeInTheDocument();
-    expect(screen.getByText('Max. Payout')).toBeInTheDocument();
-    expect(screen.getByText('Avg. Payout')).toBeInTheDocument();
-    expect(screen.getByText('Transfer Count')).toBeInTheDocument();
-    expect(screen.getByText('Largest Transfer')).toBeInTheDocument();
-    expect(screen.getByText('Highest Earner')).toBeInTheDocument();
-    expect(screen.getByText('Lowest Earner')).toBeInTheDocument();
-  });
-
-  it('should display statistics values correctly', () => {
-    render(
-      <SummaryStats
-        result={mockResultWithStats}
-        totalRevenue={15000}
-        totalInvestment={3000}
-        totalExpenses={700}
-        totalFees={5}
-        translations={translations.en}
-        lang="en"
-      />
-    );
-
-    expect(screen.getAllByText(/9,395 aUEC/).length).toBeGreaterThan(0); // minPayout
-    expect(screen.getAllByText(/13,195 aUEC/).length).toBeGreaterThan(0); // maxPayout
-    expect(screen.getAllByText(/11,295 aUEC/).length).toBeGreaterThan(0); // averagePayout
-    expect(screen.getAllByText('1').length).toBeGreaterThan(0); // totalTransfers (number without currency)
-    expect(screen.getAllByText(/1,005 aUEC/).length).toBeGreaterThan(0); // largestTransfer
-    expect(screen.getAllByText('Pilot').length).toBeGreaterThan(0); // highestEarner
-    expect(screen.getAllByText('Escort').length).toBeGreaterThan(0); // lowestEarner
   });
 });
 

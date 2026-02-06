@@ -15,7 +15,7 @@ export type Lang = "de" | "en";
  * - Distribution mode labels and descriptions
  * - Member table headers and labels
  * - Results display labels
- * - Summary and statistics labels
+ * - Summary labels
  * - Transfer-related messages
  *
  * Usage:
@@ -76,14 +76,6 @@ export const translations: Record<Lang, Record<string, string>> = {
     expensesLabel: "Kosten",
     taxesLabel: "Steuern (Fees)",
     netProfitLabel: "Gewinn (Netto)",
-    statistics: "Statistiken",
-    minPayout: "Min. Auszahlung",
-    maxPayout: "Max. Auszahlung",
-    avgPayout: "Durchschn. Auszahlung",
-    transferCount: "Anzahl Transfers",
-    largestTransfer: "Größter Transfer",
-    highestEarner: "Höchster Verdienst",
-    lowestEarner: "Niedrigster Verdienst",
     sessionName: "Session Name",
     sessionNamePlaceholder: "Session Name eingeben",
     openHistory: "Verlauf öffnen (Strg+O)",
@@ -152,14 +144,6 @@ export const translations: Record<Lang, Record<string, string>> = {
     expensesLabel: "Expenses",
     taxesLabel: "Taxes (fees)",
     netProfitLabel: "Profit (Net)",
-    statistics: "Statistics",
-    minPayout: "Min. Payout",
-    maxPayout: "Max. Payout",
-    avgPayout: "Avg. Payout",
-    transferCount: "Transfer Count",
-    largestTransfer: "Largest Transfer",
-    highestEarner: "Highest Earner",
-    lowestEarner: "Lowest Earner",
     sessionName: "Session Name",
     sessionNamePlaceholder: "Enter session name",
     openHistory: "Open History (Ctrl+O)",
