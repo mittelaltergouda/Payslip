@@ -6,6 +6,9 @@ import type { SessionInput, PayslipResult } from '@/lib/types';
 // MOCKS
 // ============================================================================
 
+// Track text calls to verify Type field removal
+let textCalls: string[] = [];
+
 // Mock jsPDF and jsPDF-AutoTable
 vi.mock('jspdf', () => {
   return {
@@ -18,7 +21,9 @@ vi.mock('jspdf', () => {
       };
       setFontSize = vi.fn();
       setFont = vi.fn();
-      text = vi.fn();
+      text = vi.fn((content: string) => {
+        textCalls.push(content);
+      });
       setTextColor = vi.fn();
       setPage = vi.fn();
       getNumberOfPages = () => 1;
@@ -39,6 +44,7 @@ vi.mock('jspdf-autotable', () => ({
 describe('generatePDF', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    textCalls = [];
   });
 
   it('should generate a PDF blob from session and result data', () => {
@@ -92,6 +98,90 @@ describe('generatePDF', () => {
 
     expect(blob).toBeInstanceOf(Blob);
     expect(blob.type).toBe('application/pdf');
+  });
+
+  it('should not include Type field in the PDF output', () => {
+    const session: SessionInput = {
+      name: 'Test Session',
+      type: 'TRADING',
+      distributionMode: 'EQUAL',
+      taxEnabled: false,
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000 },
+      ],
+    };
+
+    const result: PayslipResult = {
+      saleRevenue: 1000,
+      netProfit: 1000,
+      taxRateApplied: 0,
+      members: [
+        {
+          memberId: 'member-1',
+          handle: 'Alice',
+          role: 'Member',
+          active: true,
+          revenue: 1000,
+          investment: 0,
+          expenses: 0,
+          sharedExpenses: 0,
+          individualExpenses: 0,
+          profitShare: 1000,
+          finalNet: 1000,
+        },
+      ],
+      suggestedTransfers: [],
+    };
+
+    generatePDF(session, result);
+
+    // Verify that no text call contains "Type:"
+    const typeTextCalls = textCalls.filter((text) =>
+      typeof text === 'string' && text.includes('Type:')
+    );
+    expect(typeTextCalls).toHaveLength(0);
+  });
+
+  it('should not render session type even when type is provided in session input', () => {
+    const session: SessionInput = {
+      name: 'Mining Session',
+      type: 'MINING',
+      distributionMode: 'EQUAL',
+      taxEnabled: false,
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 500 },
+      ],
+    };
+
+    const result: PayslipResult = {
+      saleRevenue: 500,
+      netProfit: 500,
+      taxRateApplied: 0,
+      members: [
+        {
+          memberId: 'member-1',
+          handle: 'Alice',
+          role: 'Member',
+          active: true,
+          revenue: 500,
+          investment: 0,
+          expenses: 0,
+          sharedExpenses: 0,
+          individualExpenses: 0,
+          profitShare: 500,
+          finalNet: 500,
+        },
+      ],
+      suggestedTransfers: [],
+    };
+
+    generatePDF(session, result);
+
+    // Verify no text mentions MINING or Type field
+    const miningTextCalls = textCalls.filter((text) =>
+      typeof text === 'string' && (text.includes('Type:') || text.includes('MINING'))
+    );
+    expect(miningTextCalls).toHaveLength(0);
   });
 
   it('should handle sessions with no transfers', () => {
