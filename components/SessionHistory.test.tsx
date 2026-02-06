@@ -123,7 +123,7 @@ describe('SessionHistory - Initial Rendering', () => {
       />
     );
 
-    // SessionHistory component renders a close button with aria-label "Close sidebar"
+    // Dialog component renders a close button with "Close" text for screen readers
     const closeButton = screen.getByRole('button', { name: /close sidebar/i });
     expect(closeButton).toBeInTheDocument();
   });
@@ -196,7 +196,7 @@ describe('SessionHistory - Empty State', () => {
 
     // Load button should not be present
     expect(screen.queryByText('Load')).not.toBeInTheDocument();
-    // Close sidebar button is always present
+    // Dialog close button is always present
     expect(screen.getByRole('button', { name: /close sidebar/i })).toBeInTheDocument();
   });
 });
@@ -807,10 +807,10 @@ describe('SessionHistory - Accessibility', () => {
       />
     );
 
-    // SessionHistory component uses aria-label for accessibility
+    // Dialog component uses screen reader text for accessibility
     const closeButton = screen.getByRole('button', { name: /close sidebar/i });
     expect(closeButton).toBeInTheDocument();
-    // Verify the button has proper accessible name
+    // Verify the button has proper accessible name (from sr-only text)
     expect(closeButton).toHaveAccessibleName('Close sidebar');
   });
 

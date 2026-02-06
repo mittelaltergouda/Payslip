@@ -95,15 +95,17 @@ describe('sessionStorage - save()', () => {
     expect(result.data?.session.id).toBe('existing-id');
   });
 
-  it('should update an existing session by ID', async () => {
+  it('should update an existing session by ID', () => {
+    vi.useFakeTimers();
+
     const session1 = createTestSession({ id: 'session-1', name: 'First Version' });
     const result1 = sessionStorage.save(session1);
 
     expect(result1.success).toBe(true);
     const createdAt = result1.data?.createdAt;
 
-    // Wait a small amount to ensure updatedAt timestamp will be different
-    await new Promise(resolve => setTimeout(resolve, 10));
+    // Advance time to ensure updatedAt differs from createdAt
+    vi.advanceTimersByTime(1000);
 
     // Update the session
     const session2 = createTestSession({ id: 'session-1', name: 'Updated Version' });
@@ -117,6 +119,8 @@ describe('sessionStorage - save()', () => {
     // Verify only one session exists
     const allSessions = sessionStorage.getAll();
     expect(allSessions.length).toBe(1);
+
+    vi.useRealTimers();
   });
 
   it('should save multiple sessions', () => {

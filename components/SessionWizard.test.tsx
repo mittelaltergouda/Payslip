@@ -608,9 +608,8 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
         expect(expenseAmountInput).toBeInTheDocument();
       }
 
-      // Use getAllByText since there may be multiple "Payout" elements (heading + other)
-      const payoutElements = screen.getAllByText('Payout');
-      expect(payoutElements.length).toBeGreaterThan(0);
+      // "Payout" appears in multiple result card headings
+      expect(screen.queryAllByText('Payout').length).toBeGreaterThanOrEqual(1);
     });
 
     it('should handle zero revenue input', () => {
@@ -1110,23 +1109,22 @@ describe('SessionWizard - Session Management', () => {
       manualSave: mockManualSave,
       error: null
     });
-    vi.spyOn(useAutoSaveModule, 'useAutoSave').mockImplementation(mockUseAutoSave);
+    vi.spyOn(useAutoSaveModule, 'useAutoSave').mockImplementation(mockUseAutoSave as unknown as typeof useAutoSaveModule.useAutoSave);
 
     // Mock localStorage service functions
     mockGetAll = vi.fn().mockReturnValue(mockSavedSessions);
     mockDeleteSession = vi.fn().mockReturnValue({ success: true });
     mockSave = vi.fn().mockReturnValue({ success: true });
 
-    vi.spyOn(sessionStorage, 'getAll').mockImplementation(mockGetAll);
-    vi.spyOn(sessionStorage, 'deleteSession').mockImplementation(mockDeleteSession);
-    vi.spyOn(sessionStorage, 'save').mockImplementation(mockSave);
+    vi.spyOn(sessionStorage, 'getAll').mockImplementation(mockGetAll as unknown as typeof sessionStorage.getAll);
+    vi.spyOn(sessionStorage, 'deleteSession').mockImplementation(mockDeleteSession as unknown as typeof sessionStorage.deleteSession);
+    vi.spyOn(sessionStorage, 'save').mockImplementation(mockSave as unknown as typeof sessionStorage.save);
   });
 
   describe('Session Name Input', () => {
     it('should render session name input field', () => {
       renderWithToast(<SessionWizard />);
 
-      // Use role with name to specifically target the textbox input
       const nameInput = screen.getByRole('textbox', { name: /Session Name/i });
       expect(nameInput).toBeInTheDocument();
       expect(nameInput).toHaveValue('SC Session');
@@ -1135,7 +1133,6 @@ describe('SessionWizard - Session Management', () => {
     it('should update session name when input changes', () => {
       renderWithToast(<SessionWizard />);
 
-      // Use role with name to specifically target the textbox input
       const nameInput = screen.getByRole('textbox', { name: /Session Name/i }) as HTMLInputElement;
       fireEvent.change(nameInput, { target: { value: 'My Custom Session' } });
 
@@ -1289,7 +1286,7 @@ describe('SessionWizard - Session Management', () => {
       fireEvent.click(loadButtons[0]);
 
       await waitFor(() => {
-        // Session name should be updated - use role to target specific textbox
+        // Session name should be updated
         const nameInput = screen.getByRole('textbox', { name: /Session Name/i }) as HTMLInputElement;
         expect(nameInput.value).toBe('Test Session 1');
       });
@@ -1415,7 +1412,7 @@ describe('SessionWizard - Session Management', () => {
 
       const initialCallCount = mockUseAutoSave.mock.calls.length;
 
-      // Change session name - use role to target specific textbox
+      // Change session name
       const nameInput = screen.getByRole('textbox', { name: /Session Name/i }) as HTMLInputElement;
       fireEvent.change(nameInput, { target: { value: 'Updated Session' } });
 
@@ -1594,14 +1591,12 @@ describe('SessionWizard - Session Management', () => {
     it('should update session name label when language changes', () => {
       renderWithToast(<SessionWizard />);
 
-      // Use role to target specific textbox
       expect(screen.getByRole('textbox', { name: /Session Name/i })).toBeInTheDocument();
 
       // Switch to English
       const enButton = screen.getByRole('button', { name: /Switch to English/i });
       fireEvent.click(enButton);
 
-      // Session name input should still be present
       expect(screen.getByRole('textbox', { name: /Session Name/i })).toBeInTheDocument();
     });
   });

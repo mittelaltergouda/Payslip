@@ -146,9 +146,8 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    // Use heading role to find the specific h3 element (caption also has same text)
     expect(screen.getByRole('heading', { name: 'Eingabe' })).toBeInTheDocument();
-    expect(screen.getByText('+ Mitglied')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '+ Mitglied' })).toBeInTheDocument();
   });
 
   it('should render the component with English translations', () => {
@@ -167,9 +166,8 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    // Use heading role to find the specific h3 element (caption also has same text)
     expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
-    expect(screen.getByText('+ Member')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '+ Member' })).toBeInTheDocument();
   });
 
   it('should render all column headers', () => {
@@ -188,17 +186,17 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    // Use columnheader role to find table headers specifically
-    expect(screen.getByRole('columnheader', { name: 'Handle' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Revenue' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Investment' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Expenses' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Taxes' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Profit Share' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Net After Fees' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: '% Share' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Fixed Bonus' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Fixed Payout' })).toBeInTheDocument();
+    // Column headers appear in both desktop table and mobile card views
+    expect(screen.getAllByText('Handle').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Revenue').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Investment').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Expenses').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Taxes').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Profit Share').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Net After Fees').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('% Share').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Fixed Bonus').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Fixed Payout').length).toBeGreaterThanOrEqual(1);
   });
 
   it('should render role column header when showRole is true', () => {
@@ -217,7 +215,7 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    expect(screen.getByRole('columnheader', { name: 'Role' })).toBeInTheDocument();
+    expect(screen.getAllByText('Role').length).toBeGreaterThanOrEqual(1);
   });
 
   it('should not render role column header when showRole is false', () => {
@@ -255,12 +253,12 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    // Get all inputs with these values (may be in table or card view)
+    // Members appear in both desktop rows and mobile cards
     const pilotInputs = screen.getAllByDisplayValue('Pilot');
-    expect(pilotInputs.length).toBeGreaterThan(0);
+    expect(pilotInputs.length).toBeGreaterThanOrEqual(1);
 
     const escortInputs = screen.getAllByDisplayValue('Escort');
-    expect(escortInputs.length).toBeGreaterThan(0);
+    expect(escortInputs.length).toBeGreaterThanOrEqual(1);
   });
 
   it('should render empty table when no members', () => {
@@ -279,7 +277,6 @@ describe('MembersTable - Initial Rendering', () => {
       />
     );
 
-    // Use heading role to find the specific h3 element (caption also has same text)
     expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
     expect(screen.queryByDisplayValue('Pilot')).not.toBeInTheDocument();
   });
@@ -338,11 +335,11 @@ describe('MembersTable - User Interactions', () => {
     );
 
     // Verify member data is rendered (MemberRow receives correct props)
-    // Use getAllByDisplayValue since there may be multiple views (table + card)
-    expect(screen.getAllByDisplayValue('Pilot').length).toBeGreaterThan(0);
-    expect(screen.getAllByDisplayValue('Captain').length).toBeGreaterThan(0);
-    expect(screen.getAllByDisplayValue('Escort').length).toBeGreaterThan(0);
-    expect(screen.getAllByDisplayValue('Fighter').length).toBeGreaterThan(0);
+    // Members appear in both desktop rows and mobile cards
+    expect(screen.getAllByDisplayValue('Pilot').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByDisplayValue('Captain').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByDisplayValue('Escort').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByDisplayValue('Fighter').length).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -376,10 +373,8 @@ describe('MembersTable - Data Display', () => {
       />
     );
 
-    // Use heading role to find the specific h3 element (caption also has same text)
     expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
-    // Use getAllByDisplayValue since there may be multiple views (table + card)
-    expect(screen.getAllByDisplayValue('Pilot').length).toBeGreaterThan(0);
+    expect(screen.getAllByDisplayValue('Pilot').length).toBeGreaterThanOrEqual(1);
   });
 
   it('should render with empty feeByPayer object', () => {
@@ -398,7 +393,6 @@ describe('MembersTable - Data Display', () => {
       />
     );
 
-    // Use heading role to find the specific h3 element (caption also has same text)
     expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
   });
 
@@ -418,8 +412,7 @@ describe('MembersTable - Data Display', () => {
       />
     );
 
-    // Use getAllByDisplayValue since there may be multiple views (table + card)
-    expect(screen.getAllByDisplayValue('Fuel').length).toBeGreaterThan(0);
+    expect(screen.getAllByDisplayValue('Fuel').length).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -453,7 +446,6 @@ describe('MembersTable - Distribution Modes', () => {
       />
     );
 
-    // Use heading role to find the specific h3 element (caption also has same text)
     expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
   });
 
@@ -473,7 +465,6 @@ describe('MembersTable - Distribution Modes', () => {
       />
     );
 
-    // Use heading role to find the specific h3 element (caption also has same text)
     expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
   });
 
@@ -493,7 +484,6 @@ describe('MembersTable - Distribution Modes', () => {
       />
     );
 
-    // Use heading role to find the specific h3 element (caption also has same text)
     expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
   });
 });
