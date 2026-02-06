@@ -485,11 +485,40 @@ test.describe('Session History View E2E Tests', () => {
 });
 
 test.describe('Session History View - Mobile and Desktop', () => {
+  let consoleErrors: string[] = [];
+
   test.beforeEach(async ({ page }) => {
+    consoleErrors = [];
+
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        const text = msg.text();
+        if (!text.includes('Content-Security-Policy') &&
+            !text.includes('Connection closed') &&
+            !text.toLowerCase().includes('websocket')) {
+          consoleErrors.push(text);
+        }
+      }
+    });
+
+    page.on('pageerror', (error) => {
+      if (!error.message.includes('Content-Security-Policy') &&
+          !error.message.includes('Connection closed')) {
+        consoleErrors.push(error.message);
+      }
+    });
+
     await page.goto('/');
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+  });
+
+  test.afterEach(async () => {
+    if (consoleErrors.length > 0) {
+      console.error('Console errors found:', consoleErrors);
+    }
+    expect(consoleErrors).toHaveLength(0);
   });
 
   test('Sessions page renders correctly on mobile viewport', async ({ page, viewport }) => {
