@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "044-export-to-csv",
+  "spec": "053-der-bereich-statistiken-kann-enffernt-werden-diese",
   "state": "building",
   "subtasks": {
-    "completed": 5,
-    "total": 6,
+    "completed": 7,
+    "total": 11,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Testing & Verification",
+    "current": "Update Test Files",
     "id": null,
-    "total": 7
+    "total": 4
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 5,
-    "started_at": "2026-02-03T20:16:59.383492"
+    "number": 4,
+    "started_at": "2026-02-05T20:13:20.584608"
   },
-  "last_update": "2026-02-03T20:27:47.871744"
+  "last_update": "2026-02-05T20:16:57.937556"
 }

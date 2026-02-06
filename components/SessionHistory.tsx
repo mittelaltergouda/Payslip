@@ -162,6 +162,7 @@ export function SessionHistory({
       {/* Sidebar */}
       <div
         ref={sidebarRef}
+        role="dialog"
         className="fixed top-0 right-0 h-full w-full max-w-md bg-night/95 border-l border-white/10 backdrop-blur-xl z-50 overflow-y-auto"
       >
         <div className="p-6 space-y-6">
@@ -173,7 +174,7 @@ export function SessionHistory({
             <button
               onClick={onClose}
               className="p-2 rounded-lg hover:bg-white/10 transition text-sand"
-              aria-label="Close sidebar"
+              aria-label="Close"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

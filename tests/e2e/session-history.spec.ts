@@ -485,11 +485,40 @@ test.describe('Session History View E2E Tests', () => {
 });
 
 test.describe('Session History View - Mobile and Desktop', () => {
+  let consoleErrors: string[] = [];
+
   test.beforeEach(async ({ page }) => {
+    consoleErrors = [];
+
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        const text = msg.text();
+        if (!text.includes('Content-Security-Policy') &&
+            !text.includes('Connection closed') &&
+            !text.toLowerCase().includes('websocket')) {
+          consoleErrors.push(text);
+        }
+      }
+    });
+
+    page.on('pageerror', (error) => {
+      if (!error.message.includes('Content-Security-Policy') &&
+          !error.message.includes('Connection closed')) {
+        consoleErrors.push(error.message);
+      }
+    });
+
     await page.goto('/');
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+  });
+
+  test.afterEach(async () => {
+    if (consoleErrors.length > 0) {
+      console.error('Console errors found:', consoleErrors);
+    }
+    expect(consoleErrors).toHaveLength(0);
   });
 
   test('Sessions page renders correctly on mobile viewport', async ({ page, viewport }) => {
@@ -525,5 +554,63 @@ test.describe('Session History View - Mobile and Desktop', () => {
       const languageButtons = page.locator('button').filter({ hasText: /DE|EN/ });
       expect(await languageButtons.count()).toBeGreaterThan(0);
     }
+  });
+
+  test('Delete button removes session from database', async ({ page }) => {
+    await page.goto('/');
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+
+    // Create a test session via API
+    const testSessionName = 'QA Delete Test ' + Date.now();
+    const createResponse = await page.request.post('/api/sessions', {
+      data: {
+        name: testSessionName,
+        type: 'TRADING',
+        taxEnabled: true,
+        distribution: 'EQUAL',
+        members: [
+          { handle: 'Trader1', role: 'Captain', revenue: 10000, investment: 0 }
+        ]
+      }
+    });
+
+    expect(createResponse.ok()).toBeTruthy();
+    const sessionData = await createResponse.json();
+    const sessionId = sessionData.id;
+
+    // Navigate to sessions page
+    await page.goto('/sessions');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
+
+    // Verify session appears in list
+    const sessionInList = page.locator(`text="${testSessionName}"`).first();
+    await expect(sessionInList).toBeVisible({ timeout: 5000 });
+
+    // Click delete button
+    const deleteButton = page.locator('button').filter({ hasText: /delete/i }).first();
+    await deleteButton.click();
+    await page.waitForTimeout(500);
+
+    // Confirm in dialog
+    const confirmButton = page.locator('[role="dialog"] button').filter({ hasText: /delete|löschen/i }).first();
+    await expect(confirmButton).toBeVisible({ timeout: 2000 });
+    await confirmButton.click();
+
+    // Wait for success toast
+    await expect(page.locator('text=/deleted|gelöscht/i')).toBeVisible({ timeout: 3000 });
+
+    // Verify session removed from list
+    await page.waitForTimeout(500);
+    await expect(sessionInList).not.toBeVisible();
+
+    // Verify deleted from database
+    const checkResponse = await page.request.get(`/api/sessions/${sessionId}`);
+    expect(checkResponse.status()).toBe(404);
+
+    // Check for console errors
+    expect(consoleErrors.length).toBe(0);
   });
 });

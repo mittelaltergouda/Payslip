@@ -197,11 +197,6 @@ describe('Tax Gross-Up Calculations', () => {
       expect(result.suggestedTransfers[0].netAmount).toBe(200);
       expect(result.suggestedTransfers[0].grossAmount).toBe(202);
       expect(result.suggestedTransfers[0].feeAmount).toBe(2);
-
-      // Verify summaryStatistics is present and populated
-      expect(result.summaryStatistics).toBeDefined();
-      expect(result.summaryStatistics?.totalTransfers).toBe(1);
-      expect(result.summaryStatistics?.largestTransfer).toBe(200);
     });
 
     it('should not apply tax when taxEnabled is false', () => {

@@ -83,15 +83,6 @@ const mockResult: PayslipResult = {
       feeAmount: 5,
     },
   ],
-  summaryStatistics: {
-    minPayout: 9395,
-    maxPayout: 13195,
-    averagePayout: 11295,
-    totalTransfers: 1,
-    largestTransfer: 1005,
-    highestEarner: "Pilot",
-    lowestEarner: "Escort",
-  },
 };
 
 const mockFeeByPayer = {
