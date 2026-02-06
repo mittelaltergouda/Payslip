@@ -132,9 +132,8 @@ export function MembersTable({
           </thead>
           <tbody className="divide-y divide-white/10 [&>tr]:transition-colors [&>tr]:duration-200 [&>tr:hover]:bg-white/[0.02]">
             {members.map((m) => {
-              const memberId = m.id ?? '';
-              const resultMember = resultMemberMap.get(memberId);
-              const memberExpenses = expensesByMember.get(memberId) ?? [];
+              const resultMember = resultMemberMap.get(m.id);
+              const memberExpenses = m.id ? (expensesByMember.get(m.id) ?? []) : [];
               return (
                 <MemberRow
                   key={m.id}

@@ -115,6 +115,7 @@ describe("Accessibility Tests - UI Components", () => {
         <FormField
           id="username"
           label="Username"
+          inputProps={{ placeholder: "Enter username" }}
         />
       );
       const results = await axe(container);
@@ -127,6 +128,7 @@ describe("Accessibility Tests - UI Components", () => {
           id="email"
           label="Email"
           error="Invalid email address"
+          inputProps={{ placeholder: "Enter email" }}
         />
       );
       const results = await axe(container);
@@ -139,6 +141,7 @@ describe("Accessibility Tests - UI Components", () => {
           id="password"
           label="Password"
           hint="Must be at least 8 characters"
+          inputProps={{ placeholder: "Enter password" }}
         />
       );
       const results = await axe(container);
@@ -151,6 +154,7 @@ describe("Accessibility Tests - UI Components", () => {
           id="required-field"
           label="Required Field"
           required
+          inputProps={{ placeholder: "Enter value" }}
         />
       );
       const results = await axe(container);

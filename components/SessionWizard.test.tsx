@@ -735,8 +735,8 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
         expect(expenseAmountInput).toBeInTheDocument();
       }
 
-      // "Payout" appears in multiple places - just verify the app still renders
-      expect(screen.getAllByText('Payout').length).toBeGreaterThan(0);
+      // "Payout" appears in multiple result card headings
+      expect(screen.queryAllByText('Payout').length).toBeGreaterThanOrEqual(1);
     });
 
     it('should handle zero revenue input', () => {
@@ -1252,7 +1252,7 @@ describe('SessionWizard - Session Management', () => {
     it('should render session name input field', () => {
       renderWithToast(<SessionWizard />);
 
-      const nameInput = screen.getByLabelText(/Session Name/i);
+      const nameInput = screen.getByRole('textbox', { name: /Session Name/i });
       expect(nameInput).toBeInTheDocument();
       expect(nameInput).toHaveValue('SC Session');
     });
@@ -1260,7 +1260,7 @@ describe('SessionWizard - Session Management', () => {
     it('should update session name when input changes', () => {
       renderWithToast(<SessionWizard />);
 
-      const nameInput = screen.getByLabelText(/Session Name/i) as HTMLInputElement;
+      const nameInput = screen.getByRole('textbox', { name: /Session Name/i }) as HTMLInputElement;
       fireEvent.change(nameInput, { target: { value: 'My Custom Session' } });
 
       expect(nameInput.value).toBe('My Custom Session');
@@ -1414,7 +1414,7 @@ describe('SessionWizard - Session Management', () => {
 
       await waitFor(() => {
         // Session name should be updated
-        const nameInput = screen.getByLabelText(/Session Name/i) as HTMLInputElement;
+        const nameInput = screen.getByRole('textbox', { name: /Session Name/i }) as HTMLInputElement;
         expect(nameInput.value).toBe('Test Session 1');
       });
     });
@@ -1540,7 +1540,7 @@ describe('SessionWizard - Session Management', () => {
       const initialCallCount = mockUseAutoSave.mock.calls.length;
 
       // Change session name
-      const nameInput = screen.getByLabelText(/Session Name/i) as HTMLInputElement;
+      const nameInput = screen.getByRole('textbox', { name: /Session Name/i }) as HTMLInputElement;
       fireEvent.change(nameInput, { target: { value: 'Updated Session' } });
 
       // useAutoSave should be called again with updated session
@@ -1718,13 +1718,13 @@ describe('SessionWizard - Session Management', () => {
     it('should update session name label when language changes', () => {
       renderWithToast(<SessionWizard />);
 
-      expect(screen.getByLabelText(/Session Name/i)).toBeInTheDocument();
+      expect(screen.getByRole('textbox', { name: /Session Name/i })).toBeInTheDocument();
 
       // Switch to English
       const enButton = screen.getByRole('button', { name: /Switch to English/i });
       fireEvent.click(enButton);
 
-      expect(screen.getByLabelText(/Session Name/i)).toBeInTheDocument();
+      expect(screen.getByRole('textbox', { name: /Session Name/i })).toBeInTheDocument();
     });
   });
 });

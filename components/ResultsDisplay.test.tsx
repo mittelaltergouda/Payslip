@@ -801,10 +801,10 @@ describe('ResultsDisplay - CSV Export Functionality', () => {
   });
 
   it('should use "Untitled Session" as default session name for summary export', () => {
-    const sessionWithoutName: SessionInput = {
+    const sessionWithoutName = {
       ...mockSession,
-      name: '',
-    };
+      name: undefined,
+    } as unknown as SessionInput;
 
     render(
       <ResultsDisplay
@@ -828,10 +828,10 @@ describe('ResultsDisplay - CSV Export Functionality', () => {
   });
 
   it('should use "Untitled Session" as default session name for detailed export', () => {
-    const sessionWithoutName: SessionInput = {
+    const sessionWithoutName = {
       ...mockSession,
-      name: '',
-    };
+      name: undefined,
+    } as unknown as SessionInput;
 
     render(
       <ResultsDisplay
