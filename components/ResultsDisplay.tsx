@@ -7,13 +7,6 @@ import { TransfersList } from "./TransfersList";
 import { generateSummaryCSV, generateDetailedCSV, downloadCSV } from "@/lib/csv/export";
 import { ExportPDFButton } from "./ExportPDFButton";
 
-/**
- * Format a number according to the specified language locale.
- */
-function format(amount: number, lang: Lang): string {
-  return Math.round(amount).toLocaleString(lang === "de" ? "de-DE" : "en-US");
-}
-
 // CSV export translation strings
 const csvTranslations = {
   de: {
@@ -45,11 +38,6 @@ export interface ResultsDisplayProps {
   session: SessionInput;
 
   /**
-   * Mapping of member IDs to their total transfer fees.
-   */
-  feeByPayer: Record<string, number>;
-
-  /**
    * Error message to display if calculation failed.
    */
   error: string | null;
@@ -78,44 +66,13 @@ export interface ResultsDisplayProps {
 /**
  * ResultsDisplay component displays the complete payout results section including:
  * - Overall summary statistics (revenue, expenses, profit, fees)
- * - Detailed member-by-member breakdown table
  * - Suggested transfers list with fees
  *
- * This component composes SummaryStats and TransfersList components and adds
- * the member results table showing individual contributions and final payouts.
- *
- * The member results table displays:
- * - Handle: Member's name
- * - Revenue: Income generated
- * - Investment: Initial capital invested
- * - Expenses: Total expenses with itemized details
- * - Taxes: Transfer fees paid
- * - Profit Share: Calculated share of profit
- * - Net After Fees: Final payout amount (color-coded: green for positive, red for negative)
- *
- * @example
- * ```tsx
- * const result = calculatePayslip(session);
- * const feeByPayer = result.suggestedTransfers.reduce((acc, tr) => {
- *   acc[tr.fromMemberId] = (acc[tr.fromMemberId] || 0) + tr.feeAmount;
- *   return acc;
- * }, {});
- *
- * <ResultsDisplay
- *   result={result}
- *   session={session}
- *   feeByPayer={feeByPayer}
- *   error={null}
- *   translations={translations[lang]}
- *   lang={lang}
- *   currency="aUEC"
- * />
- * ```
+ * This component composes SummaryStats and TransfersList components.
  */
 export function ResultsDisplay({
   result,
   session,
-  feeByPayer,
   error,
   translations: t,
   lang,
@@ -239,7 +196,7 @@ export function ResultsDisplay({
 
       {result && (
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Left column: Summary stats and member results table */}
+          {/* Left column: Summary stats */}
           <div className="space-y-4">
             <SummaryStats
               result={result}
@@ -251,56 +208,6 @@ export function ResultsDisplay({
               lang={lang}
               currency={currency}
             />
-
-            {/* Members results table */}
-            <div className="space-y-2">
-              <h4 className="font-semibold text-white/80">{t.members}</h4>
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-base">
-                  <thead className="text-white/60 border-b border-white/10">
-                    <tr className="whitespace-nowrap">
-                      <th className="py-3 px-3 text-left">{t.handle}</th>
-                      <th className="py-3 px-3 text-left">{t.revenueLabel}</th>
-                      <th className="py-3 px-3 text-left">{t.investmentLabel}</th>
-                      <th className="py-3 px-3 text-left">{t.expensesLabel}</th>
-                      <th className="py-3 px-3 text-left">{t.taxesLabel}</th>
-                      <th className="py-3 px-3 text-left">{t.profitShareCol}</th>
-                      <th className="py-3 px-3 text-left">{t.netAfterFeesCol}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/10">
-                    {result.members.map((m) => {
-                      const taxes = feeByPayer[m.memberId] ?? 0;
-                      const net = m.finalNet - taxes;
-                      const memberExp =
-                        session.individualExpenses
-                          ?.filter((e) => e.memberId === m.memberId)
-                          .map((e) => `${e.label}: ${format(e.amount, lang)}`)
-                          .join(" • ") || "-";
-
-                      return (
-                        <tr key={m.memberId}>
-                          <td className="py-3 px-3">{m.handle}</td>
-                          <td className="py-3 px-3">{format(m.revenue, lang)}</td>
-                          <td className="py-3 px-3">{format(m.investment, lang)}</td>
-                          <td className="py-3 px-3">
-                            {format(m.expenses, lang)}
-                            <div className="text-xs text-white/60">{memberExp}</div>
-                          </td>
-                          <td className="py-3 px-3">{format(taxes, lang)}</td>
-                          <td className="py-3 px-3">{format(m.profitShare, lang)}</td>
-                          <td className="py-3 px-3 font-semibold">
-                            <span className={net >= 0 ? "text-neon" : "text-red-400"}>
-                              {format(net, lang)}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
           </div>
 
           {/* Right column: Transfers list */}
