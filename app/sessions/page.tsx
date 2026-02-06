@@ -121,6 +121,7 @@ export default function SessionsPage() {
           translations={{
             members: t.members,
             revenueLabel: t.revenueLabel,
+            deleteSession: t.deleteSession,
             searchPlaceholder: lang === "de" ? "Sessions durchsuchen..." : "Search sessions...",
             filterByType: lang === "de" ? "Nach Typ filtern" : "Filter by type",
             allTypes: lang === "de" ? "Alle Typen" : "All Types",

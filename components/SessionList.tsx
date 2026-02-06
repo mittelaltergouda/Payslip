@@ -26,6 +26,7 @@ export interface SessionListProps {
   translations: {
     members: string;
     revenueLabel: string;
+    deleteSession: string;
     searchPlaceholder: string;
     filterByType: string;
     allTypes: string;
@@ -156,6 +157,7 @@ export function SessionList({
               translations={{
                 members: t.members,
                 revenueLabel: t.revenueLabel,
+                deleteSession: t.deleteSession,
               }}
             />
           ))}

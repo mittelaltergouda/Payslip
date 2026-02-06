@@ -63,6 +63,7 @@ export interface SessionListItemProps {
   translations: {
     members: string;
     revenueLabel: string;
+    deleteSession: string;
   };
 
   /**
@@ -172,7 +173,7 @@ export function SessionListItem({
                   onClick={handleDeleteClick}
                   aria-label="Delete session"
                 >
-                  Delete
+                  {translations.deleteSession}
                 </Button>
               )}
             </div>
