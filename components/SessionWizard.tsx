@@ -14,10 +14,12 @@ import { useAutoSave } from "@/hooks/useAutoSave";
 import { SaveStatusIndicator } from "./SaveStatusIndicator";
 import { SessionHistory } from "./SessionHistory";
 import { SessionActions } from "./SessionActions";
+import { CrewPresetManager } from "./CrewPresetManager";
 import { useToast } from "./Toast";
 import { getAll, deleteSession as deleteStoredSession } from "@/lib/storage/sessionStorage";
 import { Button } from "./ui/button";
 import { FormField } from "./ui/form-field";
+import type { PresetMember } from "@/lib/types";
 
 const rndId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -59,6 +61,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
 
   // Session management state
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isPresetManagerOpen, setIsPresetManagerOpen] = useState(false);
   const [savedSessions, setSavedSessions] = useState<SavedSession[]>([]);
 
   // Auto-save and toast hooks
@@ -104,7 +107,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
     }
   }, [saveError, showToast]);
 
-  // Keyboard shortcuts (Ctrl+S for save, Ctrl+O for history)
+  // Keyboard shortcuts (Ctrl+S for save, Ctrl+O for history, Ctrl+P for presets)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ctrl+S: Manual save
@@ -117,6 +120,11 @@ export function SessionWizard({ initialLang = "de" }: Props) {
       if (e.ctrlKey && e.key === "o") {
         e.preventDefault();
         setIsHistoryOpen(true);
+      }
+      // Ctrl+P: Open preset manager
+      if (e.ctrlKey && e.key === "p") {
+        e.preventDefault();
+        setIsPresetManagerOpen(true);
       }
     };
 
@@ -165,6 +173,34 @@ export function SessionWizard({ initialLang = "de" }: Props) {
   const handleSessionNameChange = (name: string) => {
     setSession((prev) => ({ ...prev, name }));
   };
+
+  // Handle loading a crew preset
+  const handleLoadPreset = useCallback(
+    (presetMembers: PresetMember[], distributionMode?: DistributionMode) => {
+      // Create fresh MemberInput objects from PresetMember data
+      const newMembers: MemberInput[] = presetMembers.map((pm) => ({
+        id: rndId(),
+        handle: pm.handle,
+        role: pm.role,
+        revenue: 0,
+        investment: 0,
+        active: true,
+        percentShare: pm.percentShare,
+      }));
+
+      setSession((prev) => ({
+        ...prev,
+        members: newMembers,
+        // Update distribution mode if preset includes it
+        distributionMode: distributionMode ?? prev.distributionMode,
+        // Clear individual expenses since members changed
+        individualExpenses: [],
+      }));
+
+      showToast(t.presetLoaded || "Crew preset loaded", "success");
+    },
+    [showToast, t.presetLoaded]
+  );
 
   const updateMember = (id: string, patch: Partial<MemberInput>) => {
     setSession((prev) => ({
@@ -332,6 +368,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
         addIndividualExpense={addIndividualExpense}
         updateIndividualExpense={updateIndividualExpense}
         removeIndividualExpense={removeIndividualExpense}
+        onOpenPresetManager={() => setIsPresetManagerOpen(true)}
       />
 
       <ResultsDisplay
@@ -362,6 +399,17 @@ export function SessionWizard({ initialLang = "de" }: Props) {
           createdAt: t.createdAt || "Created",
           updatedAt: t.updatedAt || "Updated",
         }}
+      />
+
+      {/* Crew Preset Manager Dialog */}
+      <CrewPresetManager
+        isOpen={isPresetManagerOpen}
+        onClose={() => setIsPresetManagerOpen(false)}
+        currentMembers={session.members}
+        currentDistributionMode={session.distributionMode}
+        onLoadPreset={handleLoadPreset}
+        lang={lang}
+        translations={t}
       />
     </div>
   );

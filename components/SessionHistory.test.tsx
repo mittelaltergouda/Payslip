@@ -692,16 +692,17 @@ describe('SessionHistory - Close Functionality', () => {
       />
     );
 
-    // Dialog component renders with portal, making click-outside behavior
-    // handled by Radix UI Dialog primitive. This is well-tested in Radix UI.
-    // We verify the dialog renders and our handleOpenChange is properly wired.
-    // Escape key (tested separately) and close button both trigger onClose.
-    const dialogTitle = screen.getByText('Session History');
-    expect(dialogTitle).toBeInTheDocument();
+    // SessionHistory uses custom sidebar implementation with mousedown listener
+    // Click on backdrop (outside sidebar) should trigger onClose
+    const backdrop = document.querySelector('.fixed.inset-0.bg-black\\/50');
+    expect(backdrop).toBeInTheDocument();
 
-    // Verify sidebar structure exists (heading is inside the sidebar container)
-    const sidebar = dialogTitle.closest('div');
-    expect(sidebar).toBeInTheDocument();
+    // Trigger mousedown on backdrop
+    if (backdrop) {
+      fireEvent.mouseDown(backdrop);
+    }
+
+    expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
   it('should not call onClose when clicking inside the sidebar', () => {
