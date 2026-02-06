@@ -10,6 +10,7 @@ import { describe, it, expect } from "vitest";
 const mockTranslationsDE = {
   members: "Mitglieder",
   revenueLabel: "Umsatz",
+  deleteSession: "Löschen",
   searchPlaceholder: "Sessions durchsuchen...",
   filterByType: "Nach Typ filtern",
   allTypes: "Alle Typen",
@@ -20,6 +21,7 @@ const mockTranslationsDE = {
 const mockTranslationsEN = {
   members: "Members",
   revenueLabel: "Revenue",
+  deleteSession: "Delete",
   searchPlaceholder: "Search sessions...",
   filterByType: "Filter by type",
   allTypes: "All Types",

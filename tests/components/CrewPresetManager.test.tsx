@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { CrewPresetManager } from '../../components/CrewPresetManager';
-import type { MemberInput, DistributionMode, CrewPreset, PresetMember } from '@/lib/types';
+import type { MemberInput, CrewPreset } from '@/lib/types';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ============================================================================

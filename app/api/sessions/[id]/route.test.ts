@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { NextRequest } from 'next/server';
 import { DELETE } from './route';
 import { prisma } from '@/lib/prisma';
 
@@ -21,7 +22,7 @@ describe('DELETE /api/sessions/[id]', () => {
 
     const request = new Request('http://localhost/api/sessions/test-id', {
       method: 'DELETE'
-    });
+    }) as NextRequest;
     const context = { params: Promise.resolve({ id: 'test-id' }) };
 
     const response = await DELETE(request, context);
@@ -37,7 +38,7 @@ describe('DELETE /api/sessions/[id]', () => {
 
     const request = new Request('http://localhost/api/sessions/test-id', {
       method: 'DELETE'
-    });
+    }) as NextRequest;
     const context = { params: Promise.resolve({ id: 'test-id' }) };
 
     const response = await DELETE(request, context);
@@ -56,7 +57,7 @@ describe('DELETE /api/sessions/[id]', () => {
 
     const request = new Request('http://localhost/api/sessions/test-id', {
       method: 'DELETE'
-    });
+    }) as NextRequest;
     const context = { params: Promise.resolve({ id: 'test-id' }) };
 
     const response = await DELETE(request, context);
