@@ -406,7 +406,6 @@ export function SessionWizard({ initialLang = "de" }: Props) {
       <ResultsDisplay
         result={result}
         session={session}
-        feeByPayer={feeByPayer}
         error={error}
         translations={t}
         lang={lang}

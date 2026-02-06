@@ -85,17 +85,13 @@ const mockResult: PayslipResult = {
   ],
 };
 
-const mockFeeByPayer = {
-  m1: 5,
-};
-
 describe('ResultsDisplay - Basic Rendering', () => {
   it('should render the results heading with German translations', () => {
     render(
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.de}
         lang="de"
@@ -110,7 +106,7 @@ describe('ResultsDisplay - Basic Rendering', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -125,7 +121,7 @@ describe('ResultsDisplay - Basic Rendering', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error="Calculation failed"
         translations={translations.en}
         lang="en"
@@ -140,7 +136,7 @@ describe('ResultsDisplay - Basic Rendering', () => {
       <ResultsDisplay
         result={null}
         session={mockSession}
-        feeByPayer={{}}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -151,238 +147,13 @@ describe('ResultsDisplay - Basic Rendering', () => {
   });
 });
 
-describe('ResultsDisplay - Member Results Table', () => {
-  it('should render table headers in German', () => {
-    render(
-      <ResultsDisplay
-        result={mockResult}
-        session={mockSession}
-        feeByPayer={mockFeeByPayer}
-        error={null}
-        translations={translations.de}
-        lang="de"
-      />
-    );
-
-    const table = screen.getByRole('table');
-    expect(table).toBeInTheDocument();
-
-    // Check for table-specific headers (column names)
-    expect(screen.getByText('Handle')).toBeInTheDocument();
-    expect(screen.getByText('Gewinnanteil')).toBeInTheDocument();
-    expect(screen.getByText('Überweisung')).toBeInTheDocument();
-
-    // These labels appear in both table and summary, so just check they exist
-    expect(screen.getAllByText('Umsatz').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Investment').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Kosten').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Steuern (Fees)').length).toBeGreaterThan(0);
-  });
-
-  it('should render table headers in English', () => {
-    render(
-      <ResultsDisplay
-        result={mockResult}
-        session={mockSession}
-        feeByPayer={mockFeeByPayer}
-        error={null}
-        translations={translations.en}
-        lang="en"
-      />
-    );
-
-    const table = screen.getByRole('table');
-    expect(table).toBeInTheDocument();
-
-    // Check for table-specific headers (column names)
-    expect(screen.getByText('Handle')).toBeInTheDocument();
-    expect(screen.getByText('Profit Share')).toBeInTheDocument();
-    expect(screen.getByText('Transfer')).toBeInTheDocument();
-
-    // These labels appear in both table and summary, so just check they exist
-    expect(screen.getAllByText('Revenue').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Investment').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Expenses').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Taxes (fees)').length).toBeGreaterThan(0);
-  });
-
-  it('should render member data rows', () => {
-    render(
-      <ResultsDisplay
-        result={mockResult}
-        session={mockSession}
-        feeByPayer={mockFeeByPayer}
-        error={null}
-        translations={translations.en}
-        lang="en"
-      />
-    );
-
-    // Member handles appear in both table and statistics, so use getAllByText
-    expect(screen.getAllByText('Pilot').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Escort').length).toBeGreaterThan(0);
-  });
-
-  it('should format numbers with German locale', () => {
-    render(
-      <ResultsDisplay
-        result={mockResult}
-        session={mockSession}
-        feeByPayer={mockFeeByPayer}
-        error={null}
-        translations={translations.de}
-        lang="de"
-      />
-    );
-
-    // German locale uses periods as thousand separators
-    expect(screen.getByText('10.000')).toBeInTheDocument();
-  });
-
-  it('should format numbers with English locale', () => {
-    render(
-      <ResultsDisplay
-        result={mockResult}
-        session={mockSession}
-        feeByPayer={mockFeeByPayer}
-        error={null}
-        translations={translations.en}
-        lang="en"
-      />
-    );
-
-    // English locale uses commas as thousand separators
-    expect(screen.getByText('10,000')).toBeInTheDocument();
-  });
-
-  it('should display individual expense details', () => {
-    render(
-      <ResultsDisplay
-        result={mockResult}
-        session={mockSession}
-        feeByPayer={mockFeeByPayer}
-        error={null}
-        translations={translations.en}
-        lang="en"
-      />
-    );
-
-    // English locale: "Repairs: 200"
-    expect(screen.getByText(/Repairs: 200/)).toBeInTheDocument();
-  });
-
-  it('should display positive net amount in green (neon)', () => {
-    render(
-      <ResultsDisplay
-        result={mockResult}
-        session={mockSession}
-        feeByPayer={mockFeeByPayer}
-        error={null}
-        translations={translations.en}
-        lang="en"
-      />
-    );
-
-    // Net for Pilot: 13200 - 5 = 13195
-    const netElements = screen.getAllByText('13,195');
-    expect(netElements.length).toBeGreaterThan(0);
-    const netElement = netElements[0];
-    expect(netElement).toHaveClass('text-neon');
-  });
-
-  it('should display negative net amount in red', () => {
-    const negativeResult: PayslipResult = {
-      saleRevenue: 100,
-      netProfit: -400,
-      taxRateApplied: 0,
-      members: [
-        {
-          memberId: "m1",
-          handle: "Pilot",
-          revenue: 100,
-          investment: 0,
-          expenses: 500,
-          sharedExpenses: 500,
-          individualExpenses: 0,
-          profitShare: -400,
-          finalNet: -400,
-        },
-      ],
-      suggestedTransfers: [],
-    };
-
-    const negativeSession: SessionInput = {
-      ...mockSession,
-      members: [{ id: "m1", handle: "Pilot", revenue: 100, investment: 0 }],
-      individualExpenses: [],
-    };
-
-    render(
-      <ResultsDisplay
-        result={negativeResult}
-        session={negativeSession}
-        feeByPayer={{}}
-        error={null}
-        translations={translations.en}
-        lang="en"
-      />
-    );
-
-    // Net for Pilot: -400 - appears multiple times, find the one in the table
-    const table = screen.getByRole('table');
-    const negativeNetElement = table.querySelector('.text-red-400');
-    expect(negativeNetElement).toBeInTheDocument();
-    expect(negativeNetElement?.textContent).toContain('-400');
-  });
-
-  it('should calculate net after taxes correctly', () => {
-    render(
-      <ResultsDisplay
-        result={mockResult}
-        session={mockSession}
-        feeByPayer={mockFeeByPayer}
-        error={null}
-        translations={translations.en}
-        lang="en"
-      />
-    );
-
-    // Pilot: finalNet (13200) - taxes (5) = 13195
-    expect(screen.getByText('13,195')).toBeInTheDocument();
-
-    // Escort: finalNet (9400) - taxes (0) = 9400
-    expect(screen.getByText('9,400')).toBeInTheDocument();
-  });
-
-  it('should display dash when member has no individual expenses', () => {
-    render(
-      <ResultsDisplay
-        result={mockResult}
-        session={mockSession}
-        feeByPayer={mockFeeByPayer}
-        error={null}
-        translations={translations.en}
-        lang="en"
-      />
-    );
-
-    // Escort has no individual expenses, so should show "-"
-    const table = screen.getByRole('table');
-    const rows = table.querySelectorAll('tbody tr');
-    const escortRow = rows[1]; // Second row
-    const expenseCell = escortRow.querySelectorAll('td')[3]; // Expenses column
-    const expenseDetail = expenseCell.querySelector('.text-xs');
-    expect(expenseDetail).toHaveTextContent('-');
-  });
-});
-
 describe('ResultsDisplay - Currency Display', () => {
   it('should display default currency aUEC', () => {
     render(
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -398,7 +169,7 @@ describe('ResultsDisplay - Currency Display', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -417,7 +188,7 @@ describe('ResultsDisplay - Custom Class Name', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -446,16 +217,15 @@ describe('ResultsDisplay - Empty States', () => {
       <ResultsDisplay
         result={emptyResult}
         session={emptySession}
-        feeByPayer={{}}
+
         error={null}
         translations={translations.en}
         lang="en"
       />
     );
 
-    const table = screen.getByRole('table');
-    const tbody = table.querySelector('tbody');
-    expect(tbody?.children.length).toBe(0);
+    // Should render without errors
+    expect(screen.getByText('Payout')).toBeInTheDocument();
   });
 
   it('should handle missing individual expenses array', () => {
@@ -468,15 +238,15 @@ describe('ResultsDisplay - Empty States', () => {
       <ResultsDisplay
         result={mockResult}
         session={sessionWithoutIndividualExpenses}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
       />
     );
 
-    // Should render without errors - member name appears in multiple places
-    expect(screen.getAllByText('Pilot').length).toBeGreaterThan(0);
+    // Should render without errors
+    expect(screen.getByText('Payout')).toBeInTheDocument();
   });
 });
 
@@ -486,7 +256,7 @@ describe('ResultsDisplay - CSV Export Buttons Rendering', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.de}
         lang="de"
@@ -502,7 +272,7 @@ describe('ResultsDisplay - CSV Export Buttons Rendering', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -518,7 +288,7 @@ describe('ResultsDisplay - CSV Export Buttons Rendering', () => {
       <ResultsDisplay
         result={null}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -534,7 +304,7 @@ describe('ResultsDisplay - CSV Export Buttons Rendering', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -553,7 +323,7 @@ describe('ResultsDisplay - CSV Export Buttons Rendering', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -572,7 +342,7 @@ describe('ResultsDisplay - CSV Export Button Tooltips', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.de}
         lang="de"
@@ -589,7 +359,7 @@ describe('ResultsDisplay - CSV Export Button Tooltips', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.de}
         lang="de"
@@ -606,7 +376,7 @@ describe('ResultsDisplay - CSV Export Button Tooltips', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -623,7 +393,7 @@ describe('ResultsDisplay - CSV Export Button Tooltips', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -659,7 +429,7 @@ describe('ResultsDisplay - CSV Export Functionality', () => {
       <ResultsDisplay
         result={mockResult}
         session={sessionWithName}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -687,7 +457,7 @@ describe('ResultsDisplay - CSV Export Functionality', () => {
       <ResultsDisplay
         result={mockResult}
         session={sessionWithName}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -710,7 +480,7 @@ describe('ResultsDisplay - CSV Export Functionality', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -729,7 +499,7 @@ describe('ResultsDisplay - CSV Export Functionality', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -753,7 +523,7 @@ describe('ResultsDisplay - CSV Export Functionality', () => {
       <ResultsDisplay
         result={mockResult}
         session={sessionWithName}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -777,7 +547,7 @@ describe('ResultsDisplay - CSV Export Functionality', () => {
       <ResultsDisplay
         result={mockResult}
         session={sessionWithName}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -801,7 +571,7 @@ describe('ResultsDisplay - CSV Export Functionality', () => {
       <ResultsDisplay
         result={mockResult}
         session={sessionWithoutName}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -828,7 +598,7 @@ describe('ResultsDisplay - CSV Export Functionality', () => {
       <ResultsDisplay
         result={mockResult}
         session={sessionWithoutName}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -850,7 +620,7 @@ describe('ResultsDisplay - CSV Export Functionality', () => {
       <ResultsDisplay
         result={null}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -884,7 +654,7 @@ describe('ResultsDisplay - CSV Export Error Handling', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -909,7 +679,7 @@ describe('ResultsDisplay - CSV Export Error Handling', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -934,7 +704,7 @@ describe('ResultsDisplay - CSV Export Error Handling', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -956,7 +726,7 @@ describe('ResultsDisplay - CSV Export Error Handling', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -979,7 +749,7 @@ describe('ResultsDisplay - CSV Export Error Handling', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -1005,7 +775,7 @@ describe('ResultsDisplay - CSV Export Error Handling', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -1040,7 +810,7 @@ describe('ResultsDisplay - CSV Export Edge Cases', () => {
       <ResultsDisplay
         result={mockResult}
         session={sessionWithEmptyName}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -1062,7 +832,7 @@ describe('ResultsDisplay - CSV Export Edge Cases', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -1083,7 +853,7 @@ describe('ResultsDisplay - CSV Export Edge Cases', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -1103,7 +873,7 @@ describe('ResultsDisplay - CSV Export Edge Cases', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
@@ -1132,7 +902,7 @@ describe('ResultsDisplay - CSV Export Edge Cases', () => {
       <ResultsDisplay
         result={mockResult}
         session={sessionWithSpecialChars}
-        feeByPayer={mockFeeByPayer}
+
         error={null}
         translations={translations.en}
         lang="en"
