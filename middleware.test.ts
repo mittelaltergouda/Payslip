@@ -233,7 +233,7 @@ describe('middleware - CSRF token generation', () => {
     });
 
     // Replace the module export
-    vi.spyOn(await import('./lib/csrf'), 'generateCsrfToken').mockImplementation(mockGenerateCsrfToken);
+    vi.spyOn(await import('./lib/csrf'), 'generateCsrfToken').mockImplementation(mockGenerateCsrfToken as (byteLength?: number) => string);
   });
 
   afterEach(() => {
@@ -442,7 +442,7 @@ describe('middleware - CSRF cookie handling', () => {
     });
 
     // Replace the module export
-    vi.spyOn(await import('./lib/csrf'), 'generateCsrfToken').mockImplementation(mockGenerateCsrfToken);
+    vi.spyOn(await import('./lib/csrf'), 'generateCsrfToken').mockImplementation(mockGenerateCsrfToken as (byteLength?: number) => string);
   });
 
   afterEach(() => {

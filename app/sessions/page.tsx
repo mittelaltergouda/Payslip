@@ -8,6 +8,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import type { Lang } from "@/lib/i18n/translations";
 import { translations } from "@/lib/i18n/translations";
 import { useToast } from "@/components/Toast";
+import { getCsrfHeaders, clearCsrfToken } from "@/lib/csrf-client";
 
 /**
  * Sessions page displays a list of all saved sessions with filtering and search.
@@ -57,11 +58,19 @@ export default function SessionsPage() {
   // Handle session deletion
   const handleDelete = async (sessionId: string) => {
     try {
+      // Get CSRF token and headers
+      const headers = await getCsrfHeaders();
+
       const response = await fetch(`/api/sessions/${sessionId}`, {
         method: "DELETE",
+        headers,
       });
 
       if (!response.ok) {
+        // If CSRF validation failed, clear cached token for retry
+        if (response.status === 403) {
+          clearCsrfToken();
+        }
         throw new Error(`Failed to delete session: ${response.status}`);
       }
 
