@@ -211,4 +211,17 @@ describe('middleware - CSP nonce generation', () => {
     expect(cspHeader).not.toContain('fonts.googleapis.com');
     expect(cspHeader).not.toContain('fonts.gstatic.com');
   });
+
+  it('should not include unsafe directives in CSP header', () => {
+    const request = new NextRequest(new Request('http://localhost:3000/'));
+
+    const response = middleware(request);
+
+    const cspHeader = response.headers.get('Content-Security-Policy');
+    expect(cspHeader).toBeDefined();
+
+    // Verify unsafe directives are not present
+    expect(cspHeader).not.toContain('unsafe-eval');
+    expect(cspHeader).not.toContain('unsafe-inline');
+  });
 });
