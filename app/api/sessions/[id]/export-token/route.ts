@@ -8,7 +8,7 @@ import type { NextRequest} from "next/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateSecureToken } from "@/lib/crypto";
-import { exportTokenSchema } from "@/app/api/sessions/validation";
+import { exportTokenSchema, sessionIdParamSchema } from "@/app/api/sessions/validation";
 import { Prisma } from "@prisma/client";
 
 /**
@@ -26,6 +26,7 @@ import { Prisma } from "@prisma/client";
  * @returns 201 Created with token data, or error response
  *
  * Error responses:
+ * - 400 Bad Request: Invalid session ID format (must be UUID)
  * - 404 Not Found: Session does not exist
  * - 409 Conflict: Token collision (extremely rare, retry suggested)
  * - 500 Internal Server Error: Database or validation error
@@ -47,6 +48,18 @@ export async function POST(
   try {
     // Extract session ID from route parameters
     const { id: sessionId } = await context.params;
+
+    // Validate session ID format (must be a valid UUID)
+    const validation = sessionIdParamSchema.safeParse({ id: sessionId });
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid session ID format",
+          details: validation.error.errors[0].message
+        },
+        { status: 400 }
+      );
+    }
 
     // Validate session exists before generating token
     const session = await prisma.session.findUnique({
