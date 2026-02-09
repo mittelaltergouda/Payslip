@@ -8,6 +8,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sanitizeError } from "@/lib/errors";
 
 /**
  * DELETE /api/sessions/[id]
@@ -79,7 +80,7 @@ export async function DELETE(
     return NextResponse.json(
       {
         error: "Failed to delete session",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: sanitizeError(error)
       },
       { status: 500 }
     );
