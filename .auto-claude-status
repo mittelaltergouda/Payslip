@@ -1,15 +1,15 @@
 {
   "active": true,
-  "spec": "053-der-bereich-statistiken-kann-enffernt-werden-diese",
+  "spec": "064-remove-unsafe-eval-and-unsafe-inline-from-content-",
   "state": "building",
   "subtasks": {
-    "completed": 7,
-    "total": 11,
+    "completed": 4,
+    "total": 8,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Update Test Files",
+    "current": "Comprehensive Verification",
     "id": null,
     "total": 4
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 4,
-    "started_at": "2026-02-05T20:13:20.584608"
+    "number": 6,
+    "started_at": "2026-02-09T19:27:28.968600"
   },
-  "last_update": "2026-02-05T20:16:57.937556"
+  "last_update": "2026-02-09T19:35:48.002462"
 }
