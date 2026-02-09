@@ -8,7 +8,7 @@ export function middleware(request: NextRequest) {
   // Create Content-Security-Policy header with nonce
   const cspHeader = [
     `default-src 'self'`,
-    `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' 'unsafe-inline'`,
+    `script-src 'self' 'nonce-${nonce}'`,
     `style-src 'self' 'nonce-${nonce}' 'unsafe-inline'`,
     `img-src 'self' data: blob:`,
     `font-src 'self' data:`,
