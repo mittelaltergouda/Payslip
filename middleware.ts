@@ -9,7 +9,7 @@ export function middleware(request: NextRequest) {
   const cspHeader = [
     `default-src 'self'`,
     `script-src 'self' 'nonce-${nonce}'`,
-    `style-src 'self' 'nonce-${nonce}' 'unsafe-inline'`,
+    `style-src 'self' 'nonce-${nonce}'`,
     `img-src 'self' data: blob:`,
     `font-src 'self' data:`,
     `connect-src 'self'`,
