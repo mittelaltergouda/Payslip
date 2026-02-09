@@ -22,10 +22,16 @@ vi.mock("@/lib/prisma", () => ({
   }
 }));
 
-// Helper function to create a mock NextRequest
-function createMockRequest(sessionId: string): NextRequest {
+// Helper function to create a mock NextRequest with optional CSRF token
+function createMockRequest(sessionId: string, csrfToken?: string): NextRequest {
+  const headers: Record<string, string> = {};
+  if (csrfToken !== undefined) {
+    headers["x-csrf-token"] = csrfToken;
+  }
+
   return new NextRequest(`http://localhost:3000/api/sessions/${sessionId}/export-token`, {
-    method: "POST"
+    method: "POST",
+    headers
   });
 }
 
@@ -63,7 +69,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
       // Mock token creation
       vi.mocked(prisma.exportToken.create).mockResolvedValue(mockExportToken as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-123";
+      const request = createMockRequest(sessionId, csrfToken);
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
@@ -109,7 +116,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
         } as any);
       }) as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-456";
+      const request = createMockRequest(sessionId, csrfToken);
       const context = createMockContext(sessionId);
       await POST(request, context);
 
@@ -137,9 +145,10 @@ describe("POST /api/sessions/[id]/export-token", () => {
         } as any);
       }) as any);
 
+      const csrfToken = "valid-csrf-token-789";
       // Generate 3 tokens for the same session
       for (let i = 0; i < 3; i++) {
-        const request = createMockRequest(sessionId);
+        const request = createMockRequest(sessionId, csrfToken);
         const context = createMockContext(sessionId);
         await POST(request, context);
       }
@@ -161,7 +170,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
         expiresAt: null
       } as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-store";
+      const request = createMockRequest(sessionId, csrfToken);
       const context = createMockContext(sessionId);
       await POST(request, context);
 
@@ -188,12 +198,103 @@ describe("POST /api/sessions/[id]/export-token", () => {
         expiresAt: null
       } as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-url";
+      const request = createMockRequest(sessionId, csrfToken);
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
       const data = await response.json();
       expect(data.shareUrl).toBe(`/session/${mockToken}`);
+    });
+  });
+
+  describe("CSRF Protection", () => {
+    it("should return 403 when CSRF token is missing", async () => {
+      const sessionId = "test-session-no-csrf";
+
+      // Don't provide CSRF token
+      const request = createMockRequest(sessionId);
+      const context = createMockContext(sessionId);
+      const response = await POST(request, context);
+
+      expect(response.status).toBe(403);
+
+      const data = await response.json();
+      expect(data).toMatchObject({
+        error: "CSRF token validation failed",
+        details: "Invalid or missing CSRF token"
+      });
+
+      // Should not attempt database operations
+      expect(prisma.session.findUnique).not.toHaveBeenCalled();
+      expect(prisma.exportToken.create).not.toHaveBeenCalled();
+    });
+
+    it("should return 403 when CSRF token is empty string", async () => {
+      const sessionId = "test-session-empty-csrf";
+
+      // Provide empty CSRF token
+      const request = createMockRequest(sessionId, "");
+      const context = createMockContext(sessionId);
+      const response = await POST(request, context);
+
+      expect(response.status).toBe(403);
+
+      const data = await response.json();
+      expect(data).toMatchObject({
+        error: "CSRF token validation failed",
+        details: "Invalid or missing CSRF token"
+      });
+
+      // Should not attempt database operations
+      expect(prisma.session.findUnique).not.toHaveBeenCalled();
+      expect(prisma.exportToken.create).not.toHaveBeenCalled();
+    });
+
+    it("should prevent CSRF attacks by requiring valid token", async () => {
+      const sessionId = "test-session-csrf-attack";
+      const mockSession = { id: sessionId };
+
+      vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
+
+      // Attacker tries without CSRF token
+      const maliciousRequest = createMockRequest(sessionId);
+      const context = createMockContext(sessionId);
+      const response = await POST(maliciousRequest, context);
+
+      expect(response.status).toBe(403);
+
+      const data = await response.json();
+      expect(data.error).toBe("CSRF token validation failed");
+
+      // Database operations should not be executed
+      expect(prisma.exportToken.create).not.toHaveBeenCalled();
+    });
+
+    it("should allow request with valid CSRF token", async () => {
+      const sessionId = "test-session-valid-csrf";
+      const mockSession = { id: sessionId };
+      const mockToken = "secure-export-token";
+
+      vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
+      vi.mocked(prisma.exportToken.create).mockResolvedValue({
+        id: "token-uuid",
+        sessionId,
+        token: mockToken,
+        expiresAt: null
+      } as any);
+
+      // Legitimate request with CSRF token
+      const csrfToken = "valid-csrf-token";
+      const request = createMockRequest(sessionId, csrfToken);
+      const context = createMockContext(sessionId);
+      const response = await POST(request, context);
+
+      expect(response.status).toBe(201);
+
+      // Database operations should be executed
+      expect(prisma.session.findUnique).toHaveBeenCalled();
+      expect(prisma.exportToken.create).toHaveBeenCalled();
     });
   });
 
@@ -204,7 +305,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
       // Mock session not found
       vi.mocked(prisma.session.findUnique).mockResolvedValue(null);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-404";
+      const request = createMockRequest(sessionId, csrfToken);
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
@@ -237,7 +339,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
 
       vi.mocked(prisma.exportToken.create).mockRejectedValue(uniqueConstraintError);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-409";
+      const request = createMockRequest(sessionId, csrfToken);
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
@@ -257,7 +360,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
       vi.mocked(prisma.exportToken.create).mockRejectedValue(new Error("Database connection error"));
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-500";
+      const request = createMockRequest(sessionId, csrfToken);
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
@@ -277,7 +381,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
       vi.mocked(prisma.exportToken.create).mockRejectedValue("Unexpected error");
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-unexpected";
+      const request = createMockRequest(sessionId, csrfToken);
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
@@ -306,9 +411,10 @@ describe("POST /api/sessions/[id]/export-token", () => {
         } as any);
       }) as any);
 
+      const csrfToken = "valid-csrf-token-entropy";
       // Generate 100 tokens
       for (let i = 0; i < 100; i++) {
-        const request = createMockRequest(sessionId);
+        const request = createMockRequest(sessionId, csrfToken);
         const context = createMockContext(sessionId);
         await POST(request, context);
       }
@@ -339,9 +445,10 @@ describe("POST /api/sessions/[id]/export-token", () => {
         } as any);
       }) as any);
 
+      const csrfToken = "valid-csrf-token-url-safe";
       // Generate 50 tokens to test URL safety
       for (let i = 0; i < 50; i++) {
-        const request = createMockRequest(sessionId);
+        const request = createMockRequest(sessionId, csrfToken);
         const context = createMockContext(sessionId);
         await POST(request, context);
       }
@@ -369,7 +476,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
         expiresAt: null
       } as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-validation";
+      const request = createMockRequest(sessionId, csrfToken);
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
@@ -398,7 +506,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
         expiresAt: null
       } as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-structure";
+      const request = createMockRequest(sessionId, csrfToken);
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
@@ -431,7 +540,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
         expiresAt: null
       } as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-content-type";
+      const request = createMockRequest(sessionId, csrfToken);
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
@@ -450,7 +560,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
         expiresAt: null
       } as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-expires-null";
+      const request = createMockRequest(sessionId, csrfToken);
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
@@ -474,7 +585,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
         expiresAt: null
       } as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-verify";
+      const request = createMockRequest(sessionId, csrfToken);
       const context = createMockContext(sessionId);
       await POST(request, context);
 
@@ -494,7 +606,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
         expiresAt: null
       } as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-select";
+      const request = createMockRequest(sessionId, csrfToken);
       const context = createMockContext(sessionId);
       await POST(request, context);
 
