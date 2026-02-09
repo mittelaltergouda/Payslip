@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import type { SessionType } from "@/lib/types";
 import type { Lang } from "@/lib/i18n/translations";
-import { SessionFilters } from "./SessionFilters";
+import { SessionFilters, type SortOption } from "./SessionFilters";
 import { SessionListItem, type SessionListItemData } from "./SessionListItem";
 
 /**
@@ -30,6 +30,7 @@ export interface SessionListProps {
     searchPlaceholder: string;
     filterByType: string;
     allTypes: string;
+    sortBy?: string;
     noSessions: string;
     noSessionsFound: string;
   };
@@ -47,17 +48,18 @@ export interface SessionListProps {
 }
 
 /**
- * SessionList component displays a filterable list of sessions.
+ * SessionList component displays a filterable and sortable list of sessions.
  *
  * Features:
  * - Search filtering by session name (case-insensitive)
  * - Type filtering by session type
+ * - Sorting by date, name, or revenue
  * - Empty state for no sessions
  * - Empty state for no matching sessions
  * - Integrates SessionFilters and SessionListItem components
  *
- * The component manages filtering state internally and renders
- * filtered sessions using the SessionListItem component.
+ * The component manages filtering and sorting state internally and renders
+ * filtered and sorted sessions using the SessionListItem component.
  *
  * @example
  * ```tsx
@@ -94,8 +96,9 @@ export function SessionList({
 }: SessionListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<SessionType | null>(null);
+  const [selectedSort, setSelectedSort] = useState<SortOption>("date-newest");
 
-  // Filter sessions based on search query and selected type
+  // Filter and sort sessions based on search query, selected type, and sort option
   const filteredSessions = useMemo(() => {
     let filtered = sessions;
 
@@ -112,8 +115,31 @@ export function SessionList({
       filtered = filtered.filter((session) => session.type === selectedType);
     }
 
-    return filtered;
-  }, [sessions, searchQuery, selectedType]);
+    // Sort filtered sessions
+    const sorted = [...filtered];
+    switch (selectedSort) {
+      case "date-newest":
+        sorted.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        break;
+      case "date-oldest":
+        sorted.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+        break;
+      case "name-asc":
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "name-desc":
+        sorted.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      case "revenue-high":
+        sorted.sort((a, b) => b.totalRevenue - a.totalRevenue);
+        break;
+      case "revenue-low":
+        sorted.sort((a, b) => a.totalRevenue - b.totalRevenue);
+        break;
+    }
+
+    return sorted;
+  }, [sessions, searchQuery, selectedType, selectedSort]);
 
   // Empty state: no sessions at all
   if (sessions.length === 0) {
@@ -134,10 +160,15 @@ export function SessionList({
         onSearchChange={setSearchQuery}
         selectedType={selectedType}
         onTypeChange={setSelectedType}
+        {...(t.sortBy && {
+          selectedSort,
+          onSortChange: setSelectedSort,
+        })}
         translations={{
           searchPlaceholder: t.searchPlaceholder,
           filterByType: t.filterByType,
           allTypes: t.allTypes,
+          ...(t.sortBy && { sortBy: t.sortBy }),
         }}
       />
 
