@@ -8,6 +8,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sessionIdParamSchema } from "@/app/api/sessions/validation";
 
 /**
  * DELETE /api/sessions/[id]
@@ -25,6 +26,7 @@ import { prisma } from "@/lib/prisma";
  * @returns 200 OK with deletion confirmation, or error response
  *
  * Error responses:
+ * - 400 Bad Request: Invalid session ID format (must be UUID)
  * - 404 Not Found: Session does not exist
  * - 500 Internal Server Error: Database error during deletion
  *
@@ -43,6 +45,18 @@ export async function DELETE(
   try {
     // Extract session ID from route parameters
     const { id: sessionId } = await context.params;
+
+    // Validate session ID format (must be a valid UUID)
+    const validation = sessionIdParamSchema.safeParse({ id: sessionId });
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid session ID format",
+          details: validation.error.errors[0].message
+        },
+        { status: 400 }
+      );
+    }
 
     // Validate session exists before attempting deletion
     const session = await prisma.session.findUnique({
