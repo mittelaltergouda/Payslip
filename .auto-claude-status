@@ -3,7 +3,7 @@
   "spec": "064-remove-unsafe-eval-and-unsafe-inline-from-content-",
   "state": "building",
   "subtasks": {
-    "completed": 5,
+    "completed": 7,
     "total": 8,
     "in_progress": 1,
     "failed": 0
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 7,
+    "number": 9,
     "started_at": "2026-02-09T19:27:28.968600"
   },
-  "last_update": "2026-02-09T19:38:46.560270"
+  "last_update": "2026-02-09T20:54:56.069955"
 }
