@@ -65,8 +65,8 @@ describe('middleware - CSP nonce generation', () => {
 
     // Verify all CSP directives are present
     expect(cspHeader).toContain("default-src 'self'");
-    expect(cspHeader).toContain("script-src 'self' 'nonce-nonce-123' 'unsafe-eval' 'unsafe-inline'");
-    expect(cspHeader).toContain("style-src 'self' 'nonce-nonce-123' 'unsafe-inline'");
+    expect(cspHeader).toContain("script-src 'self' 'nonce-nonce-123'");
+    expect(cspHeader).toContain("style-src 'self' 'nonce-nonce-123'");
     expect(cspHeader).toContain("img-src 'self' data: blob:");
     expect(cspHeader).toContain("font-src 'self' data:");
     expect(cspHeader).toContain("connect-src 'self'");
