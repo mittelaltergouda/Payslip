@@ -103,7 +103,7 @@ export function sanitizeError(error: unknown): string {
     }
 
     // Other Prisma errors - generic database error message
-    if (prismaError.code?.startsWith("P")) {
+    if (typeof prismaError.code === "string" && prismaError.code.startsWith("P")) {
       return "Database operation failed";
     }
   }
