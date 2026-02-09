@@ -4,6 +4,17 @@ import { useState } from "react";
 import type { SessionType } from "@/lib/types";
 
 /**
+ * Sort options for session list.
+ */
+export type SortOption =
+  | "date-newest"
+  | "date-oldest"
+  | "name-asc"
+  | "name-desc"
+  | "revenue-high"
+  | "revenue-low";
+
+/**
  * Props for the SessionFilters component.
  */
 export interface SessionFiltersProps {
@@ -29,12 +40,25 @@ export interface SessionFiltersProps {
   onTypeChange: (type: SessionType | null) => void;
 
   /**
+   * Current selected sort option.
+   * Optional - will be added in later integration phase.
+   */
+  selectedSort?: SortOption;
+
+  /**
+   * Callback when sort option changes.
+   * Optional - will be added in later integration phase.
+   */
+  onSortChange?: (sort: SortOption) => void;
+
+  /**
    * Translation strings for the component.
    */
   translations: {
     searchPlaceholder: string;
     filterByType: string;
     allTypes: string;
+    sortBy?: string;
   };
 
   /**
@@ -53,6 +77,18 @@ const SESSION_TYPES: SessionType[] = [
   "MINING",
   "BOUNTY",
   "OTHER",
+];
+
+/**
+ * Available sort options for sorting sessions.
+ */
+const SORT_OPTIONS: SortOption[] = [
+  "date-newest",
+  "date-oldest",
+  "name-asc",
+  "name-desc",
+  "revenue-high",
+  "revenue-low",
 ];
 
 /**
