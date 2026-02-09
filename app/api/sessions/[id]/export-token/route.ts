@@ -36,7 +36,7 @@ import { Prisma } from "@prisma/client";
  *   "id": "token-uuid",
  *   "sessionId": "abc123",
  *   "token": "kJ8x-3mQfYz2vN4pL6rW9sU1tH5qD7cA8bE0gF2hG4i",
- *   "expiresAt": null,
+ *   "expiresAt": "2026-03-11T12:34:56.789Z",
  *   "shareUrl": "/session/kJ8x-3mQfYz2vN4pL6rW9sU1tH5qD7cA8bE0gF2hG4i"
  * }
  */
@@ -64,13 +64,17 @@ export async function POST(
     // Generate cryptographically secure token
     const token = generateSecureToken();
 
+    // Calculate expiration date (default 30 days from now)
+    const expirationDays = parseInt(process.env.EXPORT_TOKEN_EXPIRATION_DAYS ?? "30", 10);
+    const expiresAt = new Date(Date.now() + expirationDays * 24 * 60 * 60 * 1000);
+
     // Create export token record in database
     // The token field has a @unique constraint to prevent collisions
     const exportToken = await prisma.exportToken.create({
       data: {
         sessionId,
         token,
-        expiresAt: null // No expiration by default
+        expiresAt
       }
     });
 
