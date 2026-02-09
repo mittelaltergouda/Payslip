@@ -266,7 +266,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
       const data = await response.json();
       expect(data).toMatchObject({
         error: "Failed to generate export token",
-        details: "Database connection error"
+        details: "An unexpected error occurred" // Sanitized error message
       });
     });
 
