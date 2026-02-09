@@ -73,7 +73,7 @@ describe("API Error Sanitization", () => {
 
       vi.mocked(prisma.session.findMany).mockRejectedValue(dbError);
 
-      const request = createMockGetRequest("http://localhost:3000/api/sessions");
+      const _request = createMockGetRequest("http://localhost:3000/api/sessions");
       const response = await sessionsGet();
 
       expect(response.status).toBe(500);
@@ -110,7 +110,7 @@ describe("API Error Sanitization", () => {
 
       vi.mocked(prisma.session.findMany).mockRejectedValue(prismaError);
 
-      const request = createMockGetRequest("http://localhost:3000/api/sessions");
+      const _request = createMockGetRequest("http://localhost:3000/api/sessions");
       const response = await sessionsGet();
 
       expect(response.status).toBe(500);
@@ -143,7 +143,7 @@ describe("API Error Sanitization", () => {
 
       vi.mocked(prisma.session.findMany).mockRejectedValue(prismaError);
 
-      const request = createMockGetRequest("http://localhost:3000/api/sessions");
+      const _request = createMockGetRequest("http://localhost:3000/api/sessions");
       const response = await sessionsGet();
 
       expect(response.status).toBe(500);
@@ -175,7 +175,7 @@ describe("API Error Sanitization", () => {
 
       vi.mocked(prisma.session.findMany).mockRejectedValue(prismaError);
 
-      const request = createMockGetRequest("http://localhost:3000/api/sessions");
+      const _request = createMockGetRequest("http://localhost:3000/api/sessions");
       const response = await sessionsGet();
 
       expect(response.status).toBe(500);
@@ -206,7 +206,7 @@ describe("API Error Sanitization", () => {
 
       vi.mocked(prisma.session.findMany).mockRejectedValue(prismaError);
 
-      const request = createMockGetRequest("http://localhost:3000/api/sessions");
+      const _request = createMockGetRequest("http://localhost:3000/api/sessions");
       const response = await sessionsGet();
 
       expect(response.status).toBe(500);
@@ -234,7 +234,7 @@ describe("API Error Sanitization", () => {
 
       vi.mocked(prisma.session.findMany).mockRejectedValue(error);
 
-      const request = createMockGetRequest("http://localhost:3000/api/sessions");
+      const _request = createMockGetRequest("http://localhost:3000/api/sessions");
       const response = await sessionsGet();
 
       const data = await response.json();

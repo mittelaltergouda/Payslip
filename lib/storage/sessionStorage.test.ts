@@ -1,5 +1,5 @@
-import { duplicate, save, getAll, clearAll } from './sessionStorage';
-import type { SessionInput, SavedSession } from '../types';
+import { duplicate, save, getAll, clearAll as _clearAll } from './sessionStorage';
+import type { SessionInput, SavedSession as _SavedSession } from '../types';
 
 // Mock localStorage for testing
 const localStorageMock = (() => {
@@ -128,7 +128,7 @@ describe('duplicate', () => {
       const original = createTestSessionInput();
       const saveResult = save(original);
       const originalId = saveResult.data!.id;
-      const originalCreatedAt = saveResult.data!.createdAt;
+      const _originalCreatedAt = saveResult.data!.createdAt;
 
       // Small delay to ensure different timestamp
       const result = duplicate(originalId);
