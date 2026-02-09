@@ -47,7 +47,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
 
   describe("Success Cases", () => {
     it("should successfully create export token for valid session", async () => {
-      const sessionId = "test-session-123";
+      const sessionId = "00000000-0000-0000-0000-000000000123";
       const mockSession = { id: sessionId };
       const mockToken = "kJ8x-3mQfYz2vN4pL6rW9sU1tH5qD7cA8bE0gF2hG4i";
       const mockExportToken = {
@@ -94,7 +94,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should generate cryptographically secure token", async () => {
-      const sessionId = "test-session-456";
+      const sessionId = "00000000-0000-0000-0000-000000000456";
       const mockSession = { id: sessionId };
       let capturedToken = "";
 
@@ -121,7 +121,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should create multiple unique tokens for the same session", async () => {
-      const sessionId = "test-session-789";
+      const sessionId = "00000000-0000-0000-0000-000000000789";
       const mockSession = { id: sessionId };
       const generatedTokens: string[] = [];
 
@@ -150,7 +150,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should store token correctly in database", async () => {
-      const sessionId = "test-session-store";
+      const sessionId = "00000000-0000-0000-0000-00000000aaaa";
       const mockSession = { id: sessionId };
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
@@ -176,7 +176,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should include shareUrl in response", async () => {
-      const sessionId = "test-session-url";
+      const sessionId = "00000000-0000-0000-0000-00000000bbbb";
       const mockSession = { id: sessionId };
       const mockToken = "abc123-xyz789_test";
 
@@ -199,7 +199,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
 
   describe("Error Cases", () => {
     it("should return 404 when session does not exist", async () => {
-      const sessionId = "non-existent-session";
+      const sessionId = "00000000-0000-0000-0000-00000000cccc";
 
       // Mock session not found
       vi.mocked(prisma.session.findUnique).mockResolvedValue(null);
@@ -221,7 +221,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should return 409 on token collision (P2002 error)", async () => {
-      const sessionId = "test-session-collision";
+      const sessionId = "00000000-0000-0000-0000-00000000dddd";
       const mockSession = { id: sessionId };
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
@@ -251,7 +251,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should return 500 on database error", async () => {
-      const sessionId = "test-session-db-error";
+      const sessionId = "00000000-0000-0000-0000-00000000eeee";
       const mockSession = { id: sessionId };
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
@@ -271,7 +271,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should return 500 on unexpected error", async () => {
-      const sessionId = "test-session-unexpected";
+      const sessionId = "00000000-0000-0000-0000-00000000ffff";
       const mockSession = { id: sessionId };
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
@@ -394,7 +394,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
 
   describe("Token Security Properties", () => {
     it("should generate tokens with sufficient entropy", async () => {
-      const sessionId = "test-session-entropy";
+      const sessionId = "11111111-1111-1111-1111-111111111111";
       const mockSession = { id: sessionId };
       const generatedTokens: string[] = [];
 
@@ -427,7 +427,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should generate tokens with URL-safe characters only", async () => {
-      const sessionId = "test-session-url-safe";
+      const sessionId = "22222222-2222-2222-2222-222222222222";
       const mockSession = { id: sessionId };
       const generatedTokens: string[] = [];
 
@@ -461,7 +461,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should generate tokens that pass validation schema", async () => {
-      const sessionId = "test-session-validation";
+      const sessionId = "33333333-3333-3333-3333-333333333333";
       const mockSession = { id: sessionId };
       const mockToken = "valid-URL-safe_token123-xyz_789";
 
@@ -490,7 +490,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
 
   describe("Response Format", () => {
     it("should return correct response structure", async () => {
-      const sessionId = "test-session-structure";
+      const sessionId = "44444444-4444-4444-4444-444444444444";
       const mockSession = { id: sessionId };
       const mockToken = "test-token-structure";
 
@@ -524,7 +524,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should return correct content-type header", async () => {
-      const sessionId = "test-session-content-type";
+      const sessionId = "55555555-5555-5555-5555-555555555555";
       const mockSession = { id: sessionId };
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
@@ -543,7 +543,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should handle expiresAt null correctly", async () => {
-      const sessionId = "test-session-expires-null";
+      const sessionId = "66666666-6666-6666-6666-666666666666";
       const mockSession = { id: sessionId };
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
@@ -567,7 +567,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
 
   describe("Database Interaction", () => {
     it("should verify session exists before generating token", async () => {
-      const sessionId = "test-session-verify";
+      const sessionId = "77777777-7777-7777-7777-777777777777";
       const mockSession = { id: sessionId };
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
@@ -587,7 +587,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should select only session id for efficiency", async () => {
-      const sessionId = "test-session-select";
+      const sessionId = "88888888-8888-8888-8888-888888888888";
       const mockSession = { id: sessionId };
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
