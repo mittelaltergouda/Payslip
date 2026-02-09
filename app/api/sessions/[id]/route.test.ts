@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { NextRequest } from 'next/server';
 import { DELETE } from './route';
 import { prisma } from '@/lib/prisma';
 
@@ -19,7 +20,7 @@ describe('DELETE /api/sessions/[id]', () => {
   it('returns 404 when session does not exist', async () => {
     vi.mocked(prisma.session.findUnique).mockResolvedValue(null);
 
-    const request = new Request('http://localhost/api/sessions/test-id', {
+    const request = new NextRequest('http://localhost/api/sessions/test-id', {
       method: 'DELETE'
     });
     const context = { params: Promise.resolve({ id: 'test-id' }) };
@@ -35,7 +36,7 @@ describe('DELETE /api/sessions/[id]', () => {
     vi.mocked(prisma.session.findUnique).mockResolvedValue({ id: 'test-id' } as any);
     vi.mocked(prisma.session.delete).mockResolvedValue({ id: 'test-id' } as any);
 
-    const request = new Request('http://localhost/api/sessions/test-id', {
+    const request = new NextRequest('http://localhost/api/sessions/test-id', {
       method: 'DELETE'
     });
     const context = { params: Promise.resolve({ id: 'test-id' }) };
@@ -54,7 +55,7 @@ describe('DELETE /api/sessions/[id]', () => {
   it('returns 500 on database error', async () => {
     vi.mocked(prisma.session.findUnique).mockRejectedValue(new Error('Database error'));
 
-    const request = new Request('http://localhost/api/sessions/test-id', {
+    const request = new NextRequest('http://localhost/api/sessions/test-id', {
       method: 'DELETE'
     });
     const context = { params: Promise.resolve({ id: 'test-id' }) };
