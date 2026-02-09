@@ -174,7 +174,7 @@ export function SessionHistory({
             <button
               onClick={onClose}
               className="p-2 rounded-lg hover:bg-white/10 transition text-sand"
-              aria-label="Close"
+              aria-label="Close sidebar"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
