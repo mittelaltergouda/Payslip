@@ -286,6 +286,110 @@ describe("POST /api/sessions/[id]/export-token", () => {
       const data = await response.json();
       expect(data.error).toBe("Failed to generate export token");
     });
+
+    it("should return 400 for invalid UUID format", async () => {
+      const invalidSessionId = "not-a-uuid";
+
+      const request = createMockRequest(invalidSessionId);
+      const context = createMockContext(invalidSessionId);
+      const response = await POST(request, context);
+
+      expect(response.status).toBe(400);
+
+      const data = await response.json();
+      expect(data).toHaveProperty("error");
+      expect(data.error).toContain("Invalid session ID format");
+
+      // Database should not be queried
+      expect(prisma.session.findUnique).not.toHaveBeenCalled();
+      expect(prisma.exportToken.create).not.toHaveBeenCalled();
+    });
+
+    it("should return 400 for empty session ID", async () => {
+      const emptySessionId = "";
+
+      const request = createMockRequest(emptySessionId);
+      const context = createMockContext(emptySessionId);
+      const response = await POST(request, context);
+
+      expect(response.status).toBe(400);
+
+      const data = await response.json();
+      expect(data).toHaveProperty("error");
+
+      // Database should not be queried
+      expect(prisma.session.findUnique).not.toHaveBeenCalled();
+      expect(prisma.exportToken.create).not.toHaveBeenCalled();
+    });
+
+    it("should return 400 for numeric session ID", async () => {
+      const numericSessionId = "12345";
+
+      const request = createMockRequest(numericSessionId);
+      const context = createMockContext(numericSessionId);
+      const response = await POST(request, context);
+
+      expect(response.status).toBe(400);
+
+      const data = await response.json();
+      expect(data).toHaveProperty("error");
+      expect(data.error).toContain("Invalid session ID format");
+
+      // Database should not be queried
+      expect(prisma.session.findUnique).not.toHaveBeenCalled();
+      expect(prisma.exportToken.create).not.toHaveBeenCalled();
+    });
+
+    it("should return 400 for UUID-like string with invalid format", async () => {
+      const invalidUUIDs = [
+        "123e4567-e89b-12d3-a456-42661417400",  // Too short
+        "123e4567-e89b-12d3-a456-4266141740000", // Too long
+        "123e4567-e89b-12d3-a456-42661417400g",  // Invalid character
+        "123e4567e89b12d3a456426614174000"      // Missing hyphens
+      ];
+
+      for (const invalidSessionId of invalidUUIDs) {
+        const request = createMockRequest(invalidSessionId);
+        const context = createMockContext(invalidSessionId);
+        const response = await POST(request, context);
+
+        expect(response.status).toBe(400);
+
+        const data = await response.json();
+        expect(data).toHaveProperty("error");
+        expect(data.error).toContain("Invalid session ID format");
+      }
+
+      // Database should not be queried for any invalid UUID
+      expect(prisma.session.findUnique).not.toHaveBeenCalled();
+      expect(prisma.exportToken.create).not.toHaveBeenCalled();
+    });
+
+    it("should accept valid UUID and proceed to session check", async () => {
+      const validUUID = "550e8400-e29b-41d4-a716-446655440000";
+      const mockSession = { id: validUUID };
+      const mockToken = "test-token";
+
+      vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
+      vi.mocked(prisma.exportToken.create).mockResolvedValue({
+        id: "token-uuid",
+        sessionId: validUUID,
+        token: mockToken,
+        expiresAt: null
+      } as any);
+
+      const request = createMockRequest(validUUID);
+      const context = createMockContext(validUUID);
+      const response = await POST(request, context);
+
+      expect(response.status).toBe(201);
+
+      // Database should be queried for valid UUID
+      expect(prisma.session.findUnique).toHaveBeenCalledWith({
+        where: { id: validUUID },
+        select: { id: true }
+      });
+    });
   });
 
   describe("Token Security Properties", () => {
