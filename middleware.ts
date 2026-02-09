@@ -22,10 +22,9 @@ export function middleware(request: NextRequest) {
     `form-action 'self'`,
   ].join("; ");
 
-  // Clone the request headers and add CSP and CSRF token
+  // Clone the request headers and add CSP nonce (NOT CSRF token - security requirement)
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
-  requestHeaders.set("x-csrf-token", csrfToken);
   requestHeaders.set("Content-Security-Policy", cspHeader);
 
   // Create response with updated headers
@@ -39,6 +38,14 @@ export function middleware(request: NextRequest) {
   response.headers.set("Content-Security-Policy", cspHeader);
   response.headers.set("x-nonce", nonce);
   response.headers.set("x-csrf-token", csrfToken);
+
+  // Set CSRF token in HTTP-only cookie (double-submit cookie pattern)
+  response.cookies.set('csrf-token', csrfToken, {
+    httpOnly: true,
+    sameSite: 'strict',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/'
+  });
 
   // Set static security headers (also in next.config.mjs for production)
   // These are duplicated here to ensure they work in development mode

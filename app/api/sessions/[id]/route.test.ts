@@ -19,17 +19,28 @@ vi.mock('@/lib/prisma', () => ({
   }
 }));
 
-// Helper function to create a mock NextRequest with optional CSRF token
-function createMockRequest(sessionId: string, csrfToken?: string): NextRequest {
+// Helper function to create a mock NextRequest with optional CSRF token and cookie
+function createMockRequest(sessionId: string, csrfToken?: string, csrfCookie?: string): any {
   const headers: Record<string, string> = {};
   if (csrfToken !== undefined) {
     headers["x-csrf-token"] = csrfToken;
   }
 
-  return new NextRequest(`http://localhost:3000/api/sessions/${sessionId}`, {
+  const request = new NextRequest(`http://localhost:3000/api/sessions/${sessionId}`, {
     method: "DELETE",
     headers
   });
+
+  // Mock cookies API
+  const originalCookiesGet = request.cookies.get.bind(request.cookies);
+  request.cookies.get = (name: string) => {
+    if (name === 'csrf-token') {
+      return csrfCookie !== undefined ? { name: 'csrf-token', value: csrfCookie } : undefined;
+    }
+    return originalCookiesGet(name);
+  };
+
+  return request;
 }
 
 // Helper function to create a mock context with params
@@ -48,10 +59,11 @@ describe('DELETE /api/sessions/[id]', () => {
     vi.restoreAllMocks();
   });
 
-  describe('CSRF Protection', () => {
-    it('returns 403 when CSRF token is missing', async () => {
+  describe('CSRF Protection - Double-Submit Cookie Pattern', () => {
+    it('returns 403 when CSRF token missing from header', async () => {
       const sessionId = 'test-id';
-      const request = createMockRequest(sessionId); // No CSRF token
+      // Cookie present but header missing (attacker cannot read cookie)
+      const request = createMockRequest(sessionId, undefined, 'valid-cookie-token');
       const context = createMockContext(sessionId);
 
       const response = await DELETE(request, context);
@@ -66,9 +78,10 @@ describe('DELETE /api/sessions/[id]', () => {
       expect(prisma.session.delete).not.toHaveBeenCalled();
     });
 
-    it('returns 403 when CSRF token is empty string', async () => {
+    it('returns 403 when CSRF token missing from cookie', async () => {
       const sessionId = 'test-id';
-      const request = createMockRequest(sessionId, ''); // Empty CSRF token
+      // Header present but cookie missing
+      const request = createMockRequest(sessionId, 'attacker-token', undefined);
       const context = createMockContext(sessionId);
 
       const response = await DELETE(request, context);
@@ -83,13 +96,48 @@ describe('DELETE /api/sessions/[id]', () => {
       expect(prisma.session.delete).not.toHaveBeenCalled();
     });
 
-    it('accepts request with valid CSRF token', async () => {
+    it('returns 403 when CSRF tokens do not match', async () => {
+      const sessionId = 'test-id';
+      // Header and cookie both present but don't match
+      const request = createMockRequest(sessionId, 'token-from-attacker', 'token-from-server');
+      const context = createMockContext(sessionId);
+
+      const response = await DELETE(request, context);
+      const data = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(data.error).toBe('CSRF token validation failed');
+      expect(data.details).toBe('Invalid or missing CSRF token');
+
+      // Should not attempt database operations
+      expect(prisma.session.findUnique).not.toHaveBeenCalled();
+      expect(prisma.session.delete).not.toHaveBeenCalled();
+    });
+
+    it('returns 403 when both tokens are empty strings', async () => {
+      const sessionId = 'test-id';
+      const request = createMockRequest(sessionId, '', ''); // Empty tokens
+      const context = createMockContext(sessionId);
+
+      const response = await DELETE(request, context);
+      const data = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(data.error).toBe('CSRF token validation failed');
+      expect(data.details).toBe('Invalid or missing CSRF token');
+
+      // Should not attempt database operations
+      expect(prisma.session.findUnique).not.toHaveBeenCalled();
+      expect(prisma.session.delete).not.toHaveBeenCalled();
+    });
+
+    it('accepts request with valid matching CSRF tokens', async () => {
       const sessionId = 'test-id';
       vi.mocked(prisma.session.findUnique).mockResolvedValue({ id: sessionId } as any);
       vi.mocked(prisma.session.delete).mockResolvedValue({ id: sessionId } as any);
 
       const csrfToken = 'valid-csrf-token-123';
-      const request = createMockRequest(sessionId, csrfToken);
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
 
       const response = await DELETE(request, context);
@@ -107,7 +155,7 @@ describe('DELETE /api/sessions/[id]', () => {
       vi.mocked(prisma.session.delete).mockResolvedValue({ id: sessionId } as any);
 
       const csrfToken = 'valid-csrf-token';
-      const request = createMockRequest(sessionId, csrfToken);
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
 
       const response = await DELETE(request, context);
@@ -135,7 +183,7 @@ describe('DELETE /api/sessions/[id]', () => {
       vi.mocked(prisma.session.delete).mockResolvedValue({ id: sessionId } as any);
 
       const csrfToken = 'valid-csrf-token';
-      const request = createMockRequest(sessionId, csrfToken);
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
 
       const response = await DELETE(request, context);
@@ -155,7 +203,7 @@ describe('DELETE /api/sessions/[id]', () => {
       vi.mocked(prisma.session.findUnique).mockResolvedValue(null);
 
       const csrfToken = 'valid-csrf-token';
-      const request = createMockRequest(sessionId, csrfToken);
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
 
       const response = await DELETE(request, context);
@@ -174,7 +222,7 @@ describe('DELETE /api/sessions/[id]', () => {
       vi.mocked(prisma.session.findUnique).mockRejectedValue(new Error('Database connection error'));
 
       const csrfToken = 'valid-csrf-token';
-      const request = createMockRequest(sessionId, csrfToken);
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
 
       const response = await DELETE(request, context);
@@ -191,7 +239,7 @@ describe('DELETE /api/sessions/[id]', () => {
       vi.mocked(prisma.session.delete).mockRejectedValue(new Error('Constraint violation'));
 
       const csrfToken = 'valid-csrf-token';
-      const request = createMockRequest(sessionId, csrfToken);
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
 
       const response = await DELETE(request, context);
@@ -207,7 +255,7 @@ describe('DELETE /api/sessions/[id]', () => {
       vi.mocked(prisma.session.findUnique).mockRejectedValue('Unknown error string');
 
       const csrfToken = 'valid-csrf-token';
-      const request = createMockRequest(sessionId, csrfToken);
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
 
       const response = await DELETE(request, context);
@@ -226,7 +274,7 @@ describe('DELETE /api/sessions/[id]', () => {
       vi.mocked(prisma.session.delete).mockResolvedValue({ id: sessionId } as any);
 
       const csrfToken = 'valid-csrf-token';
-      const request = createMockRequest(sessionId, csrfToken);
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
 
       await DELETE(request, context);

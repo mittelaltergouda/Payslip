@@ -426,3 +426,108 @@ describe('middleware - CSRF token generation', () => {
     expect(response.headers.has('X-Content-Type-Options')).toBe(true);
   });
 });
+
+describe('middleware - CSRF cookie handling', () => {
+  let mockGenerateCsrfToken: ReturnType<typeof vi.fn>;
+
+  beforeEach(async () => {
+    // Create a mock function
+    mockGenerateCsrfToken = vi.fn();
+
+    // Set default implementation with counter for predictable test values
+    let counter = 0;
+    mockGenerateCsrfToken.mockImplementation(() => {
+      counter++;
+      return `test-csrf-token-${counter}`;
+    });
+
+    // Replace the module export
+    vi.spyOn(await import('./lib/csrf'), 'generateCsrfToken').mockImplementation(mockGenerateCsrfToken);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('should set CSRF token in HTTP-only cookie', () => {
+    mockGenerateCsrfToken.mockReturnValue('cookie-csrf-token');
+    const request = new NextRequest(new Request('http://localhost:3000/'));
+
+    const response = middleware(request);
+
+    const cookie = response.cookies.get('csrf-token');
+    expect(cookie).toBeDefined();
+    expect(cookie?.value).toBe('cookie-csrf-token');
+  });
+
+  it('should set cookie with httpOnly flag', () => {
+    mockGenerateCsrfToken.mockReturnValue('secure-token');
+    const request = new NextRequest(new Request('http://localhost:3000/'));
+
+    const response = middleware(request);
+
+    // Get Set-Cookie header to verify httpOnly flag
+    const setCookieHeader = response.headers.get('set-cookie');
+    expect(setCookieHeader).toBeDefined();
+    expect(setCookieHeader).toContain('HttpOnly');
+  });
+
+  it('should set cookie with SameSite=Strict', () => {
+    mockGenerateCsrfToken.mockReturnValue('samesite-token');
+    const request = new NextRequest(new Request('http://localhost:3000/'));
+
+    const response = middleware(request);
+
+    const setCookieHeader = response.headers.get('set-cookie');
+    expect(setCookieHeader).toBeDefined();
+    expect(setCookieHeader?.toLowerCase()).toContain('samesite=strict');
+  });
+
+  it('should set same CSRF token in both cookie and response header', () => {
+    mockGenerateCsrfToken.mockReturnValue('matching-token-123');
+    const request = new NextRequest(new Request('http://localhost:3000/'));
+
+    const response = middleware(request);
+
+    const cookieToken = response.cookies.get('csrf-token')?.value;
+    const headerToken = response.headers.get('x-csrf-token');
+
+    expect(cookieToken).toBeDefined();
+    expect(headerToken).toBeDefined();
+    expect(cookieToken).toBe(headerToken);
+    expect(cookieToken).toBe('matching-token-123');
+  });
+
+  it('should set cookie path to root', () => {
+    mockGenerateCsrfToken.mockReturnValue('path-token');
+    const request = new NextRequest(new Request('http://localhost:3000/'));
+
+    const response = middleware(request);
+
+    const setCookieHeader = response.headers.get('set-cookie');
+    expect(setCookieHeader).toBeDefined();
+    expect(setCookieHeader).toContain('Path=/');
+  });
+
+  it('should set different cookie values for different requests', () => {
+    const tokens: string[] = [];
+    mockGenerateCsrfToken.mockImplementation(() => {
+      const token = `unique-cookie-${tokens.length}`;
+      tokens.push(token);
+      return token;
+    });
+
+    const request1 = new NextRequest(new Request('http://localhost:3000/page1'));
+    const request2 = new NextRequest(new Request('http://localhost:3000/page2'));
+
+    const response1 = middleware(request1);
+    const response2 = middleware(request2);
+
+    const cookie1 = response1.cookies.get('csrf-token')?.value;
+    const cookie2 = response2.cookies.get('csrf-token')?.value;
+
+    expect(cookie1).toBe('unique-cookie-0');
+    expect(cookie2).toBe('unique-cookie-1');
+    expect(cookie1).not.toBe(cookie2);
+  });
+});

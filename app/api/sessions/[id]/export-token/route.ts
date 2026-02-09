@@ -51,17 +51,20 @@ export async function POST(
     // Extract session ID from route parameters
     const { id: sessionId } = await context.params;
 
-    // CSRF Protection: Validate CSRF token from request headers
-    // In this stateless implementation, the middleware generates a token for each request.
-    // The client must include this token in subsequent state-changing requests.
-    const csrfToken = extractCsrfTokenFromHeaders(request.headers);
+    // CSRF Protection: Double-Submit Cookie Pattern
+    // The client must include the CSRF token (read from previous response header)
+    // in the request header. The server validates this client token matches the
+    // server-set HTTP-only cookie.
+    //
+    // Security model:
+    // - Attacker cannot read response headers from other origin (same-origin policy)
+    // - Attacker cannot read or set HTTP-only cookies
+    // - Attacker cannot forge both values to match
+    // - Only legitimate clients can read the token from response headers and include it
+    const clientToken = extractCsrfTokenFromHeaders(request.headers);
+    const cookieToken = request.cookies.get('csrf-token')?.value;
 
-    // For stateless CSRF protection, we validate that the token exists and is properly formatted.
-    // The security comes from same-origin policy preventing external sites from reading
-    // the token from response headers, thus only legitimate requests will have valid tokens.
-    // We use validateCsrfToken with the same token twice to leverage its constant-time
-    // comparison and null/empty checks, while maintaining a simple validation model.
-    if (!validateCsrfToken(csrfToken, csrfToken)) {
+    if (!validateCsrfToken(clientToken, cookieToken)) {
       return NextResponse.json(
         {
           error: "CSRF token validation failed",
