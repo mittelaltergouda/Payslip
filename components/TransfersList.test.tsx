@@ -88,9 +88,13 @@ describe('TransfersList - Basic Rendering', () => {
       />
     );
 
-    // Should have 2 transfer cards
-    expect(screen.getByText('Pilot → Escort')).toBeInTheDocument();
-    expect(screen.getByText('Escort → Miner')).toBeInTheDocument();
+    // Should have 2 transfer cards with avatars
+    // Pilot appears once (sender in first transfer)
+    expect(screen.getByLabelText('Avatar for Pilot')).toBeInTheDocument();
+    // Escort appears twice (receiver in first, sender in second)
+    expect(screen.getAllByLabelText('Avatar for Escort').length).toBe(2);
+    // Miner appears once (receiver in second transfer)
+    expect(screen.getByLabelText('Avatar for Miner')).toBeInTheDocument();
   });
 
   it('should display no transfers message when list is empty in German', () => {
@@ -121,7 +125,7 @@ describe('TransfersList - Basic Rendering', () => {
 });
 
 describe('TransfersList - Transfer Details', () => {
-  it('should display member handles correctly', () => {
+  it('should display member avatars with initials', () => {
     render(
       <TransfersList
         transfers={mockTransfers}
@@ -131,8 +135,37 @@ describe('TransfersList - Transfer Details', () => {
       />
     );
 
-    expect(screen.getByText('Pilot → Escort')).toBeInTheDocument();
-    expect(screen.getByText('Escort → Miner')).toBeInTheDocument();
+    // Check avatars are rendered with correct aria-labels
+    expect(screen.getByLabelText('Avatar for Pilot')).toBeInTheDocument();
+    expect(screen.getAllByLabelText('Avatar for Escort').length).toBe(2);
+    expect(screen.getByLabelText('Avatar for Miner')).toBeInTheDocument();
+
+    // Check initials are displayed
+    // P appears once, E appears twice, M appears once
+    expect(screen.getByText('P')).toBeInTheDocument();
+    expect(screen.getAllByText('E').length).toBe(2);
+    expect(screen.getByText('M')).toBeInTheDocument();
+  });
+
+  it('should display arrow SVG icons between avatars', () => {
+    const { container } = render(
+      <TransfersList
+        transfers={mockTransfers}
+        members={mockMembers}
+        translations={translations.en}
+        lang="en"
+      />
+    );
+
+    // Check for SVG arrow icons (there should be 2 transfers = 2 arrows)
+    const svgElements = container.querySelectorAll('svg');
+    expect(svgElements.length).toBe(2);
+
+    // Verify SVG attributes
+    svgElements.forEach((svg) => {
+      expect(svg).toHaveAttribute('aria-hidden', 'true');
+      expect(svg.querySelector('path')).toBeInTheDocument();
+    });
   });
 
   it('should display gross amount with currency', () => {
@@ -190,7 +223,7 @@ describe('TransfersList - Transfer Details', () => {
     expect(screen.queryByText(/Fee:/)).not.toBeInTheDocument();
   });
 
-  it('should display dash when member handle is not found', () => {
+  it('should display dash avatars when member handle is not found', () => {
     const transferWithUnknownMember: Transfer[] = [
       {
         fromMemberId: "unknown1",
@@ -210,7 +243,8 @@ describe('TransfersList - Transfer Details', () => {
       />
     );
 
-    expect(screen.getByText('- → -')).toBeInTheDocument();
+    // Should display 2 avatars with "-" as the name (sender and receiver)
+    expect(screen.getAllByLabelText('Avatar for -').length).toBe(2);
   });
 });
 
@@ -352,8 +386,9 @@ describe('TransfersList - Edge Cases', () => {
       />
     );
 
-    // Should display dashes when members are not found - there are 2 transfers so 2 instances
-    expect(screen.getAllByText('- → -').length).toBe(2);
+    // Should display dash avatars when members are not found
+    // 2 transfers with 2 members each = 4 dash avatars
+    expect(screen.getAllByLabelText('Avatar for -').length).toBe(4);
   });
 
   it('should handle transfers with zero amounts', () => {
@@ -399,7 +434,7 @@ describe('TransfersList - Edge Cases', () => {
       },
     ];
 
-    render(
+    const { container } = render(
       <TransfersList
         transfers={multipleTransfers}
         members={mockMembers}
@@ -408,8 +443,13 @@ describe('TransfersList - Edge Cases', () => {
       />
     );
 
-    const transferElements = screen.getAllByText('Pilot → Escort');
-    expect(transferElements.length).toBe(2);
+    // Should render 2 transfer cards
+    const transferCards = container.querySelectorAll('.border.border-white\\/10.rounded-lg');
+    expect(transferCards.length).toBe(2);
+
+    // Should have 2 Pilot avatars and 2 Escort avatars
+    expect(screen.getAllByLabelText('Avatar for Pilot').length).toBe(2);
+    expect(screen.getAllByLabelText('Avatar for Escort').length).toBe(2);
   });
 
   it('should handle very large amounts', () => {
