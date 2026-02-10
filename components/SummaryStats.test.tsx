@@ -45,7 +45,7 @@ const mockResultWithStats: PayslipResult = {
   ],
 };
 
-const mockResultWithoutStats: PayslipResult = {
+const _mockResultWithoutStats: PayslipResult = {
   saleRevenue: 15000,
   netProfit: 11300,
   taxRateApplied: 0.005,

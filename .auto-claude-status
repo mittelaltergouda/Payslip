@@ -3,7 +3,7 @@
   "spec": "070-add-formatcurrencycompact-utility-combining-format",
   "state": "building",
   "subtasks": {
-    "completed": 1,
+    "completed": 2,
     "total": 3,
     "in_progress": 1,
     "failed": 0
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 3,
+    "number": 4,
     "started_at": "2026-02-10T02:14:46.126772"
   },
-  "last_update": "2026-02-10T02:19:59.670643"
+  "last_update": "2026-02-10T02:22:36.312225"
 }

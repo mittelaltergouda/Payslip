@@ -117,7 +117,7 @@ export default function SessionsPage() {
         <SessionList
           sessions={sessions}
           lang={lang}
-          onDelete={handleDelete}
+          onDelete={(sessionId) => { void handleDelete(sessionId); }}
           translations={{
             members: t.members,
             revenueLabel: t.revenueLabel,
