@@ -2,6 +2,7 @@
 
 import type { Transfer, MemberInput } from "@/lib/types";
 import type { Lang } from "@/lib/i18n/translations";
+import { Avatar } from "@/components/ui/avatar";
 
 /**
  * Format a number according to the specified language locale.
@@ -47,14 +48,14 @@ export interface TransfersListProps {
 
 /**
  * TransfersList component displays a list of suggested transfers between members.
- * It shows the transfer amount (gross and net), the sender and receiver handles,
+ * It shows the transfer amount (gross and net), the sender and receiver with avatar icons,
  * and any applicable fees.
  *
  * The component displays:
  * - A header with the "Suggested Transfers" title
  * - A "no transfers required" message if the list is empty
  * - Each transfer showing:
- *   - From handle → To handle
+ *   - From avatar → arrow icon → To avatar
  *   - Gross amount with currency
  *   - Net amount (in smaller text)
  *   - Fee amount (if > 0)
@@ -103,9 +104,25 @@ export function TransfersList({
           return (
             <div key={idx} className="border border-white/10 rounded-lg p-3">
               <div className="flex items-center justify-between">
-                <span>
-                  {from} → {to}
-                </span>
+                <div className="flex items-center gap-2">
+                  <Avatar name={from} size="sm" />
+                  <svg
+                    className="w-4 h-4 text-white/60"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    />
+                  </svg>
+                  <Avatar name={to} size="sm" />
+                </div>
                 <span className="font-semibold">
                   {gross} {currency} <span className="text-white/60 text-xs">(net {net})</span>
                 </span>
