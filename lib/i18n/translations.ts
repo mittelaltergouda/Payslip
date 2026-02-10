@@ -122,7 +122,9 @@ export const translations: Record<Lang, Record<string, string>> = {
     presetUpdated: "Vorlage aktualisiert",
     confirmDeletePreset: "Vorlage wirklich löschen?",
     saveCurrentCrew: "Aktuelle Crew speichern",
-    presetMembers: "Mitglieder"
+    presetMembers: "Mitglieder",
+    validationErrors: "Validierungsfehler",
+    noValidationErrors: "Keine Validierungsfehler"
   },
   en: {
     appName: "SC Payslip",
@@ -210,6 +212,8 @@ export const translations: Record<Lang, Record<string, string>> = {
     presetUpdated: "Preset updated",
     confirmDeletePreset: "Delete this preset?",
     saveCurrentCrew: "Save Current Crew",
-    presetMembers: "Members"
+    presetMembers: "Members",
+    validationErrors: "Validation Errors",
+    noValidationErrors: "No validation errors"
   }
 };
