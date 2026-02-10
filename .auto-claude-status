@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "043-export-to-pdf-payslip",
-  "state": "building",
+  "spec": "069-add-bulk-session-operations-to-storage-module",
+  "state": "planning",
   "subtasks": {
-    "completed": 1,
-    "total": 9,
+    "completed": 0,
+    "total": 0,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "PDF Export Implementation",
+    "current": "Add Bulk Operations",
     "id": null,
-    "total": 7
+    "total": 4
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 3,
-    "started_at": "2026-02-03T01:52:48.514968"
+    "number": 2,
+    "started_at": "2026-02-10T02:13:10.574045"
   },
-  "last_update": "2026-02-03T01:59:00.569813"
+  "last_update": "2026-02-10T02:16:28.544284"
 }

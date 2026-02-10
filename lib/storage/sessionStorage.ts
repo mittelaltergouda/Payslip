@@ -160,6 +160,33 @@ export function deleteSession(sessionId: string): StorageResult<void> {
 }
 
 /**
+ * Deletes multiple sessions by their IDs from localStorage.
+ *
+ * @param sessionIds - Array of session IDs to delete
+ * @returns StorageResult indicating success or failure
+ */
+export function bulkDelete(sessionIds: string[]): StorageResult<void> {
+  try {
+    const sessions = getAllInternal();
+
+    // Filter out all sessions whose IDs are in the provided array
+    const updatedSessions = sessions.filter((s) => !sessionIds.includes(s.id));
+
+    // Save updated list
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSessions));
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to delete sessions',
+    };
+  }
+}
+
+/**
  * Exports all sessions as a JSON string.
  * This can be used to create a backup file for users.
  *
