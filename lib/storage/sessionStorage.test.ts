@@ -1,4 +1,4 @@
-import { duplicate, save, getAll, clearAll, bulkDelete } from './sessionStorage';
+import { duplicate, save, getAll, getByIds, clearAll, bulkDelete } from './sessionStorage';
 import type { SessionInput, SavedSession } from '../types';
 
 // Mock localStorage for testing
@@ -1111,6 +1111,483 @@ describe('bulkDelete', () => {
       const allSessions = getAll();
       expect(allSessions.length).toBe(1);
       expect(allSessions[0].session.name).toBe('New Session');
+    });
+  });
+});
+
+// Test cases for getByIds() function
+
+describe('getByIds', () => {
+  beforeEach(() => {
+    localStorageMock.clear();
+  });
+
+  describe('basic retrieval', () => {
+    it('should retrieve multiple sessions by their IDs', () => {
+      // Save three sessions
+      const session1 = createTestSessionInput({ name: 'Session 1' });
+      const session2 = createTestSessionInput({ name: 'Session 2' });
+      const session3 = createTestSessionInput({ name: 'Session 3' });
+
+      const result1 = save(session1);
+      const result2 = save(session2);
+      const result3 = save(session3);
+
+      const id1 = result1.data!.id;
+      const id2 = result2.data!.id;
+      const id3 = result3.data!.id;
+
+      // Get sessions 1 and 3
+      const sessions = getByIds([id1, id3]);
+
+      expect(sessions.length).toBe(2);
+
+      const sessionIds = sessions.map(s => s.id);
+      expect(sessionIds).toContain(id1);
+      expect(sessionIds).toContain(id3);
+      expect(sessionIds).not.toContain(id2);
+    });
+
+    it('should retrieve a single session when array has one ID', () => {
+      const session1 = createTestSessionInput({ name: 'Session 1' });
+      const session2 = createTestSessionInput({ name: 'Session 2' });
+
+      const result1 = save(session1);
+      save(session2);
+
+      const id1 = result1.data!.id;
+
+      const sessions = getByIds([id1]);
+
+      expect(sessions.length).toBe(1);
+      expect(sessions[0].id).toBe(id1);
+      expect(sessions[0].session.name).toBe('Session 1');
+    });
+
+    it('should retrieve all sessions when all IDs are provided', () => {
+      const session1 = createTestSessionInput({ name: 'Session 1' });
+      const session2 = createTestSessionInput({ name: 'Session 2' });
+      const session3 = createTestSessionInput({ name: 'Session 3' });
+
+      const result1 = save(session1);
+      const result2 = save(session2);
+      const result3 = save(session3);
+
+      const allIds = [result1.data!.id, result2.data!.id, result3.data!.id];
+
+      const sessions = getByIds(allIds);
+
+      expect(sessions.length).toBe(3);
+      const sessionIds = sessions.map(s => s.id);
+      expect(sessionIds).toContain(allIds[0]);
+      expect(sessionIds).toContain(allIds[1]);
+      expect(sessionIds).toContain(allIds[2]);
+    });
+
+    it('should return the correct session data for retrieved sessions', () => {
+      const session1 = createTestSessionInput({
+        name: 'Mining Session',
+        type: 'MINING',
+        totalRevenue: 5000,
+        distributionMode: 'PERCENT',
+      });
+
+      const result1 = save(session1);
+      const id1 = result1.data!.id;
+
+      const sessions = getByIds([id1]);
+
+      expect(sessions.length).toBe(1);
+      expect(sessions[0].session.name).toBe('Mining Session');
+      expect(sessions[0].session.type).toBe('MINING');
+      expect(sessions[0].session.totalRevenue).toBe(5000);
+      expect(sessions[0].session.distributionMode).toBe('PERCENT');
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should return empty array when provided empty ID array', () => {
+      const session = createTestSessionInput({ name: 'Session' });
+      save(session);
+
+      const sessions = getByIds([]);
+
+      expect(sessions.length).toBe(0);
+      expect(Array.isArray(sessions)).toBe(true);
+    });
+
+    it('should return empty array when storage is empty', () => {
+      const sessions = getByIds(['some-id', 'another-id']);
+
+      expect(sessions.length).toBe(0);
+      expect(Array.isArray(sessions)).toBe(true);
+    });
+
+    it('should return empty array when no IDs match', () => {
+      const session1 = createTestSessionInput({ name: 'Session 1' });
+      const session2 = createTestSessionInput({ name: 'Session 2' });
+
+      save(session1);
+      save(session2);
+
+      const sessions = getByIds(['non-existent-id-1', 'non-existent-id-2']);
+
+      expect(sessions.length).toBe(0);
+    });
+
+    it('should return only matching sessions when some IDs do not exist', () => {
+      const session1 = createTestSessionInput({ name: 'Session 1' });
+      const session2 = createTestSessionInput({ name: 'Session 2' });
+
+      const result1 = save(session1);
+      const result2 = save(session2);
+
+      const id1 = result1.data!.id;
+      const id2 = result2.data!.id;
+
+      const sessions = getByIds([id1, 'non-existent', id2, 'another-non-existent']);
+
+      expect(sessions.length).toBe(2);
+      const sessionIds = sessions.map(s => s.id);
+      expect(sessionIds).toContain(id1);
+      expect(sessionIds).toContain(id2);
+    });
+
+    it('should handle duplicate IDs in the input array', () => {
+      const session = createTestSessionInput({ name: 'Session' });
+      const result = save(session);
+      const id = result.data!.id;
+
+      // Provide the same ID multiple times
+      const sessions = getByIds([id, id, id]);
+
+      // Should still return only one session (no duplicates in result)
+      expect(sessions.length).toBe(1);
+      expect(sessions[0].id).toBe(id);
+    });
+  });
+
+  describe('sorting behavior', () => {
+    it('should maintain sort order by updatedAt (most recent first)', () => {
+      // Save sessions in sequence
+      const session1 = createTestSessionInput({ name: 'First' });
+      const result1 = save(session1);
+      const id1 = result1.data!.id;
+      const timestamp1 = result1.data!.updatedAt;
+
+      const session2 = createTestSessionInput({ name: 'Second' });
+      const result2 = save(session2);
+      const id2 = result2.data!.id;
+
+      const session3 = createTestSessionInput({ name: 'Third' });
+      const result3 = save(session3);
+      const id3 = result3.data!.id;
+      const timestamp3 = result3.data!.updatedAt;
+
+      // Get in different order than saved
+      const sessions = getByIds([id1, id3]);
+
+      // Should be sorted by updatedAt (most recent first)
+      expect(sessions.length).toBe(2);
+
+      // Verify sorting: first session should have updatedAt >= second session
+      const time0 = new Date(sessions[0].updatedAt).getTime();
+      const time1 = new Date(sessions[1].updatedAt).getTime();
+      expect(time0).toBeGreaterThanOrEqual(time1);
+
+      // If timestamps are different, verify order matches save order
+      if (timestamp3 > timestamp1) {
+        expect(sessions[0].id).toBe(id3);
+        expect(sessions[1].id).toBe(id1);
+      }
+    });
+
+    it('should sort by updatedAt even when IDs are provided in reverse order', () => {
+      const session1 = createTestSessionInput({ name: 'Session 1' });
+      const result1 = save(session1);
+      const id1 = result1.data!.id;
+
+      const session2 = createTestSessionInput({ name: 'Session 2' });
+      const result2 = save(session2);
+      const id2 = result2.data!.id;
+
+      const session3 = createTestSessionInput({ name: 'Session 3' });
+      const result3 = save(session3);
+      const id3 = result3.data!.id;
+
+      // Provide IDs in reverse order of creation
+      const sessions = getByIds([id3, id2, id1]);
+
+      // Should still be sorted by updatedAt (most recent first)
+      expect(sessions.length).toBe(3);
+
+      // Verify sorting: each session's updatedAt should be >= next session's updatedAt
+      const time0 = new Date(sessions[0].updatedAt).getTime();
+      const time1 = new Date(sessions[1].updatedAt).getTime();
+      const time2 = new Date(sessions[2].updatedAt).getTime();
+
+      expect(time0).toBeGreaterThanOrEqual(time1);
+      expect(time1).toBeGreaterThanOrEqual(time2);
+    });
+  });
+
+  describe('data integrity', () => {
+    it('should return complete SavedSession objects', () => {
+      const session = createTestSessionInput({ name: 'Test Session' });
+      const result = save(session);
+      const id = result.data!.id;
+
+      const sessions = getByIds([id]);
+
+      expect(sessions.length).toBe(1);
+      const retrieved = sessions[0];
+
+      // Check SavedSession structure
+      expect(retrieved).toHaveProperty('id');
+      expect(retrieved).toHaveProperty('session');
+      expect(retrieved).toHaveProperty('createdAt');
+      expect(retrieved).toHaveProperty('updatedAt');
+
+      // Check session data
+      expect(retrieved.session).toHaveProperty('id');
+      expect(retrieved.session).toHaveProperty('name');
+      expect(retrieved.session).toHaveProperty('members');
+    });
+
+    it('should preserve all session properties', () => {
+      const session = createTestSessionInput({
+        name: 'Complete Session',
+        type: 'SALVAGE',
+        currency: 'aUEC',
+        totalRevenue: 10000,
+        distributionMode: 'ADJUSTABLE',
+        taxEnabled: true,
+        taxRate: 15,
+        members: [
+          { id: 'member-1', handle: 'Alice', role: 'Captain', active: true, fixedPayout: 1000 },
+          { id: 'member-2', handle: 'Bob', role: 'Member', active: true },
+        ],
+      });
+
+      const result = save(session);
+      const id = result.data!.id;
+
+      const sessions = getByIds([id]);
+
+      expect(sessions.length).toBe(1);
+      const retrieved = sessions[0].session;
+
+      expect(retrieved.name).toBe('Complete Session');
+      expect(retrieved.type).toBe('SALVAGE');
+      expect(retrieved.currency).toBe('aUEC');
+      expect(retrieved.totalRevenue).toBe(10000);
+      expect(retrieved.distributionMode).toBe('ADJUSTABLE');
+      expect(retrieved.taxEnabled).toBe(true);
+      expect(retrieved.taxRate).toBe(15);
+      expect(retrieved.members.length).toBe(2);
+      expect(retrieved.members[0].handle).toBe('Alice');
+      expect(retrieved.members[0].role).toBe('Captain');
+      expect(retrieved.members[0].fixedPayout).toBe(1000);
+    });
+
+    it('should preserve timestamps correctly', () => {
+      const session = createTestSessionInput({ name: 'Session' });
+      const result = save(session);
+      const id = result.data!.id;
+
+      const createdAt = result.data!.createdAt;
+      const updatedAt = result.data!.updatedAt;
+
+      const sessions = getByIds([id]);
+
+      expect(sessions.length).toBe(1);
+      expect(sessions[0].createdAt).toBe(createdAt);
+      expect(sessions[0].updatedAt).toBe(updatedAt);
+    });
+
+    it('should filter out corrupt data and return only valid sessions', () => {
+      // Save valid sessions
+      const session1 = createTestSessionInput({ name: 'Valid 1' });
+      const session2 = createTestSessionInput({ name: 'Valid 2' });
+
+      const result1 = save(session1);
+      const result2 = save(session2);
+
+      const id1 = result1.data!.id;
+      const id2 = result2.data!.id;
+
+      // Manually corrupt the storage by adding invalid data
+      const allSessions = getAll();
+      const corruptData = [
+        ...allSessions,
+        { id: 'corrupt-id', invalid: 'data' }, // This doesn't match SavedSession schema
+      ];
+      localStorage.setItem('sc-payslip-sessions', JSON.stringify(corruptData));
+
+      // getByIds should filter out corrupt data
+      const sessions = getByIds([id1, id2, 'corrupt-id']);
+
+      // Should only return the two valid sessions
+      expect(sessions.length).toBe(2);
+      const sessionIds = sessions.map(s => s.id);
+      expect(sessionIds).toContain(id1);
+      expect(sessionIds).toContain(id2);
+      expect(sessionIds).not.toContain('corrupt-id');
+    });
+  });
+
+  describe('interaction with other operations', () => {
+    it('should work correctly after save operations', () => {
+      const session1 = createTestSessionInput({ name: 'First' });
+      const result1 = save(session1);
+      const id1 = result1.data!.id;
+
+      const sessions1 = getByIds([id1]);
+      expect(sessions1.length).toBe(1);
+
+      // Save another session
+      const session2 = createTestSessionInput({ name: 'Second' });
+      const result2 = save(session2);
+      const id2 = result2.data!.id;
+
+      const sessions2 = getByIds([id1, id2]);
+      expect(sessions2.length).toBe(2);
+    });
+
+    it('should work correctly after update operations', () => {
+      const session = createTestSessionInput({ name: 'Original' });
+      const result = save(session);
+      const id = result.data!.id;
+
+      // Update the session
+      const updatedSession = createTestSessionInput({ id, name: 'Updated' });
+      save(updatedSession);
+
+      const sessions = getByIds([id]);
+
+      expect(sessions.length).toBe(1);
+      expect(sessions[0].session.name).toBe('Updated');
+    });
+
+    it('should return empty for deleted sessions', () => {
+      const session1 = createTestSessionInput({ name: 'Session 1' });
+      const session2 = createTestSessionInput({ name: 'Session 2' });
+
+      const result1 = save(session1);
+      const result2 = save(session2);
+
+      const id1 = result1.data!.id;
+      const id2 = result2.data!.id;
+
+      // Delete one session
+      bulkDelete([id1]);
+
+      // Try to get both sessions
+      const sessions = getByIds([id1, id2]);
+
+      // Should only get the non-deleted session
+      expect(sessions.length).toBe(1);
+      expect(sessions[0].id).toBe(id2);
+    });
+
+    it('should work correctly with getAll', () => {
+      // Save multiple sessions
+      const ids: string[] = [];
+      for (let i = 0; i < 5; i++) {
+        const session = createTestSessionInput({ name: `Session ${i}` });
+        const result = save(session);
+        ids.push(result.data!.id);
+      }
+
+      // Get all sessions
+      const allSessions = getAll();
+      expect(allSessions.length).toBe(5);
+
+      // Get subset by IDs
+      const subset = getByIds([ids[1], ids[3]]);
+      expect(subset.length).toBe(2);
+
+      // Should be a subset of getAll results
+      const allIds = allSessions.map(s => s.id);
+      subset.forEach(session => {
+        expect(allIds).toContain(session.id);
+      });
+    });
+
+    it('should return empty array after clearAll', () => {
+      const session1 = createTestSessionInput({ name: 'Session 1' });
+      const session2 = createTestSessionInput({ name: 'Session 2' });
+
+      const result1 = save(session1);
+      const result2 = save(session2);
+
+      const id1 = result1.data!.id;
+      const id2 = result2.data!.id;
+
+      // Clear all sessions
+      clearAll();
+
+      // Try to get sessions
+      const sessions = getByIds([id1, id2]);
+
+      expect(sessions.length).toBe(0);
+    });
+
+    it('should work with duplicate operation', () => {
+      const original = createTestSessionInput({ name: 'Original' });
+      const saveResult = save(original);
+      const originalId = saveResult.data!.id;
+
+      // Duplicate the session
+      const duplicateResult = duplicate(originalId);
+      expect(duplicateResult.success).toBe(true);
+      const duplicateId = duplicateResult.data!.id;
+
+      // Get both sessions
+      const sessions = getByIds([originalId, duplicateId]);
+
+      expect(sessions.length).toBe(2);
+      const sessionNames = sessions.map(s => s.session.name);
+      expect(sessionNames).toContain('Original');
+      expect(sessionNames).toContain('Original (Copy)');
+    });
+  });
+
+  describe('performance considerations', () => {
+    it('should handle large number of IDs efficiently', () => {
+      // Save 100 sessions
+      const ids: string[] = [];
+      for (let i = 0; i < 100; i++) {
+        const session = createTestSessionInput({ name: `Session ${i}` });
+        const result = save(session);
+        ids.push(result.data!.id);
+      }
+
+      // Get first 50 by IDs
+      const selectedIds = ids.slice(0, 50);
+      const sessions = getByIds(selectedIds);
+
+      expect(sessions.length).toBe(50);
+
+      // Verify all returned sessions are in the selected IDs
+      sessions.forEach(session => {
+        expect(selectedIds).toContain(session.id);
+      });
+    });
+
+    it('should handle querying all sessions efficiently', () => {
+      // Save 50 sessions
+      const ids: string[] = [];
+      for (let i = 0; i < 50; i++) {
+        const session = createTestSessionInput({ name: `Session ${i}` });
+        const result = save(session);
+        ids.push(result.data!.id);
+      }
+
+      // Get all by IDs
+      const sessions = getByIds(ids);
+
+      expect(sessions.length).toBe(50);
     });
   });
 });
