@@ -45,26 +45,6 @@ const mockResultWithStats: PayslipResult = {
   ],
 };
 
-const mockResultWithoutStats: PayslipResult = {
-  saleRevenue: 15000,
-  netProfit: 11300,
-  taxRateApplied: 0.005,
-  members: [
-    {
-      memberId: "m1",
-      handle: "Pilot",
-      revenue: 10000,
-      investment: 2000,
-      expenses: 450,
-      sharedExpenses: 250,
-      individualExpenses: 200,
-      profitShare: 5650,
-      finalNet: 13200,
-    },
-  ],
-  suggestedTransfers: [],
-};
-
 describe('SummaryStats - Basic Rendering', () => {
   it('should render summary heading in German', () => {
     render(
