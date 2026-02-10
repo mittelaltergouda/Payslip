@@ -9,11 +9,13 @@ import { describe, it, expect } from "vitest";
 const mockTranslationsDE = {
   members: "Mitglieder",
   revenueLabel: "Umsatz",
+  deleteSession: "Session löschen",
 };
 
 const mockTranslationsEN = {
   members: "Members",
   revenueLabel: "Revenue",
+  deleteSession: "Delete Session",
 };
 
 // Sample session data

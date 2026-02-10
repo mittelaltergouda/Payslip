@@ -71,7 +71,7 @@ export interface ValidationErrorListProps {
 export function ValidationErrorList({
   errors,
   translations,
-  lang,
+  lang: _lang,
   className = "",
 }: ValidationErrorListProps) {
   const t = translations;

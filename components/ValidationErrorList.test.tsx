@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { ValidationErrorList } from './ValidationErrorList';
-import { ZodError, ZodIssue } from 'zod';
+import { ZodError, type ZodIssue } from 'zod';
 import { translations } from '@/lib/i18n/translations';
 import { describe, it, expect } from 'vitest';
 
