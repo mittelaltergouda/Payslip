@@ -94,6 +94,19 @@ export function getAll(): SavedSession[] {
 }
 
 /**
+ * Retrieves multiple sessions by their IDs from localStorage.
+ * Validates each session with Zod schema and filters out corrupt data.
+ * Returns only sessions that match the provided IDs, maintaining sort order.
+ *
+ * @param sessionIds - Array of session IDs to retrieve
+ * @returns Array of validated SavedSession objects for the specified IDs
+ */
+export function getByIds(sessionIds: string[]): SavedSession[] {
+  const allSessions = getAllInternal();
+  return allSessions.filter((s) => sessionIds.includes(s.id));
+}
+
+/**
  * Internal function to get all sessions with validation
  */
 function getAllInternal(): SavedSession[] {
