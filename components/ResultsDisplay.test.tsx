@@ -919,3 +919,153 @@ describe('ResultsDisplay - CSV Export Edge Cases', () => {
     );
   });
 });
+
+describe('ResultsDisplay - Empty State Rendering', () => {
+  it('should render empty state when result is null and error is null', () => {
+    render(
+      <ResultsDisplay
+        result={null}
+        session={mockSession}
+        error={null}
+        translations={translations.en}
+        lang="en"
+      />
+    );
+
+    // Should show the results heading
+    expect(screen.getByText('Payout')).toBeInTheDocument();
+
+    // Should show the empty state message
+    expect(screen.getByText('No calculation yet')).toBeInTheDocument();
+  });
+
+  it('should render empty state with German translations', () => {
+    render(
+      <ResultsDisplay
+        result={null}
+        session={mockSession}
+        error={null}
+        translations={translations.de}
+        lang="de"
+      />
+    );
+
+    // Should show the results heading
+    expect(screen.getByText('Payout')).toBeInTheDocument();
+
+    // Should show the German empty state message
+    expect(screen.getByText('Noch keine Berechnung')).toBeInTheDocument();
+  });
+
+  it('should render empty state with English translations', () => {
+    render(
+      <ResultsDisplay
+        result={null}
+        session={mockSession}
+        error={null}
+        translations={translations.en}
+        lang="en"
+      />
+    );
+
+    // Should show the results heading
+    expect(screen.getByText('Payout')).toBeInTheDocument();
+
+    // Should show the English empty state message
+    expect(screen.getByText('No calculation yet')).toBeInTheDocument();
+  });
+
+  it('should render SVG icon in empty state', () => {
+    const { container } = render(
+      <ResultsDisplay
+        result={null}
+        session={mockSession}
+        error={null}
+        translations={translations.en}
+        lang="en"
+      />
+    );
+
+    // Should have an SVG element (the document/chart icon)
+    const svgElements = container.querySelectorAll('svg');
+    expect(svgElements.length).toBeGreaterThan(0);
+  });
+
+  it('should not render CSV export buttons in empty state', () => {
+    render(
+      <ResultsDisplay
+        result={null}
+        session={mockSession}
+        error={null}
+        translations={translations.en}
+        lang="en"
+      />
+    );
+
+    // CSV export buttons should not be present
+    expect(screen.queryByText('Summary (CSV)')).not.toBeInTheDocument();
+    expect(screen.queryByText('Detailed (CSV)')).not.toBeInTheDocument();
+  });
+
+  it('should not render result tables in empty state', () => {
+    render(
+      <ResultsDisplay
+        result={null}
+        session={mockSession}
+        error={null}
+        translations={translations.en}
+        lang="en"
+      />
+    );
+
+    // Should not have any tables
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  it('should not render empty state when error is present', () => {
+    render(
+      <ResultsDisplay
+        result={null}
+        session={mockSession}
+        error="Calculation failed"
+        translations={translations.en}
+        lang="en"
+      />
+    );
+
+    // Should show error message, not empty state
+    expect(screen.getByText('Calculation failed')).toBeInTheDocument();
+    expect(screen.queryByText('No calculation yet')).not.toBeInTheDocument();
+  });
+
+  it('should not render empty state when result is present', () => {
+    render(
+      <ResultsDisplay
+        result={mockResult}
+        session={mockSession}
+        error={null}
+        translations={translations.en}
+        lang="en"
+      />
+    );
+
+    // Should not show empty state message when there are results
+    expect(screen.queryByText('No calculation yet')).not.toBeInTheDocument();
+  });
+
+  it('should apply custom className to empty state container', () => {
+    const { container } = render(
+      <ResultsDisplay
+        result={null}
+        session={mockSession}
+        error={null}
+        translations={translations.en}
+        lang="en"
+        className="custom-empty-class"
+      />
+    );
+
+    const mainDiv = container.firstChild;
+    expect(mainDiv).toHaveClass('custom-empty-class');
+  });
+});
