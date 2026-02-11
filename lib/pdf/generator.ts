@@ -43,7 +43,7 @@ export interface PDFGeneratorOptions {
  * Generates a PDF document from session and result data.
  *
  * Creates a professionally formatted A4 PDF containing:
- * - Session header with name, date, type, and total revenue
+ * - Session header with name, date, and total revenue
  * - Member breakdown table showing handle, revenue, investment, expenses, taxes, profit share, and net payout
  * - Settlement transfers list with from/to member details and amounts (net, gross, fees)
  *
@@ -120,8 +120,6 @@ export function generatePDF(
   );
   doc.text(`Date: ${sessionDate}`, margin, yPosition);
   yPosition += 5;
-  doc.text(`Type: ${session.type}`, margin, yPosition);
-  yPosition += 5;
 
   // Total Revenue
   const totalRevenue = session.members.reduce(
@@ -184,7 +182,7 @@ export function generatePDF(
     body: memberRows,
     theme: "striped",
     headStyles: {
-      fillColor: [41, 128, 185],
+      fillColor: [26, 43, 60],
       textColor: 255,
       fontStyle: "bold",
       fontSize: 9,
@@ -251,7 +249,7 @@ export function generatePDF(
       body: transferRows,
       theme: "striped",
       headStyles: {
-        fillColor: [41, 128, 185],
+        fillColor: [26, 43, 60],
         textColor: 255,
         fontStyle: "bold",
         fontSize: 9,

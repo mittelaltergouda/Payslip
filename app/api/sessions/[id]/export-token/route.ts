@@ -8,8 +8,10 @@ import type { NextRequest} from "next/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateSecureToken } from "@/lib/crypto";
-import { exportTokenSchema } from "@/app/api/sessions/validation";
+import { exportTokenSchema, sessionIdParamSchema } from "@/app/api/sessions/validation";
 import { Prisma } from "@prisma/client";
+import { extractCsrfTokenFromHeaders, validateCsrfToken } from "@/lib/csrf";
+import { sanitizeError } from "@/lib/errors";
 
 /**
  * POST /api/sessions/[id]/export-token
@@ -17,6 +19,7 @@ import { Prisma } from "@prisma/client";
  * Generates a new export token for sharing a session via read-only link.
  *
  * Security features:
+ * - CSRF protection via token validation (prevents cross-site request forgery)
  * - Cryptographically secure token generation (256 bits entropy)
  * - Unique token constraint enforced at database level
  * - URL-safe base64 encoding for use in share links
@@ -26,6 +29,8 @@ import { Prisma } from "@prisma/client";
  * @returns 201 Created with token data, or error response
  *
  * Error responses:
+ * - 400 Bad Request: Invalid session ID format (must be UUID)
+ * - 403 Forbidden: Invalid or missing CSRF token
  * - 404 Not Found: Session does not exist
  * - 409 Conflict: Token collision (extremely rare, retry suggested)
  * - 500 Internal Server Error: Database or validation error
@@ -47,6 +52,32 @@ export async function POST(
   try {
     // Extract session ID from route parameters
     const { id: sessionId } = await context.params;
+
+    // Validate session ID format (must be a valid UUID)
+    const validation = sessionIdParamSchema.safeParse({ id: sessionId });
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid session ID format",
+          details: validation.error.errors[0].message
+        },
+        { status: 400 }
+      );
+    }
+
+    // CSRF Protection: Double-Submit Cookie Pattern
+    const clientToken = extractCsrfTokenFromHeaders(request.headers);
+    const cookieToken = request.cookies.get('csrf-token')?.value;
+
+    if (!validateCsrfToken(clientToken, cookieToken)) {
+      return NextResponse.json(
+        {
+          error: "CSRF token validation failed",
+          details: "Invalid or missing CSRF token"
+        },
+        { status: 403 }
+      );
+    }
 
     // Validate session exists before generating token
     const session = await prisma.session.findUnique({
@@ -113,7 +144,7 @@ export async function POST(
     // Handle validation errors from Zod schema
     if (error instanceof Error && error.name === "ZodError") {
       return NextResponse.json(
-        { error: "Validation error", details: error.message },
+        { error: "Validation error", details: sanitizeError(error) },
         { status: 400 }
       );
     }
@@ -125,7 +156,7 @@ export async function POST(
     return NextResponse.json(
       {
         error: "Failed to generate export token",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: sanitizeError(error)
       },
       { status: 500 }
     );

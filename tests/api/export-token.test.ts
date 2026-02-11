@@ -22,11 +22,28 @@ vi.mock("@/lib/prisma", () => ({
   }
 }));
 
-// Helper function to create a mock NextRequest
-function createMockRequest(sessionId: string): NextRequest {
-  return new NextRequest(`http://localhost:3000/api/sessions/${sessionId}/export-token`, {
-    method: "POST"
+// Helper function to create a mock NextRequest with optional CSRF token and cookie
+function createMockRequest(sessionId: string, csrfToken?: string, csrfCookie?: string): any {
+  const headers: Record<string, string> = {};
+  if (csrfToken !== undefined) {
+    headers["x-csrf-token"] = csrfToken;
+  }
+
+  const request = new NextRequest(`http://localhost:3000/api/sessions/${sessionId}/export-token`, {
+    method: "POST",
+    headers
   });
+
+  // Mock cookies API
+  const originalCookiesGet = request.cookies.get.bind(request.cookies);
+  request.cookies.get = (name: string) => {
+    if (name === 'csrf-token') {
+      return csrfCookie !== undefined ? { name: 'csrf-token', value: csrfCookie } : undefined;
+    }
+    return originalCookiesGet(name);
+  };
+
+  return request;
 }
 
 // Helper function to create a mock context with params
@@ -47,7 +64,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
 
   describe("Success Cases", () => {
     it("should successfully create export token for valid session", async () => {
-      const sessionId = "test-session-123";
+      const sessionId = "a0000000-0000-4000-a000-000000000001";
       const mockSession = { id: sessionId };
       const mockToken = "kJ8x-3mQfYz2vN4pL6rW9sU1tH5qD7cA8bE0gF2hG4i";
       const mockExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
@@ -64,7 +81,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
       // Mock token creation
       vi.mocked(prisma.exportToken.create).mockResolvedValue(mockExportToken as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-123";
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
@@ -96,7 +114,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should generate cryptographically secure token", async () => {
-      const sessionId = "test-session-456";
+      const sessionId = "a0000000-0000-4000-a000-000000000002";
       const mockSession = { id: sessionId };
       let capturedToken = "";
 
@@ -111,7 +129,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
         } as any);
       }) as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-456";
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
       await POST(request, context);
 
@@ -123,7 +142,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should create multiple unique tokens for the same session", async () => {
-      const sessionId = "test-session-789";
+      const sessionId = "a0000000-0000-4000-a000-000000000003";
       const mockSession = { id: sessionId };
       const generatedTokens: string[] = [];
 
@@ -139,9 +158,10 @@ describe("POST /api/sessions/[id]/export-token", () => {
         } as any);
       }) as any);
 
+      const csrfToken = "valid-csrf-token-789";
       // Generate 3 tokens for the same session
       for (let i = 0; i < 3; i++) {
-        const request = createMockRequest(sessionId);
+        const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
         const context = createMockContext(sessionId);
         await POST(request, context);
       }
@@ -152,7 +172,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should store token correctly in database", async () => {
-      const sessionId = "test-session-store";
+      const sessionId = "a0000000-0000-4000-a000-000000000004";
       const mockSession = { id: sessionId };
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
@@ -163,7 +183,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       } as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-store";
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
       await POST(request, context);
 
@@ -178,7 +199,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should include shareUrl in response", async () => {
-      const sessionId = "test-session-url";
+      const sessionId = "a0000000-0000-4000-a000-000000000005";
       const mockSession = { id: sessionId };
       const mockToken = "abc123-xyz789_test";
 
@@ -190,7 +211,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       } as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-url";
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
@@ -199,14 +221,149 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
   });
 
+  describe("CSRF Protection - Double-Submit Cookie Pattern", () => {
+    it("should return 403 when CSRF token missing from header", async () => {
+      const sessionId = "a0000000-0000-4000-a000-000000000006";
+
+      // Cookie present but header missing (attacker cannot read cookie)
+      const request = createMockRequest(sessionId, undefined, "valid-cookie-token");
+      const context = createMockContext(sessionId);
+      const response = await POST(request, context);
+
+      expect(response.status).toBe(403);
+
+      const data = await response.json();
+      expect(data).toMatchObject({
+        error: "CSRF token validation failed",
+        details: "Invalid or missing CSRF token"
+      });
+
+      // Should not attempt database operations
+      expect(prisma.session.findUnique).not.toHaveBeenCalled();
+      expect(prisma.exportToken.create).not.toHaveBeenCalled();
+    });
+
+    it("should return 403 when CSRF token missing from cookie", async () => {
+      const sessionId = "a0000000-0000-4000-a000-000000000007";
+
+      // Header present but cookie missing (middleware didn't set cookie)
+      const request = createMockRequest(sessionId, "attacker-token", undefined);
+      const context = createMockContext(sessionId);
+      const response = await POST(request, context);
+
+      expect(response.status).toBe(403);
+
+      const data = await response.json();
+      expect(data).toMatchObject({
+        error: "CSRF token validation failed",
+        details: "Invalid or missing CSRF token"
+      });
+
+      // Should not attempt database operations
+      expect(prisma.session.findUnique).not.toHaveBeenCalled();
+      expect(prisma.exportToken.create).not.toHaveBeenCalled();
+    });
+
+    it("should return 403 when CSRF tokens do not match", async () => {
+      const sessionId = "a0000000-0000-4000-a000-000000000008";
+
+      // Header and cookie both present but don't match
+      const request = createMockRequest(sessionId, "token-from-attacker", "token-from-server");
+      const context = createMockContext(sessionId);
+      const response = await POST(request, context);
+
+      expect(response.status).toBe(403);
+
+      const data = await response.json();
+      expect(data).toMatchObject({
+        error: "CSRF token validation failed",
+        details: "Invalid or missing CSRF token"
+      });
+
+      // Should not attempt database operations
+      expect(prisma.session.findUnique).not.toHaveBeenCalled();
+      expect(prisma.exportToken.create).not.toHaveBeenCalled();
+    });
+
+    it("should return 403 when both tokens are empty strings", async () => {
+      const sessionId = "a0000000-0000-4000-a000-000000000009";
+
+      // Both empty (invalid)
+      const request = createMockRequest(sessionId, "", "");
+      const context = createMockContext(sessionId);
+      const response = await POST(request, context);
+
+      expect(response.status).toBe(403);
+
+      const data = await response.json();
+      expect(data).toMatchObject({
+        error: "CSRF token validation failed",
+        details: "Invalid or missing CSRF token"
+      });
+
+      // Should not attempt database operations
+      expect(prisma.session.findUnique).not.toHaveBeenCalled();
+      expect(prisma.exportToken.create).not.toHaveBeenCalled();
+    });
+
+    it("should prevent cross-site attack (attacker cannot read cookie)", async () => {
+      const sessionId = "a0000000-0000-4000-a000-00000000000a";
+      const mockSession = { id: sessionId };
+
+      vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
+
+      // Simulate attacker at evil.com trying to attack victim-app.com
+      // Attacker can send header but cannot read HTTP-only cookie
+      const maliciousRequest = createMockRequest(sessionId, "attacker-guessed-token", undefined);
+      const context = createMockContext(sessionId);
+      const response = await POST(maliciousRequest, context);
+
+      expect(response.status).toBe(403);
+
+      const data = await response.json();
+      expect(data.error).toBe("CSRF token validation failed");
+
+      // Database operations should not be executed (attack prevented)
+      expect(prisma.exportToken.create).not.toHaveBeenCalled();
+    });
+
+    it("should allow legitimate request with matching tokens", async () => {
+      const sessionId = "a0000000-0000-4000-a000-00000000000b";
+      const mockSession = { id: sessionId };
+      const mockToken = "secure-export-token";
+
+      vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
+      vi.mocked(prisma.exportToken.create).mockResolvedValue({
+        id: "token-uuid",
+        sessionId,
+        token: mockToken,
+        expiresAt: null
+      } as any);
+
+      // Legitimate request: client read token from response header and included it
+      // Server set matching token in cookie
+      const csrfToken = "valid-csrf-token";
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Tokens match
+      const context = createMockContext(sessionId);
+      const response = await POST(request, context);
+
+      expect(response.status).toBe(201);
+
+      // Database operations should be executed
+      expect(prisma.session.findUnique).toHaveBeenCalled();
+      expect(prisma.exportToken.create).toHaveBeenCalled();
+    });
+  });
+
   describe("Error Cases", () => {
     it("should return 404 when session does not exist", async () => {
-      const sessionId = "non-existent-session";
+      const sessionId = "a0000000-0000-4000-a000-00000000000c";
 
       // Mock session not found
       vi.mocked(prisma.session.findUnique).mockResolvedValue(null);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-404";
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
@@ -223,7 +380,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should return 409 on token collision (P2002 error)", async () => {
-      const sessionId = "test-session-collision";
+      const sessionId = "a0000000-0000-4000-a000-00000000000d";
       const mockSession = { id: sessionId };
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
@@ -239,7 +396,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
 
       vi.mocked(prisma.exportToken.create).mockRejectedValue(uniqueConstraintError);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-409";
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
@@ -253,13 +411,14 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should return 500 on database error", async () => {
-      const sessionId = "test-session-db-error";
+      const sessionId = "a0000000-0000-4000-a000-00000000000e";
       const mockSession = { id: sessionId };
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
       vi.mocked(prisma.exportToken.create).mockRejectedValue(new Error("Database connection error"));
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-500";
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
@@ -268,18 +427,19 @@ describe("POST /api/sessions/[id]/export-token", () => {
       const data = await response.json();
       expect(data).toMatchObject({
         error: "Failed to generate export token",
-        details: "Database connection error"
+        details: "An unexpected error occurred" // Sanitized error message
       });
     });
 
     it("should return 500 on unexpected error", async () => {
-      const sessionId = "test-session-unexpected";
+      const sessionId = "a0000000-0000-4000-a000-00000000000f";
       const mockSession = { id: sessionId };
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
       vi.mocked(prisma.exportToken.create).mockRejectedValue("Unexpected error");
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-unexpected";
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
@@ -292,7 +452,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
 
   describe("Token Security Properties", () => {
     it("should generate tokens with sufficient entropy", async () => {
-      const sessionId = "test-session-entropy";
+      const sessionId = "a0000000-0000-4000-a000-000000000010";
       const mockSession = { id: sessionId };
       const generatedTokens: string[] = [];
 
@@ -308,9 +468,10 @@ describe("POST /api/sessions/[id]/export-token", () => {
         } as any);
       }) as any);
 
+      const csrfToken = "valid-csrf-token-entropy";
       // Generate 100 tokens
       for (let i = 0; i < 100; i++) {
-        const request = createMockRequest(sessionId);
+        const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
         const context = createMockContext(sessionId);
         await POST(request, context);
       }
@@ -325,7 +486,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should generate tokens with URL-safe characters only", async () => {
-      const sessionId = "test-session-url-safe";
+      const sessionId = "a0000000-0000-4000-a000-000000000005-safe";
       const mockSession = { id: sessionId };
       const generatedTokens: string[] = [];
 
@@ -341,9 +502,10 @@ describe("POST /api/sessions/[id]/export-token", () => {
         } as any);
       }) as any);
 
+      const csrfToken = "valid-csrf-token-url-safe";
       // Generate 50 tokens to test URL safety
       for (let i = 0; i < 50; i++) {
-        const request = createMockRequest(sessionId);
+        const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
         const context = createMockContext(sessionId);
         await POST(request, context);
       }
@@ -359,7 +521,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should generate tokens that pass validation schema", async () => {
-      const sessionId = "test-session-validation";
+      const sessionId = "a0000000-0000-4000-a000-000000000012";
       const mockSession = { id: sessionId };
       const mockToken = "valid-URL-safe_token123-xyz_789";
 
@@ -371,7 +533,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       } as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-validation";
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
@@ -388,7 +551,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
 
   describe("Response Format", () => {
     it("should return correct response structure", async () => {
-      const sessionId = "test-session-structure";
+      const sessionId = "a0000000-0000-4000-a000-000000000013";
       const mockSession = { id: sessionId };
       const mockToken = "test-token-structure";
       const mockExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
@@ -401,7 +564,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
         expiresAt: mockExpiresAt
       } as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-structure";
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
@@ -423,7 +587,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should return correct content-type header", async () => {
-      const sessionId = "test-session-content-type";
+      const sessionId = "a0000000-0000-4000-a000-000000000014";
       const mockSession = { id: sessionId };
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
@@ -434,7 +598,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       } as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-content-type";
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
@@ -442,7 +607,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should set expiration to 7 days from now", async () => {
-      const sessionId = "test-session-expires";
+      const sessionId = "a0000000-0000-4000-a000-000000000015";
       const mockSession = { id: sessionId };
       const now = Date.now();
       const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
@@ -455,7 +620,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
         expiresAt: new Date(now + sevenDaysInMs)
       } as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-expires-null";
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
       const response = await POST(request, context);
 
@@ -475,7 +641,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
 
   describe("Database Interaction", () => {
     it("should verify session exists before generating token", async () => {
-      const sessionId = "test-session-verify";
+      const sessionId = "a0000000-0000-4000-a000-000000000016";
       const mockSession = { id: sessionId };
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
@@ -486,7 +652,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       } as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-verify";
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
       await POST(request, context);
 
@@ -495,7 +662,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
     });
 
     it("should select only session id for efficiency", async () => {
-      const sessionId = "test-session-select";
+      const sessionId = "a0000000-0000-4000-a000-000000000017";
       const mockSession = { id: sessionId };
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
@@ -506,7 +673,8 @@ describe("POST /api/sessions/[id]/export-token", () => {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       } as any);
 
-      const request = createMockRequest(sessionId);
+      const csrfToken = "valid-csrf-token-select";
+      const request = createMockRequest(sessionId, csrfToken, csrfToken); // Cookie must match header
       const context = createMockContext(sessionId);
       await POST(request, context);
 

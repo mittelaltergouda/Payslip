@@ -141,3 +141,9 @@ export const exportTokenSchema = z.object({
 });
 
 export type ExportTokenPayload = z.infer<typeof exportTokenSchema>;
+
+export const sessionIdParamSchema = z.object({
+  id: z.string().uuid("Invalid session ID format. Session ID must be a valid UUID")
+});
+
+export type SessionIdParam = z.infer<typeof sessionIdParamSchema>;

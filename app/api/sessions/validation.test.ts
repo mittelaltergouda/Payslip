@@ -3,7 +3,8 @@ import {
   memberSchema,
   sharedExpenseSchema,
   individualExpenseSchema,
-  sessionSchema
+  sessionSchema,
+  sessionIdParamSchema
 } from './validation';
 
 describe('memberSchema', () => {
@@ -1301,6 +1302,105 @@ describe('sessionSchema', () => {
       };
       const result = sessionSchema.safeParse(complexSession);
       expect(result.success).toBe(true);
+    });
+  });
+});
+
+describe('sessionIdParamSchema', () => {
+  describe('UUID validation', () => {
+    it('should accept valid UUID v4 format', () => {
+      const validParam = {
+        id: '123e4567-e89b-12d3-a456-426614174000'
+      };
+      const result = sessionIdParamSchema.safeParse(validParam);
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept valid UUID with different variations', () => {
+      const validUUIDs = [
+        '550e8400-e29b-41d4-a716-446655440000',
+        'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+      ];
+
+      validUUIDs.forEach(id => {
+        const result = sessionIdParamSchema.safeParse({ id });
+        expect(result.success).toBe(true);
+      });
+    });
+
+    it('should reject empty string', () => {
+      const invalidParam = {
+        id: ''
+      };
+      const result = sessionIdParamSchema.safeParse(invalidParam);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toContain('Invalid');
+      }
+    });
+
+    it('should reject non-UUID string', () => {
+      const invalidParam = {
+        id: 'not-a-uuid'
+      };
+      const result = sessionIdParamSchema.safeParse(invalidParam);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toContain('Invalid session ID format');
+        expect(result.error.issues[0].message).toContain('must be a valid UUID');
+      }
+    });
+
+    it('should reject UUID-like string with invalid format', () => {
+      const invalidUUIDs = [
+        '123e4567-e89b-12d3-a456-42661417400',  // Too short
+        '123e4567-e89b-12d3-a456-4266141740000', // Too long
+        '123e4567-e89b-12d3-a456-42661417400g',  // Invalid character
+        '123e4567e89b12d3a456426614174000',      // Missing hyphens
+        '123e4567-e89b-12d3-a456'                // Incomplete
+      ];
+
+      invalidUUIDs.forEach(id => {
+        const result = sessionIdParamSchema.safeParse({ id });
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error.issues[0].message).toContain('Invalid session ID format');
+        }
+      });
+    });
+
+    it('should reject numeric session ID', () => {
+      const invalidParam = {
+        id: '12345'
+      };
+      const result = sessionIdParamSchema.safeParse(invalidParam);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toContain('Invalid session ID format');
+      }
+    });
+
+    it('should reject random string', () => {
+      const invalidParam = {
+        id: 'abc123xyz'
+      };
+      const result = sessionIdParamSchema.safeParse(invalidParam);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toContain('Invalid session ID format');
+      }
+    });
+
+    it('should reject special characters', () => {
+      const invalidParam = {
+        id: '@#$%^&*()'
+      };
+      const result = sessionIdParamSchema.safeParse(invalidParam);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toContain('Invalid session ID format');
+      }
     });
   });
 });

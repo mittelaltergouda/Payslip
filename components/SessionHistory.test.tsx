@@ -132,7 +132,7 @@ describe('SessionHistory - Initial Rendering', () => {
     );
 
     // Dialog component renders a close button with "Close" text for screen readers
-    const closeButton = screen.getByRole('button', { name: /close sidebar/i });
+    const closeButton = screen.getByRole('button', { name: /close/i });
     expect(closeButton).toBeInTheDocument();
   });
 
@@ -211,7 +211,7 @@ describe('SessionHistory - Empty State', () => {
     // Load button should not be present
     expect(screen.queryByText('Load')).not.toBeInTheDocument();
     // Dialog close button is always present
-    expect(screen.getByRole('button', { name: /close sidebar/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /close/i })).toBeInTheDocument();
   });
 });
 
@@ -693,7 +693,7 @@ describe('SessionHistory - Close Functionality', () => {
       />
     );
 
-    const closeButton = screen.getByRole('button', { name: /close sidebar/i });
+    const closeButton = screen.getByRole('button', { name: /close/i });
     fireEvent.click(closeButton);
 
     expect(mockOnClose).toHaveBeenCalledTimes(1);
@@ -866,9 +866,9 @@ describe('SessionHistory - Accessibility', () => {
     );
 
     // Dialog component uses screen reader text for accessibility
-    const closeButton = screen.getByRole('button', { name: /close sidebar/i });
+    const closeButton = screen.getByRole('button', { name: /close/i });
     expect(closeButton).toBeInTheDocument();
-    // Verify the button has proper accessible name (from sr-only text)
+    // Verify the button has proper accessible name
     expect(closeButton).toHaveAccessibleName('Close sidebar');
   });
 

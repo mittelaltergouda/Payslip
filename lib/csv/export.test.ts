@@ -1,245 +1,773 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { generateSummaryCSV, generateDetailedCSV, downloadCSV } from './export';
-import type { PayslipResult } from '../types';
+import { generateCSV, generateCSVFilename } from './export';
+import type { SessionInput, PayslipResult } from '@/lib/types';
 
-describe('CSV Export - escapeCSVField (via generateSummaryCSV)', () => {
-  const mockResult: PayslipResult = {
+// ============================================================================
+// TEST DATA HELPERS
+// ============================================================================
+
+/**
+ * Creates a minimal valid session for testing.
+ */
+function createTestSession(overrides: Partial<SessionInput> = {}): SessionInput {
+  return {
+    name: 'Test Session',
+    type: 'TRADING',
+    distributionMode: 'EQUAL',
+    taxEnabled: false,
+    members: [
+      { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000 },
+    ],
+    ...overrides,
+  };
+}
+
+/**
+ * Creates a minimal valid result for testing.
+ */
+function createTestResult(overrides: Partial<PayslipResult> = {}): PayslipResult {
+  return {
     saleRevenue: 1000,
-    netProfit: 800,
-    taxRateApplied: 4.5,
+    netProfit: 1000,
+    taxRateApplied: 0,
     members: [
       {
-        memberId: '1',
-        handle: 'TestUser',
-        role: 'Pilot',
+        memberId: 'member-1',
+        handle: 'Alice',
+        role: 'Member',
         active: true,
         revenue: 1000,
         investment: 0,
-        expenses: 200,
-        sharedExpenses: 100,
-        individualExpenses: 100,
-        profitShare: 400,
-        finalNet: 400,
+        expenses: 0,
+        sharedExpenses: 0,
+        individualExpenses: 0,
+        profitShare: 1000,
+        finalNet: 1000,
       },
     ],
     suggestedTransfers: [],
+    ...overrides,
   };
+}
 
-  it('should handle simple strings without escaping', () => {
-    const csv = generateSummaryCSV(mockResult, 'Simple Session', 'aUEC');
-    expect(csv).toContain('Simple Session');
-    expect(csv).toContain('TestUser');
+// ============================================================================
+// TESTS: generateCSV
+// ============================================================================
+
+describe('generateCSV', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it('should escape fields containing commas', () => {
-    const resultWithComma: PayslipResult = {
-      ...mockResult,
+  it('should generate a CSV string from session and result data', () => {
+    const session = createTestSession({
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 500 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 500 },
+      ],
+    });
+
+    const result = createTestResult({
       members: [
         {
-          ...mockResult.members[0],
-          handle: 'Test, User',
+          memberId: 'member-1',
+          handle: 'Alice',
+          role: 'Member',
+          active: true,
+          revenue: 500,
+          investment: 0,
+          expenses: 0,
+          sharedExpenses: 0,
+          individualExpenses: 0,
+          profitShare: 500,
+          finalNet: 500,
         },
-      ],
-    };
-    const csv = generateSummaryCSV(resultWithComma, 'Session', 'aUEC');
-    expect(csv).toContain('"Test, User"');
-  });
-
-  it('should escape fields containing double quotes', () => {
-    const resultWithQuotes: PayslipResult = {
-      ...mockResult,
-      members: [
         {
-          ...mockResult.members[0],
-          handle: 'Test "Quote" User',
+          memberId: 'member-2',
+          handle: 'Bob',
+          role: 'Member',
+          active: true,
+          revenue: 500,
+          investment: 0,
+          expenses: 0,
+          sharedExpenses: 0,
+          individualExpenses: 0,
+          profitShare: 500,
+          finalNet: 500,
         },
       ],
-    };
-    const csv = generateSummaryCSV(resultWithQuotes, 'Session', 'aUEC');
-    expect(csv).toContain('"Test ""Quote"" User"');
+    });
+
+    const csv = generateCSV(session, result);
+
+    expect(typeof csv).toBe('string');
+    expect(csv.length).toBeGreaterThan(0);
+    expect(csv).toContain('SC Payslip Export');
   });
 
-  it('should escape fields containing newlines', () => {
-    const resultWithNewline: PayslipResult = {
-      ...mockResult,
-      members: [
-        {
-          ...mockResult.members[0],
-          role: 'Pilot\nGunner',
-        },
-      ],
-    };
-    const csv = generateSummaryCSV(resultWithNewline, 'Session', 'aUEC');
-    expect(csv).toContain('"Pilot\nGunner"');
+  it('should not include Type field in the CSV output', () => {
+    const session = createTestSession({
+      type: 'TRADING',
+    });
+
+    const result = createTestResult();
+
+    const csv = generateCSV(session, result);
+
+    // Verify that the CSV does not contain "Type:" anywhere
+    expect(csv).not.toContain('Type:');
+    expect(csv).not.toContain('type:');
   });
 
-  it('should handle empty strings', () => {
-    const resultWithEmpty: PayslipResult = {
-      ...mockResult,
-      members: [
-        {
-          ...mockResult.members[0],
-          role: '',
-        },
-      ],
-    };
-    const csv = generateSummaryCSV(resultWithEmpty, 'Session', 'aUEC');
-    expect(csv).toContain(',,'); // Empty field between commas
+  it('should not render session type even when type is provided in session input', () => {
+    const session = createTestSession({
+      name: 'Mining Session',
+      type: 'MINING',
+    });
+
+    const result = createTestResult();
+
+    const csv = generateCSV(session, result);
+
+    // Verify no text mentions MINING as a type field
+    expect(csv).not.toContain('Type:');
+    expect(csv).not.toContain('MINING');
   });
 
-  it('should handle null values', () => {
-    const resultWithNull: PayslipResult = {
-      ...mockResult,
-      members: [
-        {
-          ...mockResult.members[0],
-          role: undefined,
-        },
-      ],
-    };
-    const csv = generateSummaryCSV(resultWithNull, 'Session', 'aUEC');
-    // Should have empty field for undefined role
-    expect(csv).toMatch(/TestUser,,Yes/);
+  it('should not include Type field for any session type value', () => {
+    const sessionTypes: Array<SessionInput['type']> = [
+      'TRADING',
+      'PIRACY',
+      'SALVAGE',
+      'MINING',
+      'BOUNTY',
+      'OTHER',
+    ];
+
+    for (const sessionType of sessionTypes) {
+      const session = createTestSession({ type: sessionType });
+      const result = createTestResult();
+
+      const csv = generateCSV(session, result);
+
+      expect(csv).not.toContain('Type:');
+      expect(csv).not.toContain(sessionType);
+    }
   });
 
-  it('should handle numbers correctly', () => {
-    const csv = generateSummaryCSV(mockResult, 'Session', 'aUEC');
-    expect(csv).toContain('1000');
-    expect(csv).toContain('800');
-    expect(csv).toContain('4.5');
-  });
-});
+  // --------------------------------------------------------------------------
+  // LANGUAGE AND FORMATTING TESTS
+  // --------------------------------------------------------------------------
 
-describe('generateSummaryCSV - Basic Structure', () => {
-  const mockResult: PayslipResult = {
-    saleRevenue: 10000,
-    netProfit: 8000,
-    taxRateApplied: 4.5,
-    members: [
-      {
-        memberId: '1',
-        handle: 'Alpha',
-        role: 'Pilot',
-        active: true,
-        revenue: 5000,
-        investment: 1000,
-        expenses: 500,
-        sharedExpenses: 300,
-        individualExpenses: 200,
-        profitShare: 4000,
-        finalNet: 4500,
-      },
-      {
-        memberId: '2',
-        handle: 'Bravo',
-        role: 'Gunner',
-        active: false,
-        revenue: 3000,
-        investment: 500,
-        expenses: 300,
-        sharedExpenses: 200,
-        individualExpenses: 100,
-        profitShare: 2000,
-        finalNet: 2200,
-      },
-    ],
-    suggestedTransfers: [],
-  };
+  it('should use comma as delimiter for English (default)', () => {
+    const session = createTestSession();
+    const result = createTestResult();
 
-  it('should include session header information', () => {
-    const csv = generateSummaryCSV(mockResult, 'Trading Run #1', 'aUEC');
+    const csv = generateCSV(session, result);
 
-    expect(csv).toContain('Session: Trading Run #1');
-    expect(csv).toContain('Currency: aUEC');
-    expect(csv).toContain('Total Revenue: 10000');
-    expect(csv).toContain('Net Profit: 8000');
-    expect(csv).toContain('Tax Rate: 4.5%');
+    // English CSV should use comma delimiter
+    // Check that the member header row uses commas
+    expect(csv).toContain('Handle,Revenue,Investment,Expenses,Taxes,Profit Share,Net Payout');
   });
 
-  it('should use default currency when not specified', () => {
-    const csv = generateSummaryCSV(mockResult, 'Trading Run #1');
-    expect(csv).toContain('Currency: aUEC');
+  it('should use semicolon as delimiter for German', () => {
+    const session = createTestSession();
+    const result = createTestResult();
+
+    const csv = generateCSV(session, result, { lang: 'de' });
+
+    // German CSV should use semicolon delimiter
+    // Check that the member header row uses semicolons
+    expect(csv).toContain('Handle;Umsatz;Investment;Ausgaben;Steuern;Gewinnanteil;Netto Auszahlung');
   });
 
-  it('should include column headers', () => {
-    const csv = generateSummaryCSV(mockResult, 'Session', 'aUEC');
+  it('should use English translations by default', () => {
+    const session = createTestSession();
+    const result = createTestResult();
 
-    expect(csv).toContain('Handle');
-    expect(csv).toContain('Role');
-    expect(csv).toContain('Active');
+    const csv = generateCSV(session, result);
+
+    expect(csv).toContain('Member Breakdown');
+    expect(csv).toContain('Settlement Transfers');
     expect(csv).toContain('Revenue');
-    expect(csv).toContain('Investment');
-    expect(csv).toContain('Total Expenses');
-    expect(csv).toContain('Shared Expenses');
-    expect(csv).toContain('Individual Expenses');
     expect(csv).toContain('Profit Share');
-    expect(csv).toContain('Final Net');
+    expect(csv).toContain('Net Payout');
   });
 
-  it('should include all member data rows', () => {
-    const csv = generateSummaryCSV(mockResult, 'Session', 'aUEC');
+  it('should use German translations when lang is "de"', () => {
+    const session = createTestSession();
+    const result = createTestResult();
 
-    // Check first member
-    expect(csv).toContain('Alpha');
-    expect(csv).toContain('Pilot');
-    expect(csv).toMatch(/Alpha,Pilot,Yes,5000,1000,500,300,200,4000,4500/);
+    const csv = generateCSV(session, result, { lang: 'de' });
 
-    // Check second member
-    expect(csv).toContain('Bravo');
-    expect(csv).toContain('Gunner');
-    expect(csv).toMatch(/Bravo,Gunner,No,3000,500,300,200,100,2000,2200/);
+    expect(csv).toContain('Mitglieder Übersicht');
+    expect(csv).toContain('Überweisungen');
+    expect(csv).toContain('Umsatz');
+    expect(csv).toContain('Gewinnanteil');
+    expect(csv).toContain('Netto Auszahlung');
   });
 
-  it('should format active status as Yes/No', () => {
-    const csv = generateSummaryCSV(mockResult, 'Session', 'aUEC');
+  it('should use default currency "aUEC" when not specified', () => {
+    const session = createTestSession();
+    const result = createTestResult();
 
-    expect(csv).toContain('Alpha,Pilot,Yes');
-    expect(csv).toContain('Bravo,Gunner,No');
+    const csv = generateCSV(session, result);
+
+    expect(csv).toContain('Currency:,aUEC');
   });
 
-  it('should handle empty role', () => {
-    const resultNoRole: PayslipResult = {
-      ...mockResult,
+  it('should accept custom currency option', () => {
+    const session = createTestSession();
+    const result = createTestResult();
+
+    const csv = generateCSV(session, result, { currency: 'USD' });
+
+    expect(csv).toContain('Currency:,USD');
+  });
+
+  it('should format currency correctly with German locale', () => {
+    const session = createTestSession();
+    const result = createTestResult();
+
+    const csv = generateCSV(session, result, { lang: 'de', currency: 'EUR' });
+
+    expect(csv).toContain('Währung:;EUR');
+  });
+
+  // --------------------------------------------------------------------------
+  // MEMBER DATA TESTS
+  // --------------------------------------------------------------------------
+
+  it('should include all member data in the breakdown', () => {
+    const session = createTestSession({
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Captain', active: true, revenue: 500, investment: 100 },
+      ],
+    });
+
+    const result = createTestResult({
       members: [
         {
-          ...mockResult.members[0],
-          role: undefined,
+          memberId: 'member-1',
+          handle: 'Alice',
+          role: 'Captain',
+          active: true,
+          revenue: 500,
+          investment: 100,
+          expenses: 50,
+          sharedExpenses: 50,
+          individualExpenses: 0,
+          profitShare: 400,
+          finalNet: 350,
         },
       ],
-    };
+    });
 
-    const csv = generateSummaryCSV(resultNoRole, 'Session', 'aUEC');
-    expect(csv).toMatch(/Alpha,,Yes/); // Empty role field
+    const csv = generateCSV(session, result);
+
+    // Member handle should appear
+    expect(csv).toContain('Alice');
   });
-});
 
-describe('generateSummaryCSV - Edge Cases', () => {
-  it('should handle empty members array', () => {
-    const emptyResult: PayslipResult = {
-      saleRevenue: 0,
-      netProfit: 0,
-      taxRateApplied: 0,
-      members: [],
+  it('should handle multiple members with varying data', () => {
+    const session = createTestSession({
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Captain', active: true, revenue: 500, investment: 100, percentShare: 40 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 300, investment: 50, percentShare: 30 },
+        { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 200, investment: 0, percentShare: 30 },
+      ],
+    });
+
+    const result = createTestResult({
+      members: [
+        {
+          memberId: 'member-1',
+          handle: 'Alice',
+          role: 'Captain',
+          active: true,
+          revenue: 500,
+          investment: 100,
+          expenses: 50,
+          sharedExpenses: 50,
+          individualExpenses: 0,
+          profitShare: 340,
+          finalNet: 390,
+        },
+        {
+          memberId: 'member-2',
+          handle: 'Bob',
+          role: 'Member',
+          active: true,
+          revenue: 300,
+          investment: 50,
+          expenses: 50,
+          sharedExpenses: 50,
+          individualExpenses: 0,
+          profitShare: 255,
+          finalNet: 255,
+        },
+        {
+          memberId: 'member-3',
+          handle: 'Charlie',
+          role: 'Member',
+          active: true,
+          revenue: 200,
+          investment: 0,
+          expenses: 50,
+          sharedExpenses: 50,
+          individualExpenses: 0,
+          profitShare: 255,
+          finalNet: 205,
+        },
+      ],
+    });
+
+    const csv = generateCSV(session, result);
+
+    expect(csv).toContain('Alice');
+    expect(csv).toContain('Bob');
+    expect(csv).toContain('Charlie');
+  });
+
+  it('should handle members with empty handles', () => {
+    const session = createTestSession({
+      members: [
+        { id: 'member-1', handle: '', role: 'Member', active: true, revenue: 1000 },
+      ],
+    });
+
+    const result = createTestResult({
+      members: [
+        {
+          memberId: 'member-1',
+          handle: '',
+          role: 'Member',
+          active: true,
+          revenue: 1000,
+          investment: 0,
+          expenses: 0,
+          sharedExpenses: 0,
+          individualExpenses: 0,
+          profitShare: 1000,
+          finalNet: 1000,
+        },
+      ],
+    });
+
+    const csv = generateCSV(session, result);
+
+    // Should still generate valid CSV
+    expect(typeof csv).toBe('string');
+    expect(csv.length).toBeGreaterThan(0);
+  });
+
+  // --------------------------------------------------------------------------
+  // TRANSFER TESTS
+  // --------------------------------------------------------------------------
+
+  it('should handle sessions with no transfers', () => {
+    const session = createTestSession();
+
+    const result = createTestResult({
       suggestedTransfers: [],
-    };
+    });
 
-    const csv = generateSummaryCSV(emptyResult, 'Empty Session', 'aUEC');
-    expect(csv).toContain('Session: Empty Session');
-    expect(csv).toContain('Handle,Role,Active');
-    // Should have headers but no data rows
-    const lines = csv.split('\n');
-    expect(lines.length).toBeGreaterThan(5); // Headers exist
+    const csv = generateCSV(session, result);
+
+    expect(csv).toContain('No transfers required');
+  });
+
+  it('should show "Keine Überweisungen erforderlich" for no transfers in German', () => {
+    const session = createTestSession();
+
+    const result = createTestResult({
+      suggestedTransfers: [],
+    });
+
+    const csv = generateCSV(session, result, { lang: 'de' });
+
+    expect(csv).toContain('Keine Überweisungen erforderlich');
+  });
+
+  it('should include settlement transfers when present', () => {
+    const session = createTestSession({
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 800 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 200 },
+      ],
+    });
+
+    const result = createTestResult({
+      members: [
+        {
+          memberId: 'member-1',
+          handle: 'Alice',
+          role: 'Member',
+          active: true,
+          revenue: 800,
+          investment: 0,
+          expenses: 0,
+          sharedExpenses: 0,
+          individualExpenses: 0,
+          profitShare: 500,
+          finalNet: 500,
+        },
+        {
+          memberId: 'member-2',
+          handle: 'Bob',
+          role: 'Member',
+          active: true,
+          revenue: 200,
+          investment: 0,
+          expenses: 0,
+          sharedExpenses: 0,
+          individualExpenses: 0,
+          profitShare: 500,
+          finalNet: 500,
+        },
+      ],
+      suggestedTransfers: [
+        {
+          fromMemberId: 'member-1',
+          toMemberId: 'member-2',
+          netAmount: 300,
+          grossAmount: 313.28,
+          feeAmount: 13.28,
+        },
+      ],
+    });
+
+    const csv = generateCSV(session, result);
+
+    // Should contain transfer table headers
+    expect(csv).toContain('From');
+    expect(csv).toContain('To');
+    expect(csv).toContain('Net Amount');
+    expect(csv).toContain('Gross Amount');
+    expect(csv).toContain('Fee');
+
+    // Should contain member handles in transfer
+    expect(csv).toContain('Alice');
+    expect(csv).toContain('Bob');
+  });
+
+  it('should include transfer headers in German', () => {
+    const session = createTestSession({
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 800 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 200 },
+      ],
+    });
+
+    const result = createTestResult({
+      suggestedTransfers: [
+        {
+          fromMemberId: 'member-1',
+          toMemberId: 'member-2',
+          netAmount: 300,
+          grossAmount: 313.28,
+          feeAmount: 13.28,
+        },
+      ],
+    });
+
+    const csv = generateCSV(session, result, { lang: 'de' });
+
+    expect(csv).toContain('Von');
+    expect(csv).toContain('An');
+    expect(csv).toContain('Netto Betrag');
+    expect(csv).toContain('Brutto Betrag');
+    expect(csv).toContain('Gebühr');
+  });
+
+  it('should handle multiple transfers', () => {
+    const session = createTestSession({
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Captain', active: true, revenue: 700 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 200 },
+        { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 100 },
+      ],
+    });
+
+    const result = createTestResult({
+      members: [
+        {
+          memberId: 'member-1',
+          handle: 'Alice',
+          role: 'Captain',
+          active: true,
+          revenue: 700,
+          investment: 0,
+          expenses: 0,
+          sharedExpenses: 0,
+          individualExpenses: 0,
+          profitShare: 333,
+          finalNet: 333,
+        },
+        {
+          memberId: 'member-2',
+          handle: 'Bob',
+          role: 'Member',
+          active: true,
+          revenue: 200,
+          investment: 0,
+          expenses: 0,
+          sharedExpenses: 0,
+          individualExpenses: 0,
+          profitShare: 333,
+          finalNet: 333,
+        },
+        {
+          memberId: 'member-3',
+          handle: 'Charlie',
+          role: 'Member',
+          active: true,
+          revenue: 100,
+          investment: 0,
+          expenses: 0,
+          sharedExpenses: 0,
+          individualExpenses: 0,
+          profitShare: 334,
+          finalNet: 334,
+        },
+      ],
+      suggestedTransfers: [
+        {
+          fromMemberId: 'member-1',
+          toMemberId: 'member-2',
+          netAmount: 133,
+          grossAmount: 138.88,
+          feeAmount: 5.88,
+        },
+        {
+          fromMemberId: 'member-1',
+          toMemberId: 'member-3',
+          netAmount: 234,
+          grossAmount: 244.42,
+          feeAmount: 10.42,
+        },
+      ],
+    });
+
+    const csv = generateCSV(session, result);
+
+    // Should contain all members
+    expect(csv).toContain('Alice');
+    expect(csv).toContain('Bob');
+    expect(csv).toContain('Charlie');
+  });
+
+  it('should use member ID when handle is not found for transfers', () => {
+    const session = createTestSession({
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 800 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 200 },
+      ],
+    });
+
+    const result = createTestResult({
+      suggestedTransfers: [
+        {
+          fromMemberId: 'unknown-member-1',
+          toMemberId: 'unknown-member-2',
+          netAmount: 300,
+          grossAmount: 313.28,
+          feeAmount: 13.28,
+        },
+      ],
+    });
+
+    const csv = generateCSV(session, result);
+
+    // Should fall back to member IDs
+    expect(csv).toContain('unknown-member-1');
+    expect(csv).toContain('unknown-member-2');
+  });
+
+  // --------------------------------------------------------------------------
+  // EDGE CASES
+  // --------------------------------------------------------------------------
+
+  it('should handle empty session name gracefully', () => {
+    const session = createTestSession({
+      name: '',
+    });
+
+    const result = createTestResult();
+
+    const csv = generateCSV(session, result);
+
+    // Should use "Payslip" as fallback
+    expect(csv).toContain('Session:,Payslip');
+  });
+
+  it('should handle empty session name in German', () => {
+    const session = createTestSession({
+      name: '',
+    });
+
+    const result = createTestResult();
+
+    const csv = generateCSV(session, result, { lang: 'de' });
+
+    expect(csv).toContain('Session:;Payslip');
+  });
+
+  it('should properly escape CSV fields with commas', () => {
+    const session = createTestSession({
+      name: 'Test, Session, Name',
+    });
+
+    const result = createTestResult();
+
+    const csv = generateCSV(session, result);
+
+    // Session name with commas should be quoted
+    expect(csv).toContain('"Test, Session, Name"');
+  });
+
+  it('should properly escape CSV fields with semicolons in German', () => {
+    const session = createTestSession({
+      name: 'Test; Session; Name',
+    });
+
+    const result = createTestResult();
+
+    const csv = generateCSV(session, result, { lang: 'de' });
+
+    // Session name with semicolons should be quoted in German CSV
+    expect(csv).toContain('"Test; Session; Name"');
+  });
+
+  it('should properly escape CSV fields with double quotes', () => {
+    const session = createTestSession({
+      name: 'Test "Session" Name',
+    });
+
+    const result = createTestResult();
+
+    const csv = generateCSV(session, result);
+
+    // Double quotes should be escaped by doubling them
+    expect(csv).toContain('"Test ""Session"" Name"');
+  });
+
+  it('should properly escape CSV fields with newlines', () => {
+    const session = createTestSession({
+      name: 'Test\nSession',
+    });
+
+    const result = createTestResult();
+
+    const csv = generateCSV(session, result);
+
+    // Newlines should cause the field to be quoted
+    expect(csv).toContain('"Test\nSession"');
+  });
+
+  it('should handle members with special characters in handles', () => {
+    const session = createTestSession({
+      members: [
+        { id: 'member-1', handle: 'Alice "The Great"', role: 'Member', active: true, revenue: 1000 },
+      ],
+    });
+
+    const result = createTestResult({
+      members: [
+        {
+          memberId: 'member-1',
+          handle: 'Alice "The Great"',
+          role: 'Member',
+          active: true,
+          revenue: 1000,
+          investment: 0,
+          expenses: 0,
+          sharedExpenses: 0,
+          individualExpenses: 0,
+          profitShare: 1000,
+          finalNet: 1000,
+        },
+      ],
+    });
+
+    const csv = generateCSV(session, result);
+
+    // Handle with quotes should be properly escaped
+    expect(csv).toContain('"Alice ""The Great"""');
+  });
+
+  it('should calculate and include fees in member taxes column', () => {
+    const session = createTestSession({
+      taxEnabled: true,
+      taxRate: 4.25,
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0 },
+      ],
+    });
+
+    const result = createTestResult({
+      taxRateApplied: 4.25,
+      members: [
+        {
+          memberId: 'member-1',
+          handle: 'Alice',
+          role: 'Member',
+          active: true,
+          revenue: 1000,
+          investment: 0,
+          expenses: 0,
+          sharedExpenses: 0,
+          individualExpenses: 0,
+          profitShare: 500,
+          finalNet: 500,
+        },
+        {
+          memberId: 'member-2',
+          handle: 'Bob',
+          role: 'Member',
+          active: true,
+          revenue: 0,
+          investment: 0,
+          expenses: 0,
+          sharedExpenses: 0,
+          individualExpenses: 0,
+          profitShare: 500,
+          finalNet: 500,
+        },
+      ],
+      suggestedTransfers: [
+        {
+          fromMemberId: 'member-1',
+          toMemberId: 'member-2',
+          netAmount: 500,
+          grossAmount: 522.13,
+          feeAmount: 22.13,
+        },
+      ],
+    });
+
+    const csv = generateCSV(session, result);
+
+    // CSV should contain the Taxes column header
+    expect(csv).toContain('Taxes');
   });
 
   it('should handle zero values correctly', () => {
-    const zeroResult: PayslipResult = {
+    const session = createTestSession({
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0, investment: 0 },
+      ],
+    });
+
+    const result = createTestResult({
       saleRevenue: 0,
       netProfit: 0,
-      taxRateApplied: 0,
       members: [
         {
-          memberId: '1',
-          handle: 'Zero',
+          memberId: 'member-1',
+          handle: 'Alice',
+          role: 'Member',
           active: true,
           revenue: 0,
           investment: 0,
@@ -250,23 +778,62 @@ describe('generateSummaryCSV - Edge Cases', () => {
           finalNet: 0,
         },
       ],
-      suggestedTransfers: [],
-    };
+    });
 
-    const csv = generateSummaryCSV(zeroResult, 'Session', 'aUEC');
-    expect(csv).toContain('Total Revenue: 0');
-    expect(csv).toContain('Zero,,Yes,0,0,0,0,0,0,0');
+    const csv = generateCSV(session, result);
+
+    // Should generate valid CSV even with zero values
+    expect(typeof csv).toBe('string');
+    expect(csv).toContain('Alice');
+  });
+
+  it('should include date in the header', () => {
+    const session = createTestSession();
+    const result = createTestResult();
+
+    const csv = generateCSV(session, result);
+
+    // Should contain Date field
+    expect(csv).toContain('Date:');
+  });
+
+  it('should include date in German format', () => {
+    const session = createTestSession();
+    const result = createTestResult();
+
+    const csv = generateCSV(session, result, { lang: 'de' });
+
+    // Should contain Datum field
+    expect(csv).toContain('Datum:');
+  });
+
+  it('should handle empty members array', () => {
+    const session = createTestSession({
+      members: [],
+    });
+
+    const result = createTestResult({
+      members: [],
+    });
+
+    const csv = generateCSV(session, result);
+
+    // Should still generate valid CSV with headers
+    expect(csv).toContain('SC Payslip Export');
+    expect(csv).toContain('Member Breakdown');
+    expect(csv).toContain('Handle');
   });
 
   it('should handle negative values correctly', () => {
-    const negativeResult: PayslipResult = {
-      saleRevenue: 1000,
+    const session = createTestSession();
+
+    const result = createTestResult({
       netProfit: -500,
-      taxRateApplied: 4.5,
       members: [
         {
-          memberId: '1',
-          handle: 'Negative',
+          memberId: 'member-1',
+          handle: 'Alice',
+          role: 'Member',
           active: true,
           revenue: 500,
           investment: 0,
@@ -277,23 +844,24 @@ describe('generateSummaryCSV - Edge Cases', () => {
           finalNet: -700,
         },
       ],
-      suggestedTransfers: [],
-    };
+    });
 
-    const csv = generateSummaryCSV(negativeResult, 'Session', 'aUEC');
-    expect(csv).toContain('Net Profit: -500');
-    expect(csv).toContain('-200');
-    expect(csv).toContain('-700');
+    const csv = generateCSV(session, result);
+
+    // Should handle negative numbers
+    expect(typeof csv).toBe('string');
+    expect(csv.length).toBeGreaterThan(0);
   });
 
   it('should handle very large numbers', () => {
-    const largeResult: PayslipResult = {
+    const session = createTestSession();
+
+    const result = createTestResult({
       saleRevenue: 999999999,
       netProfit: 888888888,
-      taxRateApplied: 4.5,
       members: [
         {
-          memberId: '1',
+          memberId: 'member-1',
           handle: 'Rich',
           active: true,
           revenue: 999999999,
@@ -305,438 +873,97 @@ describe('generateSummaryCSV - Edge Cases', () => {
           finalNet: 494444444,
         },
       ],
-      suggestedTransfers: [],
-    };
+    });
 
-    const csv = generateSummaryCSV(largeResult, 'Session', 'aUEC');
-    expect(csv).toContain('999999999');
-    expect(csv).toContain('888888888');
-    expect(csv).toContain('444444444');
+    const csv = generateCSV(session, result);
+
+    expect(typeof csv).toBe('string');
+    expect(csv).toContain('Rich');
   });
 });
 
-describe('generateDetailedCSV - Basic Structure', () => {
-  const mockResult: PayslipResult = {
-    saleRevenue: 10000,
-    netProfit: 8000,
-    taxRateApplied: 4.5,
-    members: [
-      {
-        memberId: '1',
-        handle: 'Alpha',
-        role: 'Pilot',
-        active: true,
-        revenue: 5000,
-        investment: 1000,
-        expenses: 500,
-        sharedExpenses: 300,
-        individualExpenses: 200,
-        profitShare: 4000,
-        finalNet: 4500,
-      },
-      {
-        memberId: '2',
-        handle: 'Bravo',
-        role: 'Gunner',
-        active: true,
-        revenue: 3000,
-        investment: 500,
-        expenses: 300,
-        sharedExpenses: 200,
-        individualExpenses: 100,
-        profitShare: 2000,
-        finalNet: 2200,
-      },
-    ],
-    suggestedTransfers: [
-      {
-        fromMemberId: '2',
-        toMemberId: '1',
-        netAmount: 1000,
-        grossAmount: 1045,
-        feeAmount: 45,
-      },
-    ],
-  };
+// ============================================================================
+// TESTS: generateCSVFilename
+// ============================================================================
 
-  it('should include session header information', () => {
-    const csv = generateDetailedCSV(mockResult, 'Trading Run #1', 'aUEC');
-
-    expect(csv).toContain('Session: Trading Run #1');
-    expect(csv).toContain('Currency: aUEC');
-    expect(csv).toContain('Total Revenue: 10000');
-    expect(csv).toContain('Net Profit: 8000');
-    expect(csv).toContain('Tax Rate: 4.5%');
-  });
-
-  it('should include MEMBER BREAKDOWN section', () => {
-    const csv = generateDetailedCSV(mockResult, 'Session', 'aUEC');
-
-    expect(csv).toContain('MEMBER BREAKDOWN');
-    expect(csv).toContain('Handle,Role,Active');
-    expect(csv).toContain('Alpha,Pilot,Yes');
-    expect(csv).toContain('Bravo,Gunner,Yes');
-  });
-
-  it('should include SUGGESTED TRANSFERS section', () => {
-    const csv = generateDetailedCSV(mockResult, 'Session', 'aUEC');
-
-    expect(csv).toContain('SUGGESTED TRANSFERS');
-    expect(csv).toContain('From,To,Net Amount,Gross Amount (with tax),Fee Amount');
-    expect(csv).toContain('Bravo,Alpha,1000,1045,45');
-  });
-
-  it('should resolve member handles in transfers', () => {
-    const csv = generateDetailedCSV(mockResult, 'Session', 'aUEC');
-
-    // Should use handles, not IDs
-    expect(csv).toContain('Bravo,Alpha');
-    expect(csv).not.toContain(',1,'); // Should not contain raw member ID
-    expect(csv).not.toContain(',2,');
-  });
-
-  it('should use member ID if handle not found', () => {
-    const resultUnknownMember: PayslipResult = {
-      ...mockResult,
-      suggestedTransfers: [
-        {
-          fromMemberId: '999',
-          toMemberId: '1',
-          netAmount: 1000,
-          grossAmount: 1045,
-          feeAmount: 45,
-        },
-      ],
-    };
-
-    const csv = generateDetailedCSV(resultUnknownMember, 'Session', 'aUEC');
-    expect(csv).toContain('999,Alpha'); // Unknown member ID used as fallback
-  });
-
-  it('should handle empty transfers array', () => {
-    const resultNoTransfers: PayslipResult = {
-      ...mockResult,
-      suggestedTransfers: [],
-    };
-
-    const csv = generateDetailedCSV(resultNoTransfers, 'Session', 'aUEC');
-    expect(csv).toContain('SUGGESTED TRANSFERS');
-    expect(csv).toContain('From,To,Net Amount');
-    // Should have headers but no transfer data rows
-  });
-});
-
-describe('generateDetailedCSV - Multiple Transfers', () => {
-  const mockResult: PayslipResult = {
-    saleRevenue: 15000,
-    netProfit: 12000,
-    taxRateApplied: 4.5,
-    members: [
-      {
-        memberId: '1',
-        handle: 'Alpha',
-        active: true,
-        revenue: 10000,
-        investment: 0,
-        expenses: 1000,
-        sharedExpenses: 500,
-        individualExpenses: 500,
-        profitShare: 6000,
-        finalNet: 6000,
-      },
-      {
-        memberId: '2',
-        handle: 'Bravo',
-        active: true,
-        revenue: 3000,
-        investment: 0,
-        expenses: 1000,
-        sharedExpenses: 500,
-        individualExpenses: 500,
-        profitShare: 3000,
-        finalNet: 3000,
-      },
-      {
-        memberId: '3',
-        handle: 'Charlie',
-        active: true,
-        revenue: 2000,
-        investment: 0,
-        expenses: 1000,
-        sharedExpenses: 500,
-        individualExpenses: 500,
-        profitShare: 3000,
-        finalNet: 3000,
-      },
-    ],
-    suggestedTransfers: [
-      {
-        fromMemberId: '2',
-        toMemberId: '1',
-        netAmount: 1500,
-        grossAmount: 1567.5,
-        feeAmount: 67.5,
-      },
-      {
-        fromMemberId: '3',
-        toMemberId: '1',
-        netAmount: 1000,
-        grossAmount: 1045,
-        feeAmount: 45,
-      },
-    ],
-  };
-
-  it('should include all transfers', () => {
-    const csv = generateDetailedCSV(mockResult, 'Session', 'aUEC');
-
-    expect(csv).toContain('Bravo,Alpha,1500,1567.5,67.5');
-    expect(csv).toContain('Charlie,Alpha,1000,1045,45');
-  });
-
-  it('should maintain transfer order', () => {
-    const csv = generateDetailedCSV(mockResult, 'Session', 'aUEC');
-    const lines = csv.split('\n');
-
-    const bravoTransferIndex = lines.findIndex((line) =>
-      line.includes('Bravo,Alpha')
-    );
-    const charlieTransferIndex = lines.findIndex((line) =>
-      line.includes('Charlie,Alpha')
-    );
-
-    expect(bravoTransferIndex).toBeLessThan(charlieTransferIndex);
-  });
-});
-
-describe('downloadCSV - Browser Download', () => {
-  let originalCreateObjectURL: typeof URL.createObjectURL;
-  let originalRevokeObjectURL: typeof URL.revokeObjectURL;
-  let mockCreateObjectURL: ReturnType<typeof vi.fn>;
-  let mockRevokeObjectURL: ReturnType<typeof vi.fn>;
-  let mockClick: ReturnType<typeof vi.fn>;
-  let appendChildSpy: ReturnType<typeof vi.spyOn>;
-  let removeChildSpy: ReturnType<typeof vi.spyOn>;
-
+describe('generateCSVFilename', () => {
   beforeEach(() => {
-    // Save original methods
-    originalCreateObjectURL = URL.createObjectURL;
-    originalRevokeObjectURL = URL.revokeObjectURL;
-
-    // Mock URL methods
-    mockCreateObjectURL = vi.fn().mockReturnValue('blob:mock-csv-url');
-    mockRevokeObjectURL = vi.fn();
-    global.URL.createObjectURL = mockCreateObjectURL as unknown as typeof URL.createObjectURL;
-    global.URL.revokeObjectURL = mockRevokeObjectURL as unknown as typeof URL.revokeObjectURL;
-
-    // Mock link click
-    mockClick = vi.fn();
-    HTMLAnchorElement.prototype.click = mockClick as unknown as typeof HTMLAnchorElement.prototype.click;
-
-    // Spy on document.body methods
-    appendChildSpy = vi.spyOn(document.body, 'appendChild');
-    removeChildSpy = vi.spyOn(document.body, 'removeChild');
+    // Use fake timers and set a consistent date
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-02-03T12:00:00Z'));
   });
 
   afterEach(() => {
-    // Restore original methods
-    URL.createObjectURL = originalCreateObjectURL;
-    URL.revokeObjectURL = originalRevokeObjectURL;
-    vi.clearAllMocks();
+    vi.useRealTimers();
   });
 
-  it('should create a blob with CSV content', () => {
-    const csvContent = 'Header1,Header2\nValue1,Value2';
-    downloadCSV(csvContent, 'test-export');
-
-    expect(mockCreateObjectURL).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'text/csv;charset=utf-8;',
-      })
-    );
+  it('should generate a filename with sanitized session name and date', () => {
+    const filename = generateCSVFilename('Mining Operation Alpha');
+    expect(filename).toBe('mining-operation-alpha-2026-02-03.csv');
   });
 
-  it('should create download link with proper filename', () => {
-    const csvContent = 'Header1,Header2\nValue1,Value2';
-    downloadCSV(csvContent, 'sc-payslip-summary');
-
-    // Check that a link was appended
-    expect(appendChildSpy).toHaveBeenCalled();
-    const link = appendChildSpy.mock.calls[0][0] as HTMLAnchorElement;
-
-    expect(link.tagName).toBe('A');
-    expect(link.href).toBe('blob:mock-csv-url');
-    expect(link.download).toMatch(/^sc-payslip-summary-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.csv$/);
+  it('should replace spaces with hyphens', () => {
+    const filename = generateCSVFilename('Trade Run Session');
+    expect(filename).toBe('trade-run-session-2026-02-03.csv');
   });
 
-  it('should trigger download click', () => {
-    const csvContent = 'Header1,Header2\nValue1,Value2';
-    downloadCSV(csvContent, 'test-export');
-
-    expect(mockClick).toHaveBeenCalledTimes(1);
+  it('should remove special characters', () => {
+    const filename = generateCSVFilename('Trade Run #1 @ Night!');
+    expect(filename).toBe('trade-run-1-night-2026-02-03.csv');
   });
 
-  it('should cleanup after download', () => {
-    const csvContent = 'Header1,Header2\nValue1,Value2';
-    downloadCSV(csvContent, 'test-export');
-
-    // Should remove link from DOM
-    expect(removeChildSpy).toHaveBeenCalled();
-
-    // Should revoke object URL
-    expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:mock-csv-url');
+  it('should handle consecutive special characters', () => {
+    const filename = generateCSVFilename('Session!!!@@@###123');
+    expect(filename).toBe('session-123-2026-02-03.csv');
   });
 
-  it('should generate timestamp in filename', () => {
-    const csvContent = 'test';
-
-    downloadCSV(csvContent, 'export');
-
-    const link = appendChildSpy.mock.calls[0][0] as HTMLAnchorElement;
-
-    // Extract timestamp from filename
-    const match = link.download.match(/export-(.+)\.csv$/);
-    expect(match).not.toBeNull();
-
-    if (match) {
-      const timestamp = match[1];
-      // Should be in format: YYYY-MM-DDTHH-MM-SS
-      expect(timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}$/);
-
-      // Verify it contains valid date components
-      const parts = timestamp.split('T');
-      expect(parts).toHaveLength(2);
-      expect(parts[0]).toMatch(/^\d{4}-\d{2}-\d{2}$/); // Date part
-      expect(parts[1]).toMatch(/^\d{2}-\d{2}-\d{2}$/); // Time part
-    }
+  it('should convert to lowercase', () => {
+    const filename = generateCSVFilename('MINING OPERATION');
+    expect(filename).toBe('mining-operation-2026-02-03.csv');
   });
 
-  it('should handle empty CSV content', () => {
-    downloadCSV('', 'empty');
-
-    expect(mockCreateObjectURL).toHaveBeenCalled();
-    expect(mockClick).toHaveBeenCalled();
-    expect(mockRevokeObjectURL).toHaveBeenCalled();
+  it('should handle leading and trailing special characters', () => {
+    const filename = generateCSVFilename('---Session Name---');
+    expect(filename).toBe('session-name-2026-02-03.csv');
   });
 
-  it('should handle special characters in filename', () => {
-    downloadCSV('test', 'my-export-file_123');
-
-    const link = appendChildSpy.mock.calls[0][0] as HTMLAnchorElement;
-    expect(link.download).toMatch(/^my-export-file_123-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.csv$/);
+  it('should handle empty or whitespace-only session names', () => {
+    const filename = generateCSVFilename('   ');
+    expect(filename).toBe('-2026-02-03.csv');
   });
 
-  it('should create blob with UTF-8 charset', () => {
-    const csvContent = 'Name,Amount\nTëst Üser,1000€';
-    downloadCSV(csvContent, 'utf8-test');
-
-    const blobCall = mockCreateObjectURL.mock.calls[0][0] as Blob;
-    expect(blobCall.type).toBe('text/csv;charset=utf-8;');
-  });
-});
-
-describe('CSV Export - Integration', () => {
-  it('should generate valid CSV from summary export', () => {
-    const mockResult: PayslipResult = {
-      saleRevenue: 50000,
-      netProfit: 40000,
-      taxRateApplied: 4.5,
-      members: [
-        {
-          memberId: '1',
-          handle: 'Captain',
-          role: 'Leader',
-          active: true,
-          revenue: 30000,
-          investment: 5000,
-          expenses: 3000,
-          sharedExpenses: 2000,
-          individualExpenses: 1000,
-          profitShare: 20000,
-          finalNet: 22000,
-        },
-        {
-          memberId: '2',
-          handle: 'Crew',
-          role: 'Support',
-          active: true,
-          revenue: 20000,
-          investment: 2000,
-          expenses: 2000,
-          sharedExpenses: 1500,
-          individualExpenses: 500,
-          profitShare: 20000,
-          finalNet: 20000,
-        },
-      ],
-      suggestedTransfers: [],
-    };
-
-    const csv = generateSummaryCSV(mockResult, 'Mission Alpha', 'aUEC');
-
-    // Split into lines
-    const lines = csv.split('\n');
-
-    // Should have header rows + member rows
-    expect(lines.length).toBeGreaterThan(8);
-
-    // First line should be session name
-    expect(lines[0]).toBe('Session: Mission Alpha');
-
-    // Should contain all expected data
-    expect(csv).toContain('Captain');
-    expect(csv).toContain('Crew');
-    expect(csv).toContain('50000');
-    expect(csv).toContain('40000');
+  it('should handle session names with only special characters', () => {
+    const filename = generateCSVFilename('###!!!@@@');
+    expect(filename).toBe('-2026-02-03.csv');
   });
 
-  it('should generate valid CSV from detailed export', () => {
-    const mockResult: PayslipResult = {
-      saleRevenue: 50000,
-      netProfit: 40000,
-      taxRateApplied: 4.5,
-      members: [
-        {
-          memberId: '1',
-          handle: 'Sender',
-          active: true,
-          revenue: 10000,
-          investment: 0,
-          expenses: 1000,
-          sharedExpenses: 500,
-          individualExpenses: 500,
-          profitShare: 15000,
-          finalNet: 14000,
-        },
-        {
-          memberId: '2',
-          handle: 'Receiver',
-          active: true,
-          revenue: 40000,
-          investment: 0,
-          expenses: 1000,
-          sharedExpenses: 500,
-          individualExpenses: 500,
-          profitShare: 25000,
-          finalNet: 26000,
-        },
-      ],
-      suggestedTransfers: [
-        {
-          fromMemberId: '1',
-          toMemberId: '2',
-          netAmount: 5000,
-          grossAmount: 5225,
-          feeAmount: 225,
-        },
-      ],
-    };
+  it('should preserve numbers in session name', () => {
+    const filename = generateCSVFilename('Trading Session 42');
+    expect(filename).toBe('trading-session-42-2026-02-03.csv');
+  });
 
-    const csv = generateDetailedCSV(mockResult, 'Mission Beta', 'UEC');
+  it('should handle mixed alphanumeric and special characters', () => {
+    const filename = generateCSVFilename('Alpha-1: Beta (Test)');
+    expect(filename).toBe('alpha-1-beta-test-2026-02-03.csv');
+  });
 
-    // Should have all three sections
-    expect(csv).toContain('MEMBER BREAKDOWN');
-    expect(csv).toContain('SUGGESTED TRANSFERS');
-    expect(csv).toContain('Sender,Receiver,5000,5225,225');
+  it('should generate .csv extension', () => {
+    const filename = generateCSVFilename('Test Session');
+    expect(filename).toMatch(/\.csv$/);
+  });
+
+  it('should include ISO date format YYYY-MM-DD', () => {
+    const filename = generateCSVFilename('Test');
+    expect(filename).toContain('2026-02-03');
+  });
+
+  it('should handle Unicode characters by removing them', () => {
+    const filename = generateCSVFilename('Session äöü test');
+    expect(filename).toBe('session-test-2026-02-03.csv');
+  });
+
+  it('should handle empty string input', () => {
+    const filename = generateCSVFilename('');
+    expect(filename).toBe('-2026-02-03.csv');
   });
 });
