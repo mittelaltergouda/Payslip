@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "066-add-csrf-protection-for-state-changing-api-endpoin",
+  "spec": "062-add-clipboard-export-button-component",
   "state": "building",
   "subtasks": {
-    "completed": 9,
-    "total": 10,
+    "completed": 4,
+    "total": 5,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "CSRF Protection Implementation",
+    "current": "End-to-End Verification",
     "id": null,
-    "total": 10
+    "total": 2
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 11,
-    "started_at": "2026-02-09T21:26:01.582358"
+    "number": 6,
+    "started_at": "2026-02-09T18:47:15.177609"
   },
-  "last_update": "2026-02-09T22:03:40.717344"
+  "last_update": "2026-02-09T19:01:26.603973"
 }
