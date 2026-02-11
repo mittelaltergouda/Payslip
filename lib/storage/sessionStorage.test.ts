@@ -310,7 +310,7 @@ describe('bulkDelete', () => {
       });
 
       const result1 = save(session1);
-      const result2 = save(session2);
+      const _result2 = save(session2);
       const result3 = save(session3);
 
       const id1 = result1.data!.id;
@@ -340,9 +340,9 @@ describe('bulkDelete', () => {
       const session3 = createTestSessionInput({ name: 'Session 3' });
       const session4 = createTestSessionInput({ name: 'Session 4' });
 
-      const result1 = save(session1);
+      const _result1 = save(session1);
       const result2 = save(session2);
-      const result3 = save(session3);
+      const _result3 = save(session3);
       const result4 = save(session4);
 
       const id2 = result2.data!.id;
@@ -432,7 +432,7 @@ describe('bulkDelete', () => {
       const session2 = createTestSessionInput({ name: 'Session 2' });
 
       const result1 = save(session1);
-      const result2 = save(session2);
+      const _result2 = save(session2);
 
       const id1 = result1.data!.id;
 
@@ -467,7 +467,7 @@ describe('bulkDelete', () => {
       const id1 = result1.data!.id;
 
       const session2 = createTestSessionInput({ name: 'Second' });
-      const result2 = save(session2);
+      const _result2 = save(session2);
 
       const deleteResult = bulkDelete([id1]);
 
@@ -714,7 +714,7 @@ describe('getByIds', () => {
 
       const session2 = createTestSessionInput({ name: 'Second' });
       const result2 = save(session2);
-      const id2 = result2.data!.id;
+      const _id2 = result2.data!.id;
 
       const session3 = createTestSessionInput({ name: 'Third' });
       const result3 = save(session3);
