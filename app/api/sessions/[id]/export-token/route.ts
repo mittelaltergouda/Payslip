@@ -8,7 +8,7 @@ import type { NextRequest} from "next/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateSecureToken } from "@/lib/crypto";
-import { exportTokenSchema } from "@/app/api/sessions/validation";
+import { exportTokenSchema, sessionIdParamSchema } from "@/app/api/sessions/validation";
 import { Prisma } from "@prisma/client";
 import { extractCsrfTokenFromHeaders, validateCsrfToken } from "@/lib/csrf";
 
@@ -28,6 +28,7 @@ import { extractCsrfTokenFromHeaders, validateCsrfToken } from "@/lib/csrf";
  * @returns 201 Created with token data, or error response
  *
  * Error responses:
+ * - 400 Bad Request: Invalid session ID format (must be UUID)
  * - 403 Forbidden: Invalid or missing CSRF token
  * - 404 Not Found: Session does not exist
  * - 409 Conflict: Token collision (extremely rare, retry suggested)
@@ -51,16 +52,19 @@ export async function POST(
     // Extract session ID from route parameters
     const { id: sessionId } = await context.params;
 
+    // Validate session ID format (must be a valid UUID)
+    const validation = sessionIdParamSchema.safeParse({ id: sessionId });
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid session ID format",
+          details: validation.error.errors[0].message
+        },
+        { status: 400 }
+      );
+    }
+
     // CSRF Protection: Double-Submit Cookie Pattern
-    // The client must include the CSRF token (read from previous response header)
-    // in the request header. The server validates this client token matches the
-    // server-set HTTP-only cookie.
-    //
-    // Security model:
-    // - Attacker cannot read response headers from other origin (same-origin policy)
-    // - Attacker cannot read or set HTTP-only cookies
-    // - Attacker cannot forge both values to match
-    // - Only legitimate clients can read the token from response headers and include it
     const clientToken = extractCsrfTokenFromHeaders(request.headers);
     const cookieToken = request.cookies.get('csrf-token')?.value;
 
