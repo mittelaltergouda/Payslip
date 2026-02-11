@@ -374,4 +374,128 @@ describe('Settlement/Transfer Generation', () => {
     expect(bobToAlice?.netAmount).toBe(800);
     expect(charlieToAlice?.netAmount).toBe(800);
   });
+
+  it('should generate transfer when one member collects all revenue', () => {
+    // This is the bug scenario: Pilot collects all 1M revenue, has 100k costs
+    // Escort collects nothing - should receive transfer of their share
+    const input: SessionInput = {
+      name: 'Revenue Collection Bug Test',
+      type: 'TRADING',
+      distributionMode: 'EQUAL',
+      totalRevenue: 1000000,
+      taxEnabled: false,
+      members: [
+        { id: 'pilot', handle: 'Pilot', role: 'Pilot', active: true, revenue: 1000000, investment: 0 },
+        { id: 'escort', handle: 'Escort', role: 'Escort', active: true, revenue: 0, investment: 0 }
+      ],
+      individualExpenses: [
+        { memberId: 'pilot', label: 'Fuel', amount: 100000 }
+      ]
+    };
+
+    const result = calculatePayslip(input);
+
+    // netProfit = 1,000,000 - 100,000 = 900,000
+    expect(result.netProfit).toBe(900000);
+
+    const pilot = result.members.find(m => m.memberId === 'pilot');
+    const escort = result.members.find(m => m.memberId === 'escort');
+
+    // Equal distribution: 900,000 / 2 = 450,000 each
+    expect(pilot?.profitShare).toBe(450000);
+    expect(escort?.profitShare).toBe(450000);
+
+    // Pilot finalNet = investment(0) + profitShare(450000) - expenses(100000) = 350,000
+    // Escort finalNet = investment(0) + profitShare(450000) - expenses(0) = 450,000
+    expect(pilot?.finalNet).toBe(350000);
+    expect(escort?.finalNet).toBe(450000);
+
+    // Balance calculation with revenue:
+    // Pilot's actual cash position = revenue(1,000,000) - expenses(100,000) = 900,000
+    // Pilot balance = finalNet(350,000) - actualCash(900,000) = -550,000 (debtor - has 550k more than they should)
+    // Escort's actual cash position = revenue(0) - expenses(0) = 0
+    // Escort balance = finalNet(450,000) - actualCash(0) = 450,000 (creditor - should receive 450k)
+
+    // Pilot should transfer to Escort
+    expect(result.suggestedTransfers.length).toBe(1);
+    const transfer = result.suggestedTransfers[0];
+    expect(transfer.fromMemberId).toBe('pilot');
+    expect(transfer.toMemberId).toBe('escort');
+    expect(transfer.netAmount).toBe(450000);
+  });
+
+  it('should handle mixed revenue collection across multiple members', () => {
+    // Scenario: Three members collect different amounts of revenue
+    // Alice collects 600k, Bob collects 400k, Charlie collects nothing
+    // Equal profit distribution - Charlie should receive from Alice and Bob
+    const input: SessionInput = {
+      name: 'Mixed Revenue Collection',
+      type: 'TRADING',
+      distributionMode: 'EQUAL',
+      totalRevenue: 1000000,
+      taxEnabled: false,
+      members: [
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 600000, investment: 0 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 400000, investment: 0 },
+        { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 0, investment: 0 }
+      ]
+    };
+
+    const result = calculatePayslip(input);
+
+    // saleRevenue = 1,000,000 - 0 = 1,000,000
+    // netProfit = 1,000,000 (no expenses)
+    expect(result.saleRevenue).toBe(1000000);
+    expect(result.netProfit).toBe(1000000);
+
+    const alice = result.members.find(m => m.memberId === 'member-1');
+    const bob = result.members.find(m => m.memberId === 'member-2');
+    const charlie = result.members.find(m => m.memberId === 'member-3');
+
+    // Equal distribution: 1,000,000 / 3 ≈ 333,333.33 each (with rounding)
+    // Profit shares should be roughly equal
+    const expectedShare = Math.floor(1000000 / 3);
+    expect(alice?.profitShare).toBeCloseTo(expectedShare, -2);
+    expect(bob?.profitShare).toBeCloseTo(expectedShare, -2);
+    expect(charlie?.profitShare).toBeCloseTo(expectedShare, -2);
+
+    // finalNet = investment(0) + profitShare
+    expect(alice?.finalNet).toBeCloseTo(expectedShare, -2);
+    expect(bob?.finalNet).toBeCloseTo(expectedShare, -2);
+    expect(charlie?.finalNet).toBeCloseTo(expectedShare, -2);
+
+    // Balance calculation with revenue:
+    // Alice's actual cash = revenue(600,000) - expenses(0) = 600,000
+    // Alice balance = finalNet(~333k) - actualCash(600k) = ~-267k (debtor - has more than should)
+    // Bob's actual cash = revenue(400,000) - expenses(0) = 400,000
+    // Bob balance = finalNet(~333k) - actualCash(400k) = ~-67k (debtor - has more than should)
+    // Charlie's actual cash = revenue(0) - expenses(0) = 0
+    // Charlie balance = finalNet(~333k) - actualCash(0) = ~333k (creditor - should receive)
+
+    // Both Alice and Bob should transfer to Charlie
+    expect(result.suggestedTransfers.length).toBe(2);
+
+    const aliceToCharlie = result.suggestedTransfers.find(
+      t => t.fromMemberId === 'member-1' && t.toMemberId === 'member-3'
+    );
+    const bobToCharlie = result.suggestedTransfers.find(
+      t => t.fromMemberId === 'member-2' && t.toMemberId === 'member-3'
+    );
+
+    // Alice owes: 600,000 - 333,333 ≈ 266,667
+    // Bob owes: 400,000 - 333,333 ≈ 66,667
+    // Total to Charlie: ~333,333
+    expect(aliceToCharlie).toBeDefined();
+    expect(bobToCharlie).toBeDefined();
+
+    // Alice should transfer more than Bob (since she collected more revenue)
+    expect(aliceToCharlie!.netAmount).toBeGreaterThan(bobToCharlie!.netAmount);
+
+    // Total transferred should equal Charlie's share
+    const totalTransferred = result.suggestedTransfers.reduce(
+      (sum, t) => sum + t.netAmount,
+      0
+    );
+    expect(totalTransferred).toBeCloseTo(expectedShare, -2);
+  });
 });
