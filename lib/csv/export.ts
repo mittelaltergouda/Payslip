@@ -1,21 +1,102 @@
-import type { PayslipResult } from "../types";
+// ============================================================================
+// CSV GENERATOR UTILITY
+// ============================================================================
+// This module provides CSV generation functionality for payslip sessions.
+// It creates a unified CSV document with session details, member breakdowns,
+// and settlement transfers in a locale-appropriate format.
+
+import type { SessionInput, PayslipResult } from "@/lib/types";
+import type { Lang } from "@/lib/i18n/translations";
+import { format } from "@/lib/format";
+
+/**
+ * CSV generation options for customizing output format and styling.
+ */
+export interface CSVGeneratorOptions {
+  /**
+   * Language for number formatting and locale-specific separators.
+   * - "de": Uses semicolon as delimiter, dot as thousand separator
+   * - "en": Uses comma as delimiter, comma as thousand separator
+   * Default: "en"
+   */
+  lang?: Lang;
+
+  /**
+   * Currency symbol or code to display with amounts.
+   * Default: "aUEC"
+   */
+  currency?: string;
+}
+
+/**
+ * Translations for CSV headers in German and English.
+ */
+const csvTranslations = {
+  de: {
+    exportTitle: "SC Payslip Export",
+    session: "Session",
+    date: "Datum",
+    currency: "Währung",
+    memberBreakdown: "Mitglieder Übersicht",
+    handle: "Handle",
+    revenue: "Umsatz",
+    investment: "Investment",
+    expenses: "Ausgaben",
+    taxes: "Steuern",
+    profitShare: "Gewinnanteil",
+    netPayout: "Netto Auszahlung",
+    settlementTransfers: "Überweisungen",
+    from: "Von",
+    to: "An",
+    netAmount: "Netto Betrag",
+    grossAmount: "Brutto Betrag",
+    fee: "Gebühr",
+    noTransfers: "Keine Überweisungen erforderlich",
+  },
+  en: {
+    exportTitle: "SC Payslip Export",
+    session: "Session",
+    date: "Date",
+    currency: "Currency",
+    memberBreakdown: "Member Breakdown",
+    handle: "Handle",
+    revenue: "Revenue",
+    investment: "Investment",
+    expenses: "Expenses",
+    taxes: "Taxes",
+    profitShare: "Profit Share",
+    netPayout: "Net Payout",
+    settlementTransfers: "Settlement Transfers",
+    from: "From",
+    to: "To",
+    netAmount: "Net Amount",
+    grossAmount: "Gross Amount",
+    fee: "Fee",
+    noTransfers: "No transfers required",
+  },
+};
 
 /**
  * Escapes a CSV field value according to RFC 4180.
- * - Wraps field in double quotes if it contains comma, newline, or double quote
+ * - Wraps field in double quotes if it contains delimiter, newline, or double quote
  * - Escapes internal double quotes by doubling them
  *
  * @param value - The field value to escape
+ * @param delimiter - The CSV delimiter being used (comma or semicolon)
  * @returns Properly escaped CSV field value
  *
  * @example
  * ```ts
- * escapeCSVField('simple') // 'simple'
- * escapeCSVField('Hello, World') // '"Hello, World"'
- * escapeCSVField('He said "Hi"') // '"He said ""Hi"""'
+ * escapeCSVField('simple', ',') // 'simple'
+ * escapeCSVField('Hello, World', ',') // '"Hello, World"'
+ * escapeCSVField('He said "Hi"', ',') // '"He said ""Hi"""'
+ * escapeCSVField('Value;here', ';') // '"Value;here"'
  * ```
  */
-function escapeCSVField(value: string | number | undefined | null): string {
+function escapeCSVField(
+  value: string | number | undefined | null,
+  delimiter: string
+): string {
   // Handle null/undefined
   if (value === null || value === undefined) {
     return "";
@@ -24,8 +105,9 @@ function escapeCSVField(value: string | number | undefined | null): string {
   // Convert to string
   const str = String(value);
 
-  // Check if escaping is needed (contains comma, newline, or double quote)
-  const needsEscaping = /[",\n\r]/.test(str);
+  // Check if escaping is needed (contains delimiter, newline, or double quote)
+  const needsEscaping =
+    str.includes(delimiter) || str.includes('"') || /[\n\r]/.test(str);
 
   if (needsEscaping) {
     // Escape double quotes by doubling them and wrap in quotes
@@ -36,194 +118,196 @@ function escapeCSVField(value: string | number | undefined | null): string {
 }
 
 /**
- * Converts an array of rows into CSV format.
- * Each row is an array of field values.
+ * Converts an array of rows into CSV format with the specified delimiter.
  *
  * @param rows - Array of rows, where each row is an array of field values
+ * @param delimiter - The delimiter to use between fields
  * @returns CSV-formatted string
  */
-function rowsToCSV(rows: (string | number | undefined | null)[][]): string {
-  return rows.map((row) => row.map(escapeCSVField).join(",")).join("\n");
+function rowsToCSV(
+  rows: (string | number | undefined | null)[][],
+  delimiter: string
+): string {
+  return rows
+    .map((row) => row.map((field) => escapeCSVField(field, delimiter)).join(delimiter))
+    .join("\n");
 }
 
 /**
- * Generates a summary CSV with one row per member and key metrics.
- * Columns: Handle, Role, Active, Revenue, Investment, Total Expenses, Shared Expenses, Individual Expenses, Profit Share, Final Net
+ * Generates a CSV document from session and result data.
  *
- * @param result - The calculated payslip result
- * @param sessionName - Name of the session for the CSV header
- * @param currency - Currency symbol (e.g., "aUEC", "USD")
- * @returns CSV-formatted string with summary data
+ * Creates a unified CSV document containing:
+ * - Session header with name, date, and currency
+ * - Member breakdown table showing handle, revenue, investment, expenses, taxes, profit share, and net payout
+ * - Settlement transfers list with from/to member details and amounts (net, gross, fees)
+ *
+ * The CSV format adapts based on locale:
+ * - German (de): Uses semicolon as delimiter, periods for thousand separators
+ * - English (en): Uses comma as delimiter, commas for thousand separators
+ *
+ * @param session - The session input data containing member and expense information
+ * @param result - The calculated payslip result with member breakdowns and transfers
+ * @param options - Optional configuration for language and currency formatting
+ * @returns A string containing the generated CSV document
  *
  * @example
- * ```ts
- * const csv = generateSummaryCSV(payslipResult, "Trading Run #1", "aUEC");
- * // Downloads as: sc-payslip-summary-2024-01-15T10-30-00.csv
+ * ```tsx
+ * const session: SessionInput = {
+ *   name: "Mining Operation Alpha",
+ *   type: "MINING",
+ *   members: [...],
+ *   // ...other session data
+ * };
+ * const result = calculatePayslip(session);
+ * const csvContent = generateCSV(session, result, { lang: 'en', currency: 'aUEC' });
+ *
+ * // Download the CSV
+ * const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+ * const url = URL.createObjectURL(blob);
+ * const link = document.createElement('a');
+ * link.href = url;
+ * link.download = 'payslip.csv';
+ * link.click();
+ * URL.revokeObjectURL(url);
  * ```
  */
-export function generateSummaryCSV(
+export function generateCSV(
+  session: SessionInput,
   result: PayslipResult,
-  sessionName: string,
-  currency: string = "aUEC"
+  options: CSVGeneratorOptions = {}
 ): string {
-  const rows: (string | number)[][] = [];
+  const { lang = "en", currency = "aUEC" } = options;
 
-  // Header row 1: Session info
-  rows.push([`Session: ${sessionName}`]);
-  rows.push([`Currency: ${currency}`]);
-  rows.push([`Total Revenue: ${result.saleRevenue}`]);
-  rows.push([`Net Profit: ${result.netProfit}`]);
-  rows.push([`Tax Rate: ${result.taxRateApplied}%`]);
+  // Select delimiter based on locale (German uses semicolon, English uses comma)
+  const delimiter = lang === "de" ? ";" : ",";
+
+  // Get translations for the selected language
+  const t = csvTranslations[lang];
+
+  // Format date according to locale
+  const exportDate = new Date().toLocaleDateString(
+    lang === "de" ? "de-DE" : "en-US",
+    {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }
+  );
+
+  // Calculate fees per member for display
+  const feeByPayer: Record<string, number> = {};
+  result.suggestedTransfers.forEach((transfer) => {
+    feeByPayer[transfer.fromMemberId] =
+      (feeByPayer[transfer.fromMemberId] || 0) + transfer.feeAmount;
+  });
+
+  // Build CSV rows
+  const rows: (string | number | undefined | null)[][] = [];
+
+  // ========================================================================
+  // HEADER SECTION
+  // ========================================================================
+  rows.push([t.exportTitle]);
+  rows.push([`${t.session}:`, session.name || "Payslip"]);
+  rows.push([`${t.date}:`, exportDate]);
+  rows.push([`${t.currency}:`, currency]);
   rows.push([]); // Empty row for spacing
 
-  // Header row 2: Column headers
+  // ========================================================================
+  // MEMBER BREAKDOWN TABLE
+  // ========================================================================
+  rows.push([t.memberBreakdown]);
   rows.push([
-    "Handle",
-    "Role",
-    "Active",
-    "Revenue",
-    "Investment",
-    "Total Expenses",
-    "Shared Expenses",
-    "Individual Expenses",
-    "Profit Share",
-    "Final Net",
+    t.handle,
+    t.revenue,
+    t.investment,
+    t.expenses,
+    t.taxes,
+    t.profitShare,
+    t.netPayout,
   ]);
 
-  // Data rows: One per member
+  // Add member rows
   for (const member of result.members) {
+    const taxes = feeByPayer[member.memberId] ?? 0;
+    const netAfterFees = member.finalNet - taxes;
+
     rows.push([
       member.handle,
-      member.role || "",
-      member.active ? "Yes" : "No",
-      member.revenue,
-      member.investment,
-      member.expenses,
-      member.sharedExpenses,
-      member.individualExpenses,
-      member.profitShare,
-      member.finalNet,
-    ]);
-  }
-
-  return rowsToCSV(rows);
-}
-
-/**
- * Generates a detailed CSV with all expenses broken out.
- * Includes transfers section showing suggested settlements.
- *
- * @param result - The calculated payslip result
- * @param sessionName - Name of the session for the CSV header
- * @param currency - Currency symbol (e.g., "aUEC", "USD")
- * @returns CSV-formatted string with detailed data
- *
- * @example
- * ```ts
- * const csv = generateDetailedCSV(payslipResult, "Trading Run #1", "aUEC");
- * // Downloads as: sc-payslip-detailed-2024-01-15T10-30-00.csv
- * ```
- */
-export function generateDetailedCSV(
-  result: PayslipResult,
-  sessionName: string,
-  currency: string = "aUEC"
-): string {
-  const rows: (string | number)[][] = [];
-
-  // Header row 1: Session info
-  rows.push([`Session: ${sessionName}`]);
-  rows.push([`Currency: ${currency}`]);
-  rows.push([`Total Revenue: ${result.saleRevenue}`]);
-  rows.push([`Net Profit: ${result.netProfit}`]);
-  rows.push([`Tax Rate: ${result.taxRateApplied}%`]);
-  rows.push([]); // Empty row for spacing
-
-  // Section 1: Member Breakdown
-  rows.push(["MEMBER BREAKDOWN"]);
-  rows.push([
-    "Handle",
-    "Role",
-    "Active",
-    "Revenue",
-    "Investment",
-    "Total Expenses",
-    "Shared Expenses",
-    "Individual Expenses",
-    "Profit Share",
-    "Final Net",
-  ]);
-
-  for (const member of result.members) {
-    rows.push([
-      member.handle,
-      member.role || "",
-      member.active ? "Yes" : "No",
-      member.revenue,
-      member.investment,
-      member.expenses,
-      member.sharedExpenses,
-      member.individualExpenses,
-      member.profitShare,
-      member.finalNet,
+      format(member.revenue, lang),
+      format(member.investment, lang),
+      format(member.expenses, lang),
+      format(taxes, lang),
+      format(member.profitShare, lang),
+      format(netAfterFees, lang),
     ]);
   }
 
   rows.push([]); // Empty row for spacing
 
-  // Section 2: Suggested Transfers
-  rows.push(["SUGGESTED TRANSFERS"]);
-  rows.push(["From", "To", "Net Amount", "Gross Amount (with tax)", "Fee Amount"]);
+  // ========================================================================
+  // SETTLEMENT TRANSFERS SECTION
+  // ========================================================================
+  rows.push([t.settlementTransfers]);
 
-  for (const transfer of result.suggestedTransfers) {
-    // Find member handles by ID
-    const fromMember = result.members.find((m) => m.memberId === transfer.fromMemberId);
-    const toMember = result.members.find((m) => m.memberId === transfer.toMemberId);
+  if (result.suggestedTransfers.length === 0) {
+    rows.push([t.noTransfers]);
+  } else {
+    rows.push([t.from, t.to, t.netAmount, t.grossAmount, t.fee]);
 
-    rows.push([
-      fromMember?.handle || transfer.fromMemberId,
-      toMember?.handle || transfer.toMemberId,
-      transfer.netAmount,
-      transfer.grossAmount,
-      transfer.feeAmount,
-    ]);
+    for (const transfer of result.suggestedTransfers) {
+      // Find member handles by ID
+      const fromMember = session.members.find(
+        (m) => m.id === transfer.fromMemberId
+      );
+      const toMember = session.members.find(
+        (m) => m.id === transfer.toMemberId
+      );
+
+      const fromHandle = fromMember?.handle || transfer.fromMemberId;
+      const toHandle = toMember?.handle || transfer.toMemberId;
+
+      rows.push([
+        fromHandle,
+        toHandle,
+        format(transfer.netAmount, lang),
+        format(transfer.grossAmount, lang),
+        format(transfer.feeAmount, lang),
+      ]);
+    }
   }
 
-  return rowsToCSV(rows);
+  return rowsToCSV(rows, delimiter);
 }
 
 /**
- * Triggers a CSV download in the browser.
- * Creates a Blob and temporary download link following the SessionActions pattern.
+ * Generates a filename for the CSV export based on session name and current date.
  *
- * @param csvContent - The CSV content as a string
- * @param filename - Base filename without extension (timestamp will be added)
+ * Creates a URL-safe filename in the format: "sessionname-YYYY-MM-DD.csv"
+ * - Converts session name to lowercase
+ * - Replaces spaces and special characters with hyphens
+ * - Appends ISO date format (YYYY-MM-DD)
+ * - Adds .csv extension
+ *
+ * @param sessionName - The name of the session to include in the filename
+ * @returns A sanitized filename string suitable for download
  *
  * @example
- * ```ts
- * const csv = generateSummaryCSV(result, "Trading Run #1", "aUEC");
- * downloadCSV(csv, "sc-payslip-summary");
- * // Downloads as: sc-payslip-summary-2024-01-15T10-30-00.csv
+ * ```tsx
+ * generateCSVFilename("Mining Operation Alpha")
+ * // Returns: "mining-operation-alpha-2026-02-03.csv"
+ *
+ * generateCSVFilename("Trade Run #1")
+ * // Returns: "trade-run-1-2026-02-03.csv"
  * ```
  */
-export function downloadCSV(csvContent: string, filename: string): void {
-  // Create a blob with the CSV data
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+export function generateCSVFilename(sessionName: string): string {
+  const sanitizedName = sessionName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
-  // Create a download link
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
+  const date = new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
 
-  // Generate filename with timestamp
-  const timestamp = new Date().toISOString().replace(/:/g, "-").split(".")[0];
-  link.download = `${filename}-${timestamp}.csv`;
-
-  // Trigger download
-  document.body.appendChild(link);
-  link.click();
-
-  // Cleanup
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  return `${sanitizedName}-${date}.csv`;
 }
