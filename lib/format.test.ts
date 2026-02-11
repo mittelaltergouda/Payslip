@@ -1,4 +1,4 @@
-import { format, formatCurrency, formatPercent, formatCompact, formatInteger, parseFormattedInteger } from './format';
+import { format, formatCurrency, formatPercent, formatCompact, formatCurrencyCompact, formatInteger, parseFormattedInteger } from './format';
 
 // Test cases for format() - Basic number formatting with thousand separators
 
@@ -278,6 +278,286 @@ describe('formatCompact', () => {
       expect(formatCompact(1551, 'en')).toBe('1.6k');  // 1.551k rounds to 1.6k
       expect(formatCompact(1234567, 'en')).toBe('1.2M'); // 1.234M rounds to 1.2M
       expect(formatCompact(1254567, 'en')).toBe('1.3M'); // 1.254M rounds to 1.3M
+    });
+  });
+});
+
+// Test cases for formatCurrencyCompact() - Compact currency formatting with K, M, B suffixes
+
+describe('formatCurrencyCompact', () => {
+  describe('aUEC (Star Citizen currency)', () => {
+    describe('values below 1000', () => {
+      it('should display small numbers without suffix', () => {
+        expect(formatCurrencyCompact(0, 'aUEC', 'en')).toBe('0 aUEC');
+        expect(formatCurrencyCompact(42, 'aUEC', 'en')).toBe('42 aUEC');
+        expect(formatCurrencyCompact(500, 'aUEC', 'en')).toBe('500 aUEC');
+        expect(formatCurrencyCompact(999, 'aUEC', 'en')).toBe('999 aUEC');
+      });
+
+      it('should handle small negative numbers', () => {
+        expect(formatCurrencyCompact(-42, 'aUEC', 'en')).toBe('-42 aUEC');
+        expect(formatCurrencyCompact(-999, 'aUEC', 'en')).toBe('-999 aUEC');
+      });
+    });
+
+    describe('thousands (k)', () => {
+      it('should format thousands with k suffix in English', () => {
+        expect(formatCurrencyCompact(1000, 'aUEC', 'en')).toBe('1.0k aUEC');
+        expect(formatCurrencyCompact(1500, 'aUEC', 'en')).toBe('1.5k aUEC');
+        expect(formatCurrencyCompact(42000, 'aUEC', 'en')).toBe('42.0k aUEC');
+        expect(formatCurrencyCompact(999999, 'aUEC', 'en')).toBe('1000.0k aUEC');
+      });
+
+      it('should format thousands with k suffix in German', () => {
+        expect(formatCurrencyCompact(1000, 'aUEC', 'de')).toBe('1,0k aUEC');
+        expect(formatCurrencyCompact(1500, 'aUEC', 'de')).toBe('1,5k aUEC');
+        expect(formatCurrencyCompact(42000, 'aUEC', 'de')).toBe('42,0k aUEC');
+      });
+
+      it('should handle negative thousands', () => {
+        expect(formatCurrencyCompact(-1500, 'aUEC', 'en')).toBe('-1.5k aUEC');
+        expect(formatCurrencyCompact(-1500, 'aUEC', 'de')).toBe('-1,5k aUEC');
+      });
+    });
+
+    describe('millions (M)', () => {
+      it('should format millions with M suffix in English', () => {
+        expect(formatCurrencyCompact(1000000, 'aUEC', 'en')).toBe('1.0M aUEC');
+        expect(formatCurrencyCompact(1234567, 'aUEC', 'en')).toBe('1.2M aUEC');
+        expect(formatCurrencyCompact(15000000, 'aUEC', 'en')).toBe('15.0M aUEC');
+      });
+
+      it('should format millions with M suffix in German', () => {
+        expect(formatCurrencyCompact(1000000, 'aUEC', 'de')).toBe('1,0M aUEC');
+        expect(formatCurrencyCompact(1234567, 'aUEC', 'de')).toBe('1,2M aUEC');
+        expect(formatCurrencyCompact(15000000, 'aUEC', 'de')).toBe('15,0M aUEC');
+      });
+
+      it('should handle negative millions', () => {
+        expect(formatCurrencyCompact(-1234567, 'aUEC', 'en')).toBe('-1.2M aUEC');
+        expect(formatCurrencyCompact(-1234567, 'aUEC', 'de')).toBe('-1,2M aUEC');
+      });
+    });
+
+    describe('billions (B)', () => {
+      it('should format billions with B suffix in English', () => {
+        expect(formatCurrencyCompact(1000000000, 'aUEC', 'en')).toBe('1.0B aUEC');
+        expect(formatCurrencyCompact(1234567890, 'aUEC', 'en')).toBe('1.2B aUEC');
+        expect(formatCurrencyCompact(15000000000, 'aUEC', 'en')).toBe('15.0B aUEC');
+      });
+
+      it('should format billions with B suffix in German', () => {
+        expect(formatCurrencyCompact(1000000000, 'aUEC', 'de')).toBe('1,0B aUEC');
+        expect(formatCurrencyCompact(1234567890, 'aUEC', 'de')).toBe('1,2B aUEC');
+        expect(formatCurrencyCompact(15000000000, 'aUEC', 'de')).toBe('15,0B aUEC');
+      });
+
+      it('should handle negative billions', () => {
+        expect(formatCurrencyCompact(-1234567890, 'aUEC', 'en')).toBe('-1.2B aUEC');
+        expect(formatCurrencyCompact(-1234567890, 'aUEC', 'de')).toBe('-1,2B aUEC');
+      });
+    });
+  });
+
+  describe('USD (US Dollar)', () => {
+    describe('values below 1000', () => {
+      it('should display small amounts with dollar sign in English', () => {
+        expect(formatCurrencyCompact(0, 'USD', 'en')).toBe('$0');
+        expect(formatCurrencyCompact(42, 'USD', 'en')).toBe('$42');
+        expect(formatCurrencyCompact(500, 'USD', 'en')).toBe('$500');
+        expect(formatCurrencyCompact(999, 'USD', 'en')).toBe('$999');
+      });
+
+      it('should handle small negative amounts', () => {
+        expect(formatCurrencyCompact(-42, 'USD', 'en')).toBe('-$42');
+        expect(formatCurrencyCompact(-500, 'USD', 'en')).toBe('-$500');
+      });
+    });
+
+    describe('thousands (k)', () => {
+      it('should format thousands with k suffix in English', () => {
+        expect(formatCurrencyCompact(1000, 'USD', 'en')).toBe('$1.0k');
+        expect(formatCurrencyCompact(1500, 'USD', 'en')).toBe('$1.5k');
+        expect(formatCurrencyCompact(42000, 'USD', 'en')).toBe('$42.0k');
+      });
+
+      it('should handle negative thousands', () => {
+        expect(formatCurrencyCompact(-1500, 'USD', 'en')).toBe('-$1.5k');
+      });
+    });
+
+    describe('millions (M)', () => {
+      it('should format millions with M suffix in English', () => {
+        expect(formatCurrencyCompact(1000000, 'USD', 'en')).toBe('$1.0M');
+        expect(formatCurrencyCompact(1234567, 'USD', 'en')).toBe('$1.2M');
+        expect(formatCurrencyCompact(15000000, 'USD', 'en')).toBe('$15.0M');
+      });
+
+      it('should handle negative millions', () => {
+        expect(formatCurrencyCompact(-1500000, 'USD', 'en')).toBe('-$1.5M');
+      });
+    });
+
+    describe('billions (B)', () => {
+      it('should format billions with B suffix in English', () => {
+        expect(formatCurrencyCompact(1000000000, 'USD', 'en')).toBe('$1.0B');
+        expect(formatCurrencyCompact(1234567890, 'USD', 'en')).toBe('$1.2B');
+      });
+
+      it('should handle negative billions', () => {
+        expect(formatCurrencyCompact(-1234567890, 'USD', 'en')).toBe('-$1.2B');
+      });
+    });
+  });
+
+  describe('EUR (Euro)', () => {
+    describe('values below 1000', () => {
+      it('should display small amounts with euro symbol in English', () => {
+        const result = formatCurrencyCompact(42, 'EUR', 'en');
+        expect(result).toContain('42');
+        expect(result).toContain('€');
+      });
+
+      it('should display small amounts with euro symbol in German', () => {
+        const result = formatCurrencyCompact(42, 'EUR', 'de');
+        expect(result).toContain('42');
+        expect(result).toContain('€');
+      });
+    });
+
+    describe('thousands (k)', () => {
+      it('should format thousands with k suffix in English', () => {
+        const result = formatCurrencyCompact(1500, 'EUR', 'en');
+        expect(result).toContain('1.5k');
+        expect(result).toContain('€');
+      });
+
+      it('should format thousands with k suffix in German', () => {
+        const result = formatCurrencyCompact(1500, 'EUR', 'de');
+        expect(result).toContain('1,5k');
+        expect(result).toContain('€');
+      });
+    });
+
+    describe('millions (M)', () => {
+      it('should format millions with M suffix in English', () => {
+        const result = formatCurrencyCompact(1234567, 'EUR', 'en');
+        expect(result).toContain('1.2M');
+        expect(result).toContain('€');
+      });
+
+      it('should format millions with M suffix in German', () => {
+        const result = formatCurrencyCompact(1234567, 'EUR', 'de');
+        expect(result).toContain('1,2M');
+        expect(result).toContain('€');
+      });
+    });
+
+    describe('billions (B)', () => {
+      it('should format billions with B suffix in English', () => {
+        const result = formatCurrencyCompact(1234567890, 'EUR', 'en');
+        expect(result).toContain('1.2B');
+        expect(result).toContain('€');
+      });
+
+      it('should format billions with B suffix in German', () => {
+        const result = formatCurrencyCompact(1234567890, 'EUR', 'de');
+        expect(result).toContain('1,2B');
+        expect(result).toContain('€');
+      });
+    });
+
+    describe('negative values', () => {
+      it('should handle negative EUR amounts', () => {
+        const result = formatCurrencyCompact(-1500, 'EUR', 'en');
+        expect(result).toContain('1.5k');
+        expect(result).toContain('€');
+        expect(result.startsWith('-')).toBe(true);
+      });
+    });
+  });
+
+  describe('GBP (British Pound)', () => {
+    describe('values below 1000', () => {
+      it('should display small amounts with pound sign in English', () => {
+        expect(formatCurrencyCompact(42, 'GBP', 'en')).toBe('£42');
+        expect(formatCurrencyCompact(500, 'GBP', 'en')).toBe('£500');
+        expect(formatCurrencyCompact(999, 'GBP', 'en')).toBe('£999');
+      });
+
+      it('should handle small negative amounts', () => {
+        expect(formatCurrencyCompact(-42, 'GBP', 'en')).toBe('-£42');
+      });
+    });
+
+    describe('thousands (k)', () => {
+      it('should format thousands with k suffix in English', () => {
+        expect(formatCurrencyCompact(1500, 'GBP', 'en')).toBe('£1.5k');
+        expect(formatCurrencyCompact(42000, 'GBP', 'en')).toBe('£42.0k');
+      });
+
+      it('should handle negative thousands', () => {
+        expect(formatCurrencyCompact(-1500, 'GBP', 'en')).toBe('-£1.5k');
+      });
+    });
+
+    describe('millions (M)', () => {
+      it('should format millions with M suffix in English', () => {
+        expect(formatCurrencyCompact(1234567, 'GBP', 'en')).toBe('£1.2M');
+        expect(formatCurrencyCompact(15000000, 'GBP', 'en')).toBe('£15.0M');
+      });
+
+      it('should handle negative millions', () => {
+        expect(formatCurrencyCompact(-1234567, 'GBP', 'en')).toBe('-£1.2M');
+      });
+    });
+
+    describe('billions (B)', () => {
+      it('should format billions with B suffix in English', () => {
+        expect(formatCurrencyCompact(1234567890, 'GBP', 'en')).toBe('£1.2B');
+      });
+
+      it('should handle negative billions', () => {
+        expect(formatCurrencyCompact(-1234567890, 'GBP', 'en')).toBe('-£1.2B');
+      });
+    });
+  });
+
+  describe('boundary values', () => {
+    it('should handle transition from no suffix to k for aUEC', () => {
+      expect(formatCurrencyCompact(999, 'aUEC', 'en')).toBe('999 aUEC');
+      expect(formatCurrencyCompact(1000, 'aUEC', 'en')).toBe('1.0k aUEC');
+    });
+
+    it('should handle transition from k to M for USD', () => {
+      expect(formatCurrencyCompact(999999, 'USD', 'en')).toBe('$1000.0k');
+      expect(formatCurrencyCompact(1000000, 'USD', 'en')).toBe('$1.0M');
+    });
+
+    it('should handle transition from M to B for GBP', () => {
+      expect(formatCurrencyCompact(999999999, 'GBP', 'en')).toBe('£1000.0M');
+      expect(formatCurrencyCompact(1000000000, 'GBP', 'en')).toBe('£1.0B');
+    });
+  });
+
+  describe('rounding behavior', () => {
+    it('should round to one decimal place for compact values', () => {
+      expect(formatCurrencyCompact(1549, 'aUEC', 'en')).toBe('1.5k aUEC');  // 1.549k rounds to 1.5k
+      expect(formatCurrencyCompact(1551, 'aUEC', 'en')).toBe('1.6k aUEC');  // 1.551k rounds to 1.6k
+      expect(formatCurrencyCompact(1234567, 'USD', 'en')).toBe('$1.2M'); // 1.234M rounds to 1.2M
+      expect(formatCurrencyCompact(1254567, 'USD', 'en')).toBe('$1.3M'); // 1.254M rounds to 1.3M
+    });
+  });
+
+  describe('locale-specific formatting', () => {
+    it('should use period as decimal separator in English', () => {
+      expect(formatCurrencyCompact(1500, 'aUEC', 'en')).toContain('1.5k');
+      expect(formatCurrencyCompact(1234567, 'USD', 'en')).toContain('1.2M');
+    });
+
+    it('should use comma as decimal separator in German', () => {
+      expect(formatCurrencyCompact(1500, 'aUEC', 'de')).toContain('1,5k');
+      expect(formatCurrencyCompact(1234567, 'EUR', 'de')).toContain('1,2M');
     });
   });
 });

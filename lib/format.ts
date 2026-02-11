@@ -155,6 +155,90 @@ export function formatCompact(amount: number, lang: Lang): string {
 }
 
 /**
+ * Formats a number with currency symbol using compact notation (K, M, B) for large values.
+ * Combines formatCompact's K/M/B logic with formatCurrency's currency handling.
+ * Useful for displaying large revenue values in compact session list views.
+ *
+ * For aUEC (Star Citizen currency), uses compact notation with ' aUEC' suffix.
+ * For standard currencies (USD, EUR, GBP), combines compact notation with
+ * locale-appropriate currency symbols and spacing conventions.
+ *
+ * The function applies the same magnitude rules as formatCompact:
+ * - Values < 1000: display as-is with currency symbol
+ * - Values >= 1000 and < 1,000,000: divide by 1000 and append 'k'
+ * - Values >= 1,000,000 and < 1,000,000,000: divide by 1,000,000 and append 'M'
+ * - Values >= 1,000,000,000: divide by 1,000,000,000 and append 'B'
+ *
+ * Currency symbol placement follows locale conventions:
+ * - English (USD, GBP): symbol before value, no space (e.g., "$1.5M", "£1.2M")
+ * - German (EUR): symbol after value, with space (e.g., "1,5M €")
+ *
+ * @param amount - The numeric amount to format in compact notation
+ * @param currency - Currency code (aUEC, USD, EUR, GBP)
+ * @param lang - The locale language ('de' for German, 'en' for English)
+ * @returns Formatted compact currency string with appropriate symbol and separators
+ *
+ * @example
+ * formatCurrencyCompact(1234567, 'aUEC', 'en')  // "1.2M aUEC"
+ * formatCurrencyCompact(1234567, 'aUEC', 'de')  // "1,2M aUEC"
+ * formatCurrencyCompact(1500, 'USD', 'en')      // "$1.5k"
+ * formatCurrencyCompact(1234567, 'USD', 'en')   // "$1.2M"
+ * formatCurrencyCompact(1234567, 'EUR', 'de')   // "1,2M €"
+ * formatCurrencyCompact(999, 'GBP', 'en')       // "£999"
+ * formatCurrencyCompact(-1500000, 'USD', 'en')  // "-$1.5M"
+ */
+export function formatCurrencyCompact(
+  amount: number,
+  currency: string,
+  lang: Lang
+): string {
+  // Handle Star Citizen game currency specially
+  if (currency === "aUEC") {
+    return `${formatCompact(amount, lang)} aUEC`;
+  }
+
+  // For standard currencies, combine compact notation with currency formatting
+  const locale = lang === "de" ? "de-DE" : "en-US";
+  const compactValue = formatCompact(amount, lang);
+
+  // Use Intl.NumberFormat to determine currency symbol and formatting pattern
+  const formatter = new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: currency,
+  });
+
+  // Format a sample value to analyze the pattern
+  const parts = formatter.formatToParts(1);
+  const currencyPart = parts.find(p => p.type === 'currency');
+  const currencySymbol = currencyPart?.value || currency;
+
+  // Determine if currency comes before or after the number
+  const currencyFirst = parts[0].type === 'currency';
+
+  // Check if there's a space between currency and number
+  const hasSpace = parts.some(p => p.type === 'literal' && p.value.trim() === '');
+
+  // Handle negative values: extract sign from compact value
+  const isNegative = compactValue.startsWith('-');
+  const absoluteCompactValue = isNegative ? compactValue.slice(1) : compactValue;
+
+  // Construct the formatted string
+  let result: string;
+  if (currencyFirst) {
+    result = hasSpace
+      ? `${currencySymbol} ${absoluteCompactValue}`
+      : `${currencySymbol}${absoluteCompactValue}`;
+  } else {
+    result = hasSpace
+      ? `${absoluteCompactValue} ${currencySymbol}`
+      : `${absoluteCompactValue}${currencySymbol}`;
+  }
+
+  // Re-add negative sign at the beginning
+  return isNegative ? `-${result}` : result;
+}
+
+/**
  * Formats an integer with locale-specific thousand separators.
  * Truncates any decimal portion before formatting, since this is
  * intended for integer-only input fields.
