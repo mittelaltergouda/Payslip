@@ -85,6 +85,33 @@ const mockResult: PayslipResult = {
   ],
 };
 
+// Session with zero revenue for empty state testing
+const zeroRevenueSession: SessionInput = {
+  name: "Zero Revenue Session",
+  type: "TRADING",
+  distributionMode: "EQUAL",
+  taxEnabled: true,
+  taxRate: 0.005,
+  members: [
+    {
+      id: "m1",
+      handle: "Player 1",
+      role: "Pilot",
+      revenue: 0,
+      investment: 0,
+    },
+    {
+      id: "m2",
+      handle: "Player 2",
+      role: "Crew",
+      revenue: 0,
+      investment: 0,
+    },
+  ],
+  sharedExpenses: [],
+  individualExpenses: [],
+};
+
 describe('ResultsDisplay - Basic Rendering', () => {
   it('should render the results heading with German translations', () => {
     render(
@@ -921,11 +948,11 @@ describe('ResultsDisplay - CSV Export Edge Cases', () => {
 });
 
 describe('ResultsDisplay - Empty State Rendering', () => {
-  it('should render empty state when result is null and error is null', () => {
+  it('should render empty state when all members have zero revenue', () => {
     render(
       <ResultsDisplay
-        result={null}
-        session={mockSession}
+        result={mockResult}
+        session={zeroRevenueSession}
         error={null}
         translations={translations.en}
         lang="en"
@@ -942,8 +969,8 @@ describe('ResultsDisplay - Empty State Rendering', () => {
   it('should render empty state with German translations', () => {
     render(
       <ResultsDisplay
-        result={null}
-        session={mockSession}
+        result={mockResult}
+        session={zeroRevenueSession}
         error={null}
         translations={translations.de}
         lang="de"
@@ -960,8 +987,8 @@ describe('ResultsDisplay - Empty State Rendering', () => {
   it('should render empty state with English translations', () => {
     render(
       <ResultsDisplay
-        result={null}
-        session={mockSession}
+        result={mockResult}
+        session={zeroRevenueSession}
         error={null}
         translations={translations.en}
         lang="en"
@@ -978,8 +1005,8 @@ describe('ResultsDisplay - Empty State Rendering', () => {
   it('should render SVG icon in empty state', () => {
     const { container } = render(
       <ResultsDisplay
-        result={null}
-        session={mockSession}
+        result={mockResult}
+        session={zeroRevenueSession}
         error={null}
         translations={translations.en}
         lang="en"
@@ -994,8 +1021,8 @@ describe('ResultsDisplay - Empty State Rendering', () => {
   it('should not render CSV export buttons in empty state', () => {
     render(
       <ResultsDisplay
-        result={null}
-        session={mockSession}
+        result={mockResult}
+        session={zeroRevenueSession}
         error={null}
         translations={translations.en}
         lang="en"
@@ -1010,8 +1037,8 @@ describe('ResultsDisplay - Empty State Rendering', () => {
   it('should not render result tables in empty state', () => {
     render(
       <ResultsDisplay
-        result={null}
-        session={mockSession}
+        result={mockResult}
+        session={zeroRevenueSession}
         error={null}
         translations={translations.en}
         lang="en"
@@ -1026,7 +1053,7 @@ describe('ResultsDisplay - Empty State Rendering', () => {
     render(
       <ResultsDisplay
         result={null}
-        session={mockSession}
+        session={zeroRevenueSession}
         error="Calculation failed"
         translations={translations.en}
         lang="en"
@@ -1056,8 +1083,8 @@ describe('ResultsDisplay - Empty State Rendering', () => {
   it('should apply custom className to empty state container', () => {
     const { container } = render(
       <ResultsDisplay
-        result={null}
-        session={mockSession}
+        result={mockResult}
+        session={zeroRevenueSession}
         error={null}
         translations={translations.en}
         lang="en"
@@ -1067,5 +1094,35 @@ describe('ResultsDisplay - Empty State Rendering', () => {
 
     const mainDiv = container.firstChild;
     expect(mainDiv).toHaveClass('custom-empty-class');
+  });
+
+  it('should render description text in empty state (English)', () => {
+    render(
+      <ResultsDisplay
+        result={mockResult}
+        session={zeroRevenueSession}
+        error={null}
+        translations={translations.en}
+        lang="en"
+      />
+    );
+
+    // Should show the description text
+    expect(screen.getByText('Add members and enter revenue to calculate the payout distribution')).toBeInTheDocument();
+  });
+
+  it('should render description text in empty state (German)', () => {
+    render(
+      <ResultsDisplay
+        result={mockResult}
+        session={zeroRevenueSession}
+        error={null}
+        translations={translations.de}
+        lang="de"
+      />
+    );
+
+    // Should show the German description text
+    expect(screen.getByText('Fügen Sie Mitglieder hinzu und geben Sie Umsätze ein, um die Auszahlung zu berechnen')).toBeInTheDocument();
   });
 });

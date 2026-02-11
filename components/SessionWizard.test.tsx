@@ -587,10 +587,18 @@ describe('SessionWizard - Reset Functionality', () => {
 });
 
 describe('SessionWizard - Results Display', () => {
-  it('should display summary section with revenue, investment, expenses', () => {
+  it('should display summary section with revenue, investment, expenses', async () => {
     renderWithToast(<SessionWizard />);
 
-    expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    // Add revenue to trigger results display (empty state shows with zero revenue)
+    const numberInputs = screen.getAllByRole('textbox');
+    const revenueInput = numberInputs[0] as HTMLInputElement;
+    fireEvent.change(revenueInput, { target: { value: '1000' } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+    });
+
     const umsatzTexts = screen.getAllByText('Umsatz');
     expect(umsatzTexts.length).toBeGreaterThan(0);
     const investmentTexts = screen.getAllByText('Investment');
@@ -602,11 +610,23 @@ describe('SessionWizard - Results Display', () => {
   it('should display suggested transfers section', () => {
     renderWithToast(<SessionWizard />);
 
+    // Add revenue to trigger results display
+    const numberInputs = screen.getAllByRole('textbox');
+    const revenueInput = numberInputs[0] as HTMLInputElement;
+    fireEvent.change(revenueInput, { target: { value: '1000' } });
+
     expect(screen.getByText('Vorgeschlagene Überweisungen')).toBeInTheDocument();
   });
 
   it('should show "no transfers required" message when members have equal revenue', () => {
     renderWithToast(<SessionWizard />);
+
+    // Add equal revenue to both members
+    const numberInputs = screen.getAllByRole('textbox');
+    const revenueInput1 = numberInputs[0] as HTMLInputElement;
+    const revenueInput2 = numberInputs[2] as HTMLInputElement; // Skip investment input
+    fireEvent.change(revenueInput1, { target: { value: '1000' } });
+    fireEvent.change(revenueInput2, { target: { value: '1000' } });
 
     expect(screen.getByText('Keine Transfers nötig.')).toBeInTheDocument();
   });
@@ -625,6 +645,11 @@ describe('SessionWizard - Results Display', () => {
 
   it('should display member results table with all members', () => {
     renderWithToast(<SessionWizard />);
+
+    // Add revenue to trigger results display
+    const numberInputs = screen.getAllByRole('textbox');
+    const revenueInput = numberInputs[0] as HTMLInputElement;
+    fireEvent.change(revenueInput, { target: { value: '1000' } });
 
     // Results section renders and contains member results
     const payoutHeadings = screen.getAllByText('Payout');
@@ -745,10 +770,12 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       const numberInputs = screen.getAllByRole('textbox');
       const revenueInput = numberInputs[0] as HTMLInputElement;
 
+      // Set revenue to zero
       fireEvent.change(revenueInput, { target: { value: '0' } });
 
-      expect(screen.getByText('Gesamt')).toBeInTheDocument();
-      expect(screen.getByText('Keine Transfers nötig.')).toBeInTheDocument();
+      // With zero revenue, empty state should display instead of results
+      expect(screen.getByText('Noch keine Berechnung')).toBeInTheDocument();
+      expect(screen.queryByText('Gesamt')).not.toBeInTheDocument();
     });
 
     it('should handle very large numbers without crashing', () => {
@@ -757,6 +784,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       const numberInputs = screen.getAllByRole('textbox');
       const revenueInput = numberInputs[0] as HTMLInputElement;
 
+      // Add very large revenue to trigger results
       fireEvent.change(revenueInput, { target: { value: '999999999' } });
 
       expect(screen.getByText('Gesamt')).toBeInTheDocument();
@@ -768,9 +796,12 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       const numberInputs = screen.getAllByRole('textbox');
       const revenueInput = numberInputs[0] as HTMLInputElement;
 
+      // Set revenue to empty string (treated as zero)
       fireEvent.change(revenueInput, { target: { value: '' } });
 
-      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+      // Empty revenue should show empty state
+      expect(screen.getByText('Noch keine Berechnung')).toBeInTheDocument();
+      expect(screen.queryByText('Gesamt')).not.toBeInTheDocument();
     });
 
     it('should not crash with empty member handle', () => {
@@ -800,6 +831,11 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should handle all members being inactive', () => {
       renderWithToast(<SessionWizard />);
 
+      // Add revenue first to trigger results display
+      const numberInputs = screen.getAllByRole('textbox');
+      const revenueInput = numberInputs[0] as HTMLInputElement;
+      fireEvent.change(revenueInput, { target: { value: '1000' } });
+
       const checkboxes = screen.getAllByRole('checkbox').filter(checkbox => {
         const label = (checkbox as HTMLInputElement).getAttribute('aria-label');
         return !label || (!label.includes('Transfer Tax') && !label.includes('Rollen'));
@@ -817,6 +853,11 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should handle removing all members except one', () => {
       renderWithToast(<SessionWizard />);
 
+      // Add revenue first to trigger results display
+      const numberInputs = screen.getAllByRole('textbox');
+      const revenueInput = numberInputs[0] as HTMLInputElement;
+      fireEvent.change(revenueInput, { target: { value: '1000' } });
+
       const deleteButtons = screen.getAllByTitle('Entfernen');
       const memberDeleteButtons = deleteButtons.slice(0, 2);
 
@@ -829,6 +870,11 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
     it('should handle adding maximum number of members', () => {
       renderWithToast(<SessionWizard />);
+
+      // Add revenue first to trigger results display
+      const numberInputs = screen.getAllByRole('textbox');
+      const revenueInput = numberInputs[0] as HTMLInputElement;
+      fireEvent.change(revenueInput, { target: { value: '1000' } });
 
       const addButton = screen.getByRole('button', { name: '+ Mitglied' });
 
@@ -850,8 +896,9 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       const revenueInput = numberInputs[0] as HTMLInputElement;
       fireEvent.change(revenueInput, { target: { value: '0' } });
 
-      expect(screen.getByText('Gesamt')).toBeInTheDocument();
-      expect(screen.getByText('Keine Transfers nötig.')).toBeInTheDocument();
+      // Zero revenue should show empty state
+      expect(screen.getByText('Noch keine Berechnung')).toBeInTheDocument();
+      expect(screen.queryByText('Gesamt')).not.toBeInTheDocument();
     });
   });
 
@@ -903,7 +950,9 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       fireEvent.change(revenueInput, { target: { value: '0' } });
       fireEvent.change(investmentInput, { target: { value: '1000' } });
 
-      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+      // Zero revenue should show empty state even with investment
+      expect(screen.getByText('Noch keine Berechnung')).toBeInTheDocument();
+      expect(screen.queryByText('Gesamt')).not.toBeInTheDocument();
     });
 
     it('should handle multiple expenses exceeding total revenue', () => {
@@ -994,6 +1043,11 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should handle switching between modes multiple times', () => {
       renderWithToast(<SessionWizard />);
 
+      // Add revenue first to trigger results display
+      const numberInputs = screen.getAllByRole('textbox');
+      const revenueInput = numberInputs[0] as HTMLInputElement;
+      fireEvent.change(revenueInput, { target: { value: '1000' } });
+
       selectDistributionMode('Prozent');
       expect(getCurrentDistributionMode()).toBe('PERCENT');
 
@@ -1014,6 +1068,11 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
     it('should maintain state after rapid member additions and removals', () => {
       renderWithToast(<SessionWizard />);
 
+      // Add revenue first to trigger results display
+      const numberInputs = screen.getAllByRole('textbox');
+      const revenueInput = numberInputs[0] as HTMLInputElement;
+      fireEvent.change(revenueInput, { target: { value: '1000' } });
+
       const addButton = screen.getByRole('button', { name: '+ Mitglied' });
 
       fireEvent.click(addButton);
@@ -1029,6 +1088,11 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
     it('should maintain calculations after rapid expense additions and removals', () => {
       renderWithToast(<SessionWizard />);
+
+      // Add revenue first to trigger results display
+      const numberInputs = screen.getAllByRole('textbox');
+      const revenueInput = numberInputs[0] as HTMLInputElement;
+      fireEvent.change(revenueInput, { target: { value: '1000' } });
 
       const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
       fireEvent.click(addExpenseButtons[0]);
@@ -1049,6 +1113,11 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
     it('should handle toggling tax multiple times', () => {
       renderWithToast(<SessionWizard />);
+
+      // Add revenue first to trigger results display
+      const numberInputs = screen.getAllByRole('textbox');
+      const revenueInput = numberInputs[0] as HTMLInputElement;
+      fireEvent.change(revenueInput, { target: { value: '1000' } });
 
       const taxCheckbox = screen.getByRole('checkbox', {
         name: /Transfer Tax berücksichtigen/i
@@ -1107,8 +1176,9 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
         fireEvent.change(input, { target: { value: '0' } });
       });
 
-      expect(screen.getByText('Gesamt')).toBeInTheDocument();
-      expect(screen.getByText('Keine Transfers nötig.')).toBeInTheDocument();
+      // All zero values should show empty state
+      expect(screen.getByText('Noch keine Berechnung')).toBeInTheDocument();
+      expect(screen.queryByText('Gesamt')).not.toBeInTheDocument();
     });
 
     it('should handle member with only investment and no revenue', () => {
@@ -1121,7 +1191,9 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       fireEvent.change(revenueInput, { target: { value: '0' } });
       fireEvent.change(investmentInput, { target: { value: '1000' } });
 
-      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+      // Zero revenue should show empty state even with investment
+      expect(screen.getByText('Noch keine Berechnung')).toBeInTheDocument();
+      expect(screen.queryByText('Gesamt')).not.toBeInTheDocument();
     });
 
     it('should handle member with only expenses and no revenue', () => {
@@ -1145,7 +1217,9 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
         fireEvent.change(expenseAmountInput, { target: { value: '100' } });
       }
 
-      expect(screen.getByText('Gesamt')).toBeInTheDocument();
+      // Zero revenue should show empty state even with expenses
+      expect(screen.getByText('Noch keine Berechnung')).toBeInTheDocument();
+      expect(screen.queryByText('Gesamt')).not.toBeInTheDocument();
     });
 
     it('should handle reset after complex modifications', () => {

@@ -123,8 +123,10 @@ export function ResultsDisplay({
     }
   };
 
-  // Empty state: no results yet
-  if (!result && !error) {
+  // Empty state: no revenue entered yet
+  const hasRevenue = session.members.some(m => (m.revenue ?? 0) > 0);
+
+  if (!hasRevenue && !error) {
     return (
       <div className={`glass p-6 space-y-4 ${className}`}>
         <h3 className="text-xl font-display">{t.results}</h3>
@@ -144,6 +146,7 @@ export function ResultsDisplay({
             />
           </svg>
           <p className="text-white/60 text-lg">{t.noResultsYet || "No results yet"}</p>
+          <p className="text-white/40 text-sm mt-2">{t.noResultsDescription}</p>
         </div>
       </div>
     );
