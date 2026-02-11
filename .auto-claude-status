@@ -1,6 +1,6 @@
 {
   "active": true,
-  "spec": "068-add-input-validation-for-session-id-path-parameter",
+  "spec": "062-add-clipboard-export-button-component",
   "state": "building",
   "subtasks": {
     "completed": 4,
@@ -9,9 +9,9 @@
     "failed": 0
   },
   "phase": {
-    "current": "Add UUID Validation",
+    "current": "End-to-End Verification",
     "id": null,
-    "total": 5
+    "total": 2
   },
   "workers": {
     "active": 0,
@@ -19,7 +19,7 @@
   },
   "session": {
     "number": 6,
-    "started_at": "2026-02-09T22:22:11.089518"
+    "started_at": "2026-02-09T18:47:15.177609"
   },
-  "last_update": "2026-02-09T22:37:06.196512"
+  "last_update": "2026-02-09T19:01:26.603973"
 }
