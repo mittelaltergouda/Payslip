@@ -126,7 +126,7 @@ export default function SessionsPage() {
         <SessionList
           sessions={sessions}
           lang={lang}
-          onDelete={(id) => void handleDelete(id)}
+          onDelete={(sessionId) => void handleDelete(sessionId)}
           translations={{
             members: t.members,
             revenueLabel: t.revenueLabel,
@@ -134,6 +134,7 @@ export default function SessionsPage() {
             searchPlaceholder: lang === "de" ? "Sessions durchsuchen..." : "Search sessions...",
             filterByType: lang === "de" ? "Nach Typ filtern" : "Filter by type",
             allTypes: lang === "de" ? "Alle Typen" : "All Types",
+            sortBy: lang === "de" ? "Sortieren" : "Sort by",
             noSessions: t.noSessions,
             noSessionsFound: lang === "de" ? "Keine Sessions gefunden" : "No sessions found matching your filters",
           }}

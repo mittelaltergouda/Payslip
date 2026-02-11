@@ -11,12 +11,14 @@ const mockTranslationsDE = {
   searchPlaceholder: "Sessions durchsuchen...",
   filterByType: "Nach Typ filtern",
   allTypes: "Alle Typen",
+  sortBy: "Sortieren nach",
 };
 
 const mockTranslationsEN = {
   searchPlaceholder: "Search sessions...",
   filterByType: "Filter by type",
   allTypes: "All Types",
+  sortBy: "Sort by",
 };
 
 // Helper function to create default props
@@ -27,6 +29,8 @@ const createDefaultProps = (
   onSearchChange: vi.fn(),
   selectedType: null,
   onTypeChange: vi.fn(),
+  selectedSort: undefined,
+  onSortChange: undefined,
   translations: mockTranslationsEN,
   ...overrides,
 });
@@ -307,6 +311,359 @@ describe("SessionFilters - Type Dropdown", () => {
   });
 });
 
+describe("SessionFilters - Sort Dropdown", () => {
+  it("should not render sort dropdown when selectedSort is undefined", () => {
+    const props = createDefaultProps();
+    render(<SessionFilters {...props} />);
+
+    // Sort dropdown should not exist
+    expect(
+      screen.queryByRole("button", { name: "Sort by" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("should not render sort dropdown when onSortChange is undefined", () => {
+    const props = createDefaultProps({
+      selectedSort: "date-newest",
+      onSortChange: undefined,
+    });
+    render(<SessionFilters {...props} />);
+
+    // Sort dropdown should not exist
+    expect(
+      screen.queryByRole("button", { name: "Sort by" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("should not render sort dropdown when sortBy translation is missing", () => {
+    const props = createDefaultProps({
+      selectedSort: "date-newest",
+      onSortChange: vi.fn(),
+      translations: {
+        searchPlaceholder: "Search sessions...",
+        filterByType: "Filter by type",
+        allTypes: "All Types",
+      },
+    });
+    render(<SessionFilters {...props} />);
+
+    // Sort dropdown should not exist
+    expect(
+      screen.queryByRole("button", { name: "Sort by" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("should render sort dropdown when all required props are provided", () => {
+    const props = createDefaultProps({
+      selectedSort: "date-newest",
+      onSortChange: vi.fn(),
+    });
+    render(<SessionFilters {...props} />);
+
+    const sortButton = screen.getByRole("button", { name: "Sort by" });
+    expect(sortButton).toBeInTheDocument();
+  });
+
+  it("should display selected sort option in dropdown button", () => {
+    const props = createDefaultProps({
+      selectedSort: "name-asc",
+      onSortChange: vi.fn(),
+    });
+    render(<SessionFilters {...props} />);
+
+    expect(screen.getByText("Name (A-Z)")).toBeInTheDocument();
+  });
+
+  it("should display correct label for each sort option", () => {
+    const sortLabels: Record<
+      string,
+      string
+    > = {
+      "date-newest": "Date (Newest First)",
+      "date-oldest": "Date (Oldest First)",
+      "name-asc": "Name (A-Z)",
+      "name-desc": "Name (Z-A)",
+      "revenue-high": "Revenue (Highest)",
+      "revenue-low": "Revenue (Lowest)",
+    };
+
+    Object.entries(sortLabels).forEach(([sortValue, expectedLabel]) => {
+      const props = createDefaultProps({
+        selectedSort: sortValue as any,
+        onSortChange: vi.fn(),
+      });
+      const { unmount } = render(<SessionFilters {...props} />);
+
+      expect(screen.getByText(expectedLabel)).toBeInTheDocument();
+
+      unmount();
+    });
+  });
+
+  it("should open dropdown when clicking the button", () => {
+    const props = createDefaultProps({
+      selectedSort: "date-newest",
+      onSortChange: vi.fn(),
+    });
+    render(<SessionFilters {...props} />);
+
+    const sortButton = screen.getByRole("button", { name: "Sort by" });
+    fireEvent.click(sortButton);
+
+    // Check for dropdown options
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+  });
+
+  it("should display all sort options in dropdown", () => {
+    const props = createDefaultProps({
+      selectedSort: "date-newest",
+      onSortChange: vi.fn(),
+    });
+    render(<SessionFilters {...props} />);
+
+    const sortButton = screen.getByRole("button", { name: "Sort by" });
+    fireEvent.click(sortButton);
+
+    // Check for all sort options by role
+    expect(
+      screen.getByRole("option", { name: "Date (Newest First)" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Date (Oldest First)" })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Name (A-Z)" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Name (Z-A)" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Revenue (Highest)" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Revenue (Lowest)" })
+    ).toBeInTheDocument();
+  });
+
+  it("should call onSortChange when selecting a sort option", () => {
+    const mockOnSortChange = vi.fn();
+    const props = createDefaultProps({
+      selectedSort: "date-newest",
+      onSortChange: mockOnSortChange,
+    });
+    render(<SessionFilters {...props} />);
+
+    const sortButton = screen.getByRole("button", { name: "Sort by" });
+    fireEvent.click(sortButton);
+
+    const nameAscOption = screen.getByRole("option", { name: "Name (A-Z)" });
+    fireEvent.click(nameAscOption);
+
+    expect(mockOnSortChange).toHaveBeenCalledWith("name-asc");
+  });
+
+  it("should highlight selected sort option in dropdown", () => {
+    const props = createDefaultProps({
+      selectedSort: "revenue-high",
+      onSortChange: vi.fn(),
+    });
+    render(<SessionFilters {...props} />);
+
+    const sortButton = screen.getByRole("button", { name: "Sort by" });
+    fireEvent.click(sortButton);
+
+    const revenueHighOption = screen.getByRole("option", {
+      name: "Revenue (Highest)",
+    });
+    expect(revenueHighOption).toHaveClass("bg-neon/20 text-neon");
+  });
+
+  it("should show down arrow when dropdown is closed", () => {
+    const props = createDefaultProps({
+      selectedSort: "date-newest",
+      onSortChange: vi.fn(),
+    });
+    render(<SessionFilters {...props} />);
+
+    const sortButton = screen.getByRole("button", { name: "Sort by" });
+    expect(sortButton).toHaveTextContent("▼");
+  });
+
+  it("should show up arrow when dropdown is open", () => {
+    const props = createDefaultProps({
+      selectedSort: "date-newest",
+      onSortChange: vi.fn(),
+    });
+    render(<SessionFilters {...props} />);
+
+    const sortButton = screen.getByRole("button", { name: "Sort by" });
+    fireEvent.click(sortButton);
+
+    expect(sortButton).toHaveTextContent("▲");
+  });
+
+  it("should set aria-expanded correctly when dropdown opens/closes", () => {
+    const props = createDefaultProps({
+      selectedSort: "date-newest",
+      onSortChange: vi.fn(),
+    });
+    render(<SessionFilters {...props} />);
+
+    const sortButton = screen.getByRole("button", { name: "Sort by" });
+
+    // Initially closed
+    expect(sortButton).toHaveAttribute("aria-expanded", "false");
+
+    // Open dropdown
+    fireEvent.click(sortButton);
+    expect(sortButton).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("should work with all sort options", () => {
+    const mockOnSortChange = vi.fn();
+    const props = createDefaultProps({
+      selectedSort: "date-newest",
+      onSortChange: mockOnSortChange,
+    });
+    render(<SessionFilters {...props} />);
+
+    const sortButton = screen.getByRole("button", { name: "Sort by" });
+
+    const sortOptions: Array<[string, string]> = [
+      ["date-newest", "Date (Newest First)"],
+      ["date-oldest", "Date (Oldest First)"],
+      ["name-asc", "Name (A-Z)"],
+      ["name-desc", "Name (Z-A)"],
+      ["revenue-high", "Revenue (Highest)"],
+      ["revenue-low", "Revenue (Lowest)"],
+    ];
+
+    sortOptions.forEach(([sortValue, sortLabel]) => {
+      mockOnSortChange.mockClear();
+      fireEvent.click(sortButton);
+
+      const option = screen.getByRole("option", { name: sortLabel });
+      fireEvent.click(option);
+
+      expect(mockOnSortChange).toHaveBeenCalledWith(sortValue);
+    });
+  });
+
+  it("should mark selected option with aria-selected", () => {
+    const props = createDefaultProps({
+      selectedSort: "name-desc",
+      onSortChange: vi.fn(),
+    });
+    render(<SessionFilters {...props} />);
+
+    const sortButton = screen.getByRole("button", { name: "Sort by" });
+    fireEvent.click(sortButton);
+
+    const nameDescOption = screen.getByRole("option", { name: "Name (Z-A)" });
+    expect(nameDescOption).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("should have proper aria attributes on dropdown button", () => {
+    const props = createDefaultProps({
+      selectedSort: "date-newest",
+      onSortChange: vi.fn(),
+    });
+    render(<SessionFilters {...props} />);
+
+    const sortButton = screen.getByRole("button", { name: "Sort by" });
+
+    expect(sortButton).toHaveAttribute("aria-haspopup", "listbox");
+    expect(sortButton).toHaveAttribute("aria-expanded");
+  });
+
+  it("should maintain search input value when sort changes", () => {
+    const mockOnSortChange = vi.fn();
+    const props = createDefaultProps({
+      searchQuery: "mining session",
+      selectedSort: "date-newest",
+      onSortChange: mockOnSortChange,
+    });
+    render(<SessionFilters {...props} />);
+
+    // Open sort dropdown and select an option
+    const sortButton = screen.getByRole("button", { name: "Sort by" });
+    fireEvent.click(sortButton);
+
+    const nameAscOption = screen.getByRole("option", { name: "Name (A-Z)" });
+    fireEvent.click(nameAscOption);
+
+    // Search input should still have the same value
+    const searchInput = screen.getByPlaceholderText("Search sessions...");
+    expect(searchInput).toHaveValue("mining session");
+  });
+
+  it("should maintain type filter when sort changes", () => {
+    const mockOnSortChange = vi.fn();
+    const props = createDefaultProps({
+      selectedType: "MINING",
+      selectedSort: "date-newest",
+      onSortChange: mockOnSortChange,
+    });
+    render(<SessionFilters {...props} />);
+
+    // Open sort dropdown and select an option
+    const sortButton = screen.getByRole("button", { name: "Sort by" });
+    fireEvent.click(sortButton);
+
+    const revenueHighOption = screen.getByRole("option", {
+      name: "Revenue (Highest)",
+    });
+    fireEvent.click(revenueHighOption);
+
+    // Type filter should still show MINING
+    expect(screen.getByText("MINING")).toBeInTheDocument();
+  });
+
+  it("should handle sort change when search and type filter are active", () => {
+    const mockOnSearchChange = vi.fn();
+    const mockOnTypeChange = vi.fn();
+    const mockOnSortChange = vi.fn();
+    const props = createDefaultProps({
+      searchQuery: "test",
+      selectedType: "TRADING",
+      selectedSort: "date-newest",
+      onSearchChange: mockOnSearchChange,
+      onTypeChange: mockOnTypeChange,
+      onSortChange: mockOnSortChange,
+    });
+    render(<SessionFilters {...props} />);
+
+    // Change sort option
+    const sortButton = screen.getByRole("button", { name: "Sort by" });
+    fireEvent.click(sortButton);
+
+    const revenueLowOption = screen.getByRole("option", {
+      name: "Revenue (Lowest)",
+    });
+    fireEvent.click(revenueLowOption);
+
+    expect(mockOnSortChange).toHaveBeenCalledWith("revenue-low");
+    // Other callbacks should not be called
+    expect(mockOnSearchChange).not.toHaveBeenCalled();
+    expect(mockOnTypeChange).not.toHaveBeenCalled();
+  });
+
+  it("should render 3-column grid when sort dropdown is present", () => {
+    const props = createDefaultProps({
+      selectedSort: "date-newest",
+      onSortChange: vi.fn(),
+    });
+    const { container } = render(<SessionFilters {...props} />);
+
+    const grid = container.querySelector(".md\\:grid-cols-3");
+    expect(grid).toBeInTheDocument();
+  });
+
+  it("should render 2-column grid when sort dropdown is not present", () => {
+    const props = createDefaultProps();
+    const { container } = render(<SessionFilters {...props} />);
+
+    const grid = container.querySelector(".md\\:grid-cols-2");
+    expect(grid).toBeInTheDocument();
+  });
+});
+
 describe("SessionFilters - Translations", () => {
   it("should render German translations", () => {
     const props = createDefaultProps({ translations: mockTranslationsDE });
@@ -326,6 +683,30 @@ describe("SessionFilters - Translations", () => {
       screen.getByPlaceholderText("Search sessions...")
     ).toBeInTheDocument();
     expect(screen.getByText("All Types")).toBeInTheDocument();
+  });
+
+  it("should render German translations for sort dropdown", () => {
+    const props = createDefaultProps({
+      translations: mockTranslationsDE,
+      selectedSort: "date-newest",
+      onSortChange: vi.fn(),
+    });
+    render(<SessionFilters {...props} />);
+
+    const sortButton = screen.getByRole("button", { name: "Sortieren nach" });
+    expect(sortButton).toBeInTheDocument();
+  });
+
+  it("should render English translations for sort dropdown", () => {
+    const props = createDefaultProps({
+      translations: mockTranslationsEN,
+      selectedSort: "date-newest",
+      onSortChange: vi.fn(),
+    });
+    render(<SessionFilters {...props} />);
+
+    const sortButton = screen.getByRole("button", { name: "Sort by" });
+    expect(sortButton).toBeInTheDocument();
   });
 });
 
