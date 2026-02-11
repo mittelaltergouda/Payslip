@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "064-remove-unsafe-eval-and-unsafe-inline-from-content-",
+  "spec": "062-add-clipboard-export-button-component",
   "state": "building",
   "subtasks": {
-    "completed": 7,
-    "total": 8,
+    "completed": 4,
+    "total": 5,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Comprehensive Verification",
+    "current": "End-to-End Verification",
     "id": null,
-    "total": 4
+    "total": 2
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 9,
-    "started_at": "2026-02-09T19:27:28.968600"
+    "number": 6,
+    "started_at": "2026-02-09T18:47:15.177609"
   },
-  "last_update": "2026-02-09T20:54:56.069955"
+  "last_update": "2026-02-09T19:01:26.603973"
 }
