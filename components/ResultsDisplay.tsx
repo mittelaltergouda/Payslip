@@ -123,6 +123,32 @@ export function ResultsDisplay({
     }
   };
 
+  // Empty state: no results yet
+  if (!result && !error) {
+    return (
+      <div className={`glass p-6 space-y-4 ${className}`}>
+        <h3 className="text-xl font-display">{t.results}</h3>
+        <div className="glass p-8 text-center">
+          <svg
+            className="w-16 h-16 mx-auto mb-4 text-white/30"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          <p className="text-white/60 text-lg">{t.noResultsYet || "No results yet"}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`glass p-6 space-y-4 ${className}`}>
       <div className="flex items-center justify-between flex-wrap gap-2">
