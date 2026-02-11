@@ -122,7 +122,9 @@ export const translations: Record<Lang, Record<string, string>> = {
     presetUpdated: "Vorlage aktualisiert",
     confirmDeletePreset: "Vorlage wirklich löschen?",
     saveCurrentCrew: "Aktuelle Crew speichern",
-    presetMembers: "Mitglieder"
+    presetMembers: "Mitglieder",
+    noResultsYet: "Noch keine Berechnung",
+    noResultsDescription: "Fügen Sie Mitglieder hinzu und geben Sie Umsätze ein, um die Auszahlung zu berechnen"
   },
   en: {
     appName: "SC Payslip",
@@ -210,6 +212,8 @@ export const translations: Record<Lang, Record<string, string>> = {
     presetUpdated: "Preset updated",
     confirmDeletePreset: "Delete this preset?",
     saveCurrentCrew: "Save Current Crew",
-    presetMembers: "Members"
+    presetMembers: "Members",
+    noResultsYet: "No calculation yet",
+    noResultsDescription: "Add members and enter revenue to calculate the payout distribution"
   }
 };
