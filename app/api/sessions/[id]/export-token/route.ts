@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { generateSecureToken } from "@/lib/crypto";
 import { exportTokenSchema } from "@/app/api/sessions/validation";
 import { Prisma } from "@prisma/client";
+import { extractCsrfTokenFromHeaders, validateCsrfToken } from "@/lib/csrf";
 
 /**
  * POST /api/sessions/[id]/export-token
@@ -17,6 +18,7 @@ import { Prisma } from "@prisma/client";
  * Generates a new export token for sharing a session via read-only link.
  *
  * Security features:
+ * - CSRF protection via token validation (prevents cross-site request forgery)
  * - Cryptographically secure token generation (256 bits entropy)
  * - Unique token constraint enforced at database level
  * - URL-safe base64 encoding for use in share links
@@ -26,6 +28,7 @@ import { Prisma } from "@prisma/client";
  * @returns 201 Created with token data, or error response
  *
  * Error responses:
+ * - 403 Forbidden: Invalid or missing CSRF token
  * - 404 Not Found: Session does not exist
  * - 409 Conflict: Token collision (extremely rare, retry suggested)
  * - 500 Internal Server Error: Database or validation error
@@ -47,6 +50,29 @@ export async function POST(
   try {
     // Extract session ID from route parameters
     const { id: sessionId } = await context.params;
+
+    // CSRF Protection: Double-Submit Cookie Pattern
+    // The client must include the CSRF token (read from previous response header)
+    // in the request header. The server validates this client token matches the
+    // server-set HTTP-only cookie.
+    //
+    // Security model:
+    // - Attacker cannot read response headers from other origin (same-origin policy)
+    // - Attacker cannot read or set HTTP-only cookies
+    // - Attacker cannot forge both values to match
+    // - Only legitimate clients can read the token from response headers and include it
+    const clientToken = extractCsrfTokenFromHeaders(request.headers);
+    const cookieToken = request.cookies.get('csrf-token')?.value;
+
+    if (!validateCsrfToken(clientToken, cookieToken)) {
+      return NextResponse.json(
+        {
+          error: "CSRF token validation failed",
+          details: "Invalid or missing CSRF token"
+        },
+        { status: 403 }
+      );
+    }
 
     // Validate session exists before generating token
     const session = await prisma.session.findUnique({

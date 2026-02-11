@@ -8,11 +8,15 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { extractCsrfTokenFromHeaders, validateCsrfToken } from "@/lib/csrf";
 
 /**
  * DELETE /api/sessions/[id]
  *
  * Deletes a session and all its associated data via cascade delete.
+ *
+ * Security features:
+ * - CSRF protection via token validation (prevents cross-site request forgery)
  *
  * Cascade behavior:
  * - All members associated with the session are deleted
@@ -20,11 +24,12 @@ import { prisma } from "@/lib/prisma";
  * - All individual expenses associated with the session are deleted
  * - All export tokens associated with the session are deleted
  *
- * @param request - Next.js request object (unused but required by signature)
+ * @param request - Next.js request object
  * @param params - Route parameters containing session ID
  * @returns 200 OK with deletion confirmation, or error response
  *
  * Error responses:
+ * - 403 Forbidden: Invalid or missing CSRF token
  * - 404 Not Found: Session does not exist
  * - 500 Internal Server Error: Database error during deletion
  *
@@ -43,6 +48,29 @@ export async function DELETE(
   try {
     // Extract session ID from route parameters
     const { id: sessionId } = await context.params;
+
+    // CSRF Protection: Double-Submit Cookie Pattern
+    // The client must include the CSRF token (read from previous response header)
+    // in the request header. The server validates this client token matches the
+    // server-set HTTP-only cookie.
+    //
+    // Security model:
+    // - Attacker cannot read response headers from other origin (same-origin policy)
+    // - Attacker cannot read or set HTTP-only cookies
+    // - Attacker cannot forge both values to match
+    // - Only legitimate clients can read the token from response headers and include it
+    const clientToken = extractCsrfTokenFromHeaders(request.headers);
+    const cookieToken = request.cookies.get('csrf-token')?.value;
+
+    if (!validateCsrfToken(clientToken, cookieToken)) {
+      return NextResponse.json(
+        {
+          error: "CSRF token validation failed",
+          details: "Invalid or missing CSRF token"
+        },
+        { status: 403 }
+      );
+    }
 
     // Validate session exists before attempting deletion
     const session = await prisma.session.findUnique({

@@ -4,8 +4,10 @@
 // GET: Retrieves all sessions from the database with essential metadata
 // POST: Creates a new session with members (primarily for testing)
 
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { extractCsrfTokenFromHeaders, validateCsrfToken } from "@/lib/csrf";
 
 /**
  * GET /api/sessions
@@ -88,6 +90,9 @@ export async function GET() {
  *
  * Creates a new session with members. Primarily used for E2E testing.
  *
+ * Security features:
+ * - CSRF protection via token validation (prevents cross-site request forgery)
+ *
  * Request body:
  * - name: Session name
  * - type: SessionType (TRADING, PIRACY, SALVAGE, MINING, BOUNTY, OTHER)
@@ -98,11 +103,35 @@ export async function GET() {
  * @returns 200 OK with created session object, or error response
  *
  * Error responses:
+ * - 403 Forbidden: Invalid or missing CSRF token
  * - 400 Bad Request: Invalid input data
  * - 500 Internal Server Error: Database creation failure
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // CSRF Protection: Double-Submit Cookie Pattern
+    // The client must include the CSRF token (read from previous response header)
+    // in the request header. The server validates this client token matches the
+    // server-set HTTP-only cookie.
+    //
+    // Security model:
+    // - Attacker cannot read response headers from other origin (same-origin policy)
+    // - Attacker cannot read or set HTTP-only cookies
+    // - Attacker cannot forge both values to match
+    // - Only legitimate clients can read the token from response headers and include it
+    const clientToken = extractCsrfTokenFromHeaders(request.headers);
+    const cookieToken = request.cookies.get('csrf-token')?.value;
+
+    if (!validateCsrfToken(clientToken, cookieToken)) {
+      return NextResponse.json(
+        {
+          error: "CSRF token validation failed",
+          details: "Invalid or missing CSRF token"
+        },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const { name, type, taxEnabled, distribution, members } = body;
 

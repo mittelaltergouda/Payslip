@@ -1,9 +1,13 @@
 import type { NextRequest} from "next/server";
 import { NextResponse } from "next/server";
+import { generateCsrfToken } from "./lib/csrf";
 
 export function middleware(request: NextRequest) {
   // Generate a unique nonce for this request
   const nonce = crypto.randomUUID();
+
+  // Generate a CSRF token for this request
+  const csrfToken = generateCsrfToken();
 
   // Create Content-Security-Policy header with nonce
   const cspHeader = [
@@ -18,7 +22,7 @@ export function middleware(request: NextRequest) {
     `form-action 'self'`,
   ].join("; ");
 
-  // Clone the request headers and add CSP
+  // Clone the request headers and add CSP nonce (NOT CSRF token - security requirement)
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", cspHeader);
@@ -33,6 +37,15 @@ export function middleware(request: NextRequest) {
   // Set CSP header on response
   response.headers.set("Content-Security-Policy", cspHeader);
   response.headers.set("x-nonce", nonce);
+  response.headers.set("x-csrf-token", csrfToken);
+
+  // Set CSRF token in HTTP-only cookie (double-submit cookie pattern)
+  response.cookies.set('csrf-token', csrfToken, {
+    httpOnly: true,
+    sameSite: 'strict',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/'
+  });
 
   // Set static security headers (also in next.config.mjs for production)
   // These are duplicated here to ensure they work in development mode
