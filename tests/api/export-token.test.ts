@@ -50,11 +50,12 @@ describe("POST /api/sessions/[id]/export-token", () => {
       const sessionId = "test-session-123";
       const mockSession = { id: sessionId };
       const mockToken = "kJ8x-3mQfYz2vN4pL6rW9sU1tH5qD7cA8bE0gF2hG4i";
+      const mockExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
       const mockExportToken = {
         id: "token-uuid-123",
         sessionId,
         token: mockToken,
-        expiresAt: null
+        expiresAt: mockExpiresAt
       };
 
       // Mock session exists
@@ -74,9 +75,10 @@ describe("POST /api/sessions/[id]/export-token", () => {
         id: "token-uuid-123",
         sessionId,
         token: mockToken,
-        expiresAt: null,
         shareUrl: `/session/${mockToken}`
       });
+      expect(data.expiresAt).toBeTruthy();
+      expect(new Date(data.expiresAt)).toBeInstanceOf(Date);
 
       // Verify database calls
       expect(prisma.session.findUnique).toHaveBeenCalledWith({
@@ -88,7 +90,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
         data: {
           sessionId,
           token: expect.any(String),
-          expiresAt: null
+          expiresAt: expect.any(Date)
         }
       });
     });
@@ -105,7 +107,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
           id: "token-uuid",
           sessionId,
           token: capturedToken,
-          expiresAt: null
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         } as any);
       }) as any);
 
@@ -133,7 +135,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
           id: `token-uuid-${generatedTokens.length}`,
           sessionId,
           token,
-          expiresAt: null
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         } as any);
       }) as any);
 
@@ -158,7 +160,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
         id: "token-uuid",
         sessionId,
         token: "test-token-123",
-        expiresAt: null
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       } as any);
 
       const request = createMockRequest(sessionId);
@@ -170,7 +172,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
         data: {
           sessionId,
           token: expect.any(String),
-          expiresAt: null // No expiration by default
+          expiresAt: expect.any(Date) // 7 days expiration by default
         }
       });
     });
@@ -185,7 +187,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
         id: "token-uuid",
         sessionId,
         token: mockToken,
-        expiresAt: null
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       } as any);
 
       const request = createMockRequest(sessionId);
@@ -302,7 +304,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
           id: `token-${generatedTokens.length}`,
           sessionId,
           token,
-          expiresAt: null
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         } as any);
       }) as any);
 
@@ -335,7 +337,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
           id: `token-${generatedTokens.length}`,
           sessionId,
           token,
-          expiresAt: null
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         } as any);
       }) as any);
 
@@ -366,7 +368,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
         id: "token-uuid",
         sessionId,
         token: mockToken,
-        expiresAt: null
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       } as any);
 
       const request = createMockRequest(sessionId);
@@ -389,13 +391,14 @@ describe("POST /api/sessions/[id]/export-token", () => {
       const sessionId = "test-session-structure";
       const mockSession = { id: sessionId };
       const mockToken = "test-token-structure";
+      const mockExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
       vi.mocked(prisma.exportToken.create).mockResolvedValue({
         id: "token-uuid-123",
         sessionId,
         token: mockToken,
-        expiresAt: null
+        expiresAt: mockExpiresAt
       } as any);
 
       const request = createMockRequest(sessionId);
@@ -415,7 +418,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
       expect(typeof data.id).toBe("string");
       expect(typeof data.sessionId).toBe("string");
       expect(typeof data.token).toBe("string");
-      expect(data.expiresAt).toBeNull();
+      expect(data.expiresAt).toBeTruthy();
       expect(typeof data.shareUrl).toBe("string");
     });
 
@@ -428,7 +431,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
         id: "token-uuid",
         sessionId,
         token: "test-token",
-        expiresAt: null
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       } as any);
 
       const request = createMockRequest(sessionId);
@@ -438,16 +441,18 @@ describe("POST /api/sessions/[id]/export-token", () => {
       expect(response.headers.get("content-type")).toContain("application/json");
     });
 
-    it("should handle expiresAt null correctly", async () => {
-      const sessionId = "test-session-expires-null";
+    it("should set expiration to 7 days from now", async () => {
+      const sessionId = "test-session-expires";
       const mockSession = { id: sessionId };
+      const now = Date.now();
+      const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue(mockSession as any);
       vi.mocked(prisma.exportToken.create).mockResolvedValue({
         id: "token-uuid",
         sessionId,
         token: "test-token",
-        expiresAt: null
+        expiresAt: new Date(now + sevenDaysInMs)
       } as any);
 
       const request = createMockRequest(sessionId);
@@ -456,8 +461,15 @@ describe("POST /api/sessions/[id]/export-token", () => {
 
       const data = await response.json();
 
-      // expiresAt should be null (no expiration)
-      expect(data.expiresAt).toBeNull();
+      // expiresAt should be set to 7 days from now
+      expect(data.expiresAt).toBeTruthy();
+      const expiresAt = new Date(data.expiresAt);
+      expect(expiresAt).toBeInstanceOf(Date);
+
+      // Verify it's approximately 7 days from now (allow 1 second variance)
+      const expectedExpiration = now + sevenDaysInMs;
+      const actualExpiration = expiresAt.getTime();
+      expect(Math.abs(actualExpiration - expectedExpiration)).toBeLessThan(1000);
     });
   });
 
@@ -471,7 +483,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
         id: "token-uuid",
         sessionId,
         token: "test-token",
-        expiresAt: null
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       } as any);
 
       const request = createMockRequest(sessionId);
@@ -491,7 +503,7 @@ describe("POST /api/sessions/[id]/export-token", () => {
         id: "token-uuid",
         sessionId,
         token: "test-token",
-        expiresAt: null
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       } as any);
 
       const request = createMockRequest(sessionId);
