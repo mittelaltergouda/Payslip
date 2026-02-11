@@ -869,7 +869,7 @@ describe('SessionHistory - Accessibility', () => {
     const closeButton = screen.getByRole('button', { name: /close/i });
     expect(closeButton).toBeInTheDocument();
     // Verify the button has proper accessible name
-    expect(closeButton).toHaveAccessibleName('Close');
+    expect(closeButton).toHaveAccessibleName('Close sidebar');
   });
 
   it('should render session names as headings for better structure', () => {

@@ -38,17 +38,28 @@ function createMockGetRequest(url: string): NextRequest {
   });
 }
 
-// Helper function to create a mock NextRequest for POST requests
-function createMockPostRequest(url: string, body: any): NextRequest {
-  return new NextRequest(url, {
+// Helper function to create a mock NextRequest for POST requests with CSRF tokens
+function createMockPostRequestWithCsrf(url: string, body: any, csrfToken: string): any {
+  const request = new NextRequest(url, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      "x-csrf-token": csrfToken
     },
     body: JSON.stringify(body)
   });
-}
 
+  // Mock cookies API for CSRF cookie
+  const originalCookiesGet = request.cookies.get.bind(request.cookies);
+  request.cookies.get = (name: string) => {
+    if (name === 'csrf-token') {
+      return { name: 'csrf-token', value: csrfToken };
+    }
+    return originalCookiesGet(name);
+  };
+
+  return request;
+}
 // Helper function to create a mock context with params
 function createMockContext(sessionId: string) {
   return {
@@ -259,7 +270,7 @@ describe("API Error Sanitization", () => {
 
       vi.mocked(prisma.session.create).mockRejectedValue(dbError);
 
-      const request = createMockPostRequest("http://localhost:3000/api/sessions", {
+      const request = createMockPostRequestWithCsrf("http://localhost:3000/api/sessions", {
         name: "Test Session",
         type: "MINING",
         taxEnabled: true,
@@ -267,7 +278,7 @@ describe("API Error Sanitization", () => {
         members: [
           { handle: "player1", revenue: 1000 }
         ]
-      });
+      }, "test-csrf-token");
 
       const response = await sessionsPost(request);
 
@@ -304,7 +315,7 @@ describe("API Error Sanitization", () => {
 
       vi.mocked(prisma.session.create).mockRejectedValue(zodError);
 
-      const request = createMockPostRequest("http://localhost:3000/api/sessions", {
+      const request = createMockPostRequestWithCsrf("http://localhost:3000/api/sessions", {
         name: "Test Session",
         type: "MINING",
         taxEnabled: true,
@@ -312,7 +323,7 @@ describe("API Error Sanitization", () => {
         members: [
           { handle: 123, revenue: 1000 }
         ]
-      });
+      }, "test-csrf-token");
 
       const response = await sessionsPost(request);
 
@@ -333,13 +344,13 @@ describe("API Error Sanitization", () => {
     it("should handle null/undefined errors gracefully", async () => {
       vi.mocked(prisma.session.create).mockRejectedValue(null);
 
-      const request = createMockPostRequest("http://localhost:3000/api/sessions", {
+      const request = createMockPostRequestWithCsrf("http://localhost:3000/api/sessions", {
         name: "Test Session",
         type: "MINING",
         taxEnabled: true,
         distribution: "EQUAL",
         members: []
-      });
+      }, "test-csrf-token");
 
       const response = await sessionsPost(request);
 
@@ -356,13 +367,13 @@ describe("API Error Sanitization", () => {
         "Database error: Connection to postgresql://user:password123@localhost:5432/db failed"
       );
 
-      const request = createMockPostRequest("http://localhost:3000/api/sessions", {
+      const request = createMockPostRequestWithCsrf("http://localhost:3000/api/sessions", {
         name: "Test Session",
         type: "MINING",
         taxEnabled: true,
         distribution: "EQUAL",
         members: []
-      });
+      }, "test-csrf-token");
 
       const response = await sessionsPost(request);
 
@@ -383,15 +394,15 @@ describe("API Error Sanitization", () => {
 
   describe("POST /api/sessions/[id]/export-token - Error Sanitization", () => {
     it("should sanitize database errors in export token creation", async () => {
-      const sessionId = "test-session-123";
+      const sessionId = "b0000000-0000-4000-a000-000000000001";
       const dbError = new Error("Connection timeout at /app/node_modules/pg/lib/connection.ts:512");
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue({ id: sessionId } as any);
       vi.mocked(prisma.exportToken.create).mockRejectedValue(dbError);
 
-      const request = createMockPostRequest(
+      const request = createMockPostRequestWithCsrf(
         `http://localhost:3000/api/sessions/${sessionId}/export-token`,
-        {}
+        {}, "test-csrf-token"
       );
       const context = createMockContext(sessionId);
 
@@ -411,7 +422,7 @@ describe("API Error Sanitization", () => {
     });
 
     it("should sanitize Zod validation errors in export token endpoint", async () => {
-      const sessionId = "test-session-456";
+      const sessionId = "b0000000-0000-4000-a000-000000000002";
       const zodError = {
         name: "ZodError",
         issues: [
@@ -426,9 +437,9 @@ describe("API Error Sanitization", () => {
       vi.mocked(prisma.session.findUnique).mockResolvedValue({ id: sessionId } as any);
       vi.mocked(prisma.exportToken.create).mockRejectedValue(zodError);
 
-      const request = createMockPostRequest(
+      const request = createMockPostRequestWithCsrf(
         `http://localhost:3000/api/sessions/${sessionId}/export-token`,
-        {}
+        {}, "test-csrf-token"
       );
       const context = createMockContext(sessionId);
 
@@ -448,7 +459,7 @@ describe("API Error Sanitization", () => {
     });
 
     it("should handle P2002 errors specially with custom message", async () => {
-      const sessionId = "test-session-789";
+      const sessionId = "b0000000-0000-4000-a000-000000000003";
       const prismaError = new Prisma.PrismaClientKnownRequestError(
         "Unique constraint failed on the constraint: `ExportToken_token_key`",
         {
@@ -464,9 +475,9 @@ describe("API Error Sanitization", () => {
       vi.mocked(prisma.session.findUnique).mockResolvedValue({ id: sessionId } as any);
       vi.mocked(prisma.exportToken.create).mockRejectedValue(prismaError);
 
-      const request = createMockPostRequest(
+      const request = createMockPostRequestWithCsrf(
         `http://localhost:3000/api/sessions/${sessionId}/export-token`,
-        {}
+        {}, "test-csrf-token"
       );
       const context = createMockContext(sessionId);
 
@@ -486,15 +497,15 @@ describe("API Error Sanitization", () => {
     });
 
     it("should not expose library version information", async () => {
-      const sessionId = "test-session-version";
+      const sessionId = "b0000000-0000-4000-a000-000000000004";
       const error = new Error("Failed in @prisma/client@5.18.0 at node_modules/@prisma/client/runtime/library.js:1234");
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue({ id: sessionId } as any);
       vi.mocked(prisma.exportToken.create).mockRejectedValue(error);
 
-      const request = createMockPostRequest(
+      const request = createMockPostRequestWithCsrf(
         `http://localhost:3000/api/sessions/${sessionId}/export-token`,
-        {}
+        {}, "test-csrf-token"
       );
       const context = createMockContext(sessionId);
 
@@ -514,15 +525,15 @@ describe("API Error Sanitization", () => {
     });
 
     it("should not expose database connection strings", async () => {
-      const sessionId = "test-session-conn";
+      const sessionId = "b0000000-0000-4000-a000-000000000005";
       const error = new Error("connect ECONNREFUSED postgresql://admin:secretpass@db.example.com:5432/production");
 
       vi.mocked(prisma.session.findUnique).mockResolvedValue({ id: sessionId } as any);
       vi.mocked(prisma.exportToken.create).mockRejectedValue(error);
 
-      const request = createMockPostRequest(
+      const request = createMockPostRequestWithCsrf(
         `http://localhost:3000/api/sessions/${sessionId}/export-token`,
-        {}
+        {}, "test-csrf-token"
       );
       const context = createMockContext(sessionId);
 
@@ -558,12 +569,12 @@ describe("API Error Sanitization", () => {
 
       // Test POST /api/sessions
       vi.mocked(prisma.session.create).mockRejectedValue(errorWithStack);
-      const postRequest = createMockPostRequest("http://localhost:3000/api/sessions", {
+      const postRequest = createMockPostRequestWithCsrf("http://localhost:3000/api/sessions", {
         name: "Test",
         type: "MINING",
         distribution: "EQUAL",
         members: []
-      });
+      }, "test-csrf-token");
       const postResponse = await sessionsPost(postRequest);
       const postData = await postResponse.json();
       expect(JSON.stringify(postData)).not.toContain(errorWithStack.stack!);

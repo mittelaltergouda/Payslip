@@ -273,7 +273,6 @@ describe('ResultsDisplay - CSV Export Button', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
         error={null}
         translations={translations.de}
         lang="de"
@@ -290,7 +289,6 @@ describe('ResultsDisplay - CSV Export Button', () => {
       <ResultsDisplay
         result={mockResult}
         session={mockSession}
-        feeByPayer={mockFeeByPayer}
         error={null}
         translations={translations.en}
         lang="en"

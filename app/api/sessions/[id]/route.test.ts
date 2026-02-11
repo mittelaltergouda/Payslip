@@ -61,7 +61,7 @@ describe('DELETE /api/sessions/[id]', () => {
 
   describe('CSRF Protection - Double-Submit Cookie Pattern', () => {
     it('returns 403 when CSRF token missing from header', async () => {
-      const sessionId = 'test-id';
+      const sessionId = '00000000-0000-4000-a000-000000000001';
       // Cookie present but header missing (attacker cannot read cookie)
       const request = createMockRequest(sessionId, undefined, 'valid-cookie-token');
       const context = createMockContext(sessionId);
@@ -79,7 +79,7 @@ describe('DELETE /api/sessions/[id]', () => {
     });
 
     it('returns 403 when CSRF token missing from cookie', async () => {
-      const sessionId = 'test-id';
+      const sessionId = '00000000-0000-4000-a000-000000000001';
       // Header present but cookie missing
       const request = createMockRequest(sessionId, 'attacker-token', undefined);
       const context = createMockContext(sessionId);
@@ -97,7 +97,7 @@ describe('DELETE /api/sessions/[id]', () => {
     });
 
     it('returns 403 when CSRF tokens do not match', async () => {
-      const sessionId = 'test-id';
+      const sessionId = '00000000-0000-4000-a000-000000000001';
       // Header and cookie both present but don't match
       const request = createMockRequest(sessionId, 'token-from-attacker', 'token-from-server');
       const context = createMockContext(sessionId);
@@ -115,7 +115,7 @@ describe('DELETE /api/sessions/[id]', () => {
     });
 
     it('returns 403 when both tokens are empty strings', async () => {
-      const sessionId = 'test-id';
+      const sessionId = '00000000-0000-4000-a000-000000000001';
       const request = createMockRequest(sessionId, '', ''); // Empty tokens
       const context = createMockContext(sessionId);
 
@@ -132,7 +132,7 @@ describe('DELETE /api/sessions/[id]', () => {
     });
 
     it('accepts request with valid matching CSRF tokens', async () => {
-      const sessionId = 'test-id';
+      const sessionId = '00000000-0000-4000-a000-000000000001';
       vi.mocked(prisma.session.findUnique).mockResolvedValue({ id: sessionId } as any);
       vi.mocked(prisma.session.delete).mockResolvedValue({ id: sessionId } as any);
 
@@ -150,7 +150,7 @@ describe('DELETE /api/sessions/[id]', () => {
 
   describe('Success Cases', () => {
     it('successfully deletes existing session', async () => {
-      const sessionId = 'test-id';
+      const sessionId = '00000000-0000-4000-a000-000000000001';
       vi.mocked(prisma.session.findUnique).mockResolvedValue({ id: sessionId } as any);
       vi.mocked(prisma.session.delete).mockResolvedValue({ id: sessionId } as any);
 
@@ -178,7 +178,7 @@ describe('DELETE /api/sessions/[id]', () => {
     });
 
     it('returns correct response structure on successful deletion', async () => {
-      const sessionId = 'test-session-123';
+      const sessionId = '00000000-0000-4000-a000-000000000002';
       vi.mocked(prisma.session.findUnique).mockResolvedValue({ id: sessionId } as any);
       vi.mocked(prisma.session.delete).mockResolvedValue({ id: sessionId } as any);
 
@@ -199,7 +199,7 @@ describe('DELETE /api/sessions/[id]', () => {
 
   describe('Error Cases', () => {
     it('returns 404 when session does not exist', async () => {
-      const sessionId = 'non-existent-id';
+      const sessionId = '00000000-0000-4000-a000-000000000003';
       vi.mocked(prisma.session.findUnique).mockResolvedValue(null);
 
       const csrfToken = 'valid-csrf-token';
@@ -218,7 +218,7 @@ describe('DELETE /api/sessions/[id]', () => {
     });
 
     it('returns 500 on database error during lookup', async () => {
-      const sessionId = 'test-id';
+      const sessionId = '00000000-0000-4000-a000-000000000001';
       vi.mocked(prisma.session.findUnique).mockRejectedValue(new Error('Database connection error'));
 
       const csrfToken = 'valid-csrf-token';
@@ -230,11 +230,11 @@ describe('DELETE /api/sessions/[id]', () => {
 
       expect(response.status).toBe(500);
       expect(data.error).toBe('Failed to delete session');
-      expect(data.details).toBe('Database connection error');
+      expect(data.details).toBe('An unexpected error occurred');
     });
 
     it('returns 500 on database error during deletion', async () => {
-      const sessionId = 'test-id';
+      const sessionId = '00000000-0000-4000-a000-000000000001';
       vi.mocked(prisma.session.findUnique).mockResolvedValue({ id: sessionId } as any);
       vi.mocked(prisma.session.delete).mockRejectedValue(new Error('Constraint violation'));
 
@@ -247,11 +247,11 @@ describe('DELETE /api/sessions/[id]', () => {
 
       expect(response.status).toBe(500);
       expect(data.error).toBe('Failed to delete session');
-      expect(data.details).toBe('Constraint violation');
+      expect(data.details).toBe('An unexpected error occurred');
     });
 
     it('handles unknown error types gracefully', async () => {
-      const sessionId = 'test-id';
+      const sessionId = '00000000-0000-4000-a000-000000000001';
       vi.mocked(prisma.session.findUnique).mockRejectedValue('Unknown error string');
 
       const csrfToken = 'valid-csrf-token';
@@ -263,13 +263,13 @@ describe('DELETE /api/sessions/[id]', () => {
 
       expect(response.status).toBe(500);
       expect(data.error).toBe('Failed to delete session');
-      expect(data.details).toBe('Unknown error');
+      expect(data.details).toBe('An unexpected error occurred');
     });
   });
 
   describe('Cascade Deletion Behavior', () => {
     it('relies on Prisma cascade to delete related data', async () => {
-      const sessionId = 'session-with-data';
+      const sessionId = '00000000-0000-4000-a000-000000000004';
       vi.mocked(prisma.session.findUnique).mockResolvedValue({ id: sessionId } as any);
       vi.mocked(prisma.session.delete).mockResolvedValue({ id: sessionId } as any);
 
