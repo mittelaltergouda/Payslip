@@ -144,7 +144,7 @@ describe('CrewPresetManager - Initial Rendering', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={[]}
         currentDistributionMode="EQUAL"
@@ -165,7 +165,7 @@ describe('CrewPresetManager - Initial Rendering', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={[]}
         currentDistributionMode="EQUAL"
@@ -193,7 +193,7 @@ describe('CrewPresetManager - Empty State', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={[]}
         currentDistributionMode="EQUAL"
@@ -212,7 +212,7 @@ describe('CrewPresetManager - Empty State', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={[]}
         currentDistributionMode="EQUAL"
@@ -241,7 +241,7 @@ describe('CrewPresetManager - List of Presets', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={mockCurrentMembers}
         currentDistributionMode="EQUAL"
@@ -264,7 +264,7 @@ describe('CrewPresetManager - List of Presets', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={mockCurrentMembers}
         currentDistributionMode="EQUAL"
@@ -286,7 +286,7 @@ describe('CrewPresetManager - List of Presets', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={mockCurrentMembers}
         currentDistributionMode="EQUAL"
@@ -313,7 +313,7 @@ describe('CrewPresetManager - Save Preset Flow', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={mockCurrentMembers}
         currentDistributionMode="EQUAL"
@@ -335,7 +335,7 @@ describe('CrewPresetManager - Save Preset Flow', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={mockCurrentMembers}
         currentDistributionMode="PERCENT"
@@ -370,7 +370,7 @@ describe('CrewPresetManager - Save Preset Flow', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={mockCurrentMembers}
         currentDistributionMode="EQUAL"
@@ -406,7 +406,7 @@ describe('CrewPresetManager - Load Preset', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={mockCurrentMembers}
         currentDistributionMode="EQUAL"
@@ -436,7 +436,7 @@ describe('CrewPresetManager - Load Preset', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={mockCurrentMembers}
         currentDistributionMode="EQUAL"
@@ -467,7 +467,7 @@ describe('CrewPresetManager - Delete Preset', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={mockCurrentMembers}
         currentDistributionMode="EQUAL"
@@ -495,7 +495,7 @@ describe('CrewPresetManager - Delete Preset', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={mockCurrentMembers}
         currentDistributionMode="EQUAL"
@@ -523,7 +523,7 @@ describe('CrewPresetManager - Delete Preset', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={mockCurrentMembers}
         currentDistributionMode="EQUAL"
@@ -560,7 +560,7 @@ describe('CrewPresetManager - Delete Preset', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={mockCurrentMembers}
         currentDistributionMode="EQUAL"
@@ -600,7 +600,7 @@ describe('CrewPresetManager - Empty Preset Name Handling', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={mockCurrentMembers}
         currentDistributionMode="EQUAL"
@@ -620,7 +620,7 @@ describe('CrewPresetManager - Empty Preset Name Handling', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={mockCurrentMembers}
         currentDistributionMode="EQUAL"
@@ -646,7 +646,7 @@ describe('CrewPresetManager - Empty Preset Name Handling', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={mockCurrentMembers}
         currentDistributionMode="EQUAL"
@@ -672,7 +672,7 @@ describe('CrewPresetManager - Empty Preset Name Handling', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={mockCurrentMembers}
         currentDistributionMode="EQUAL"
@@ -708,7 +708,7 @@ describe('CrewPresetManager - No Current Members', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={[]}
         currentDistributionMode="EQUAL"
@@ -728,7 +728,7 @@ describe('CrewPresetManager - No Current Members', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={[]}
         currentDistributionMode="EQUAL"
@@ -747,7 +747,7 @@ describe('CrewPresetManager - No Current Members', () => {
 
     render(
       <CrewPresetManager
-        isOpen={true}
+        isOpen
         onClose={mockOnClose}
         currentMembers={[]}
         currentDistributionMode="EQUAL"

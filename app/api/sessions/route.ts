@@ -8,6 +8,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { extractCsrfTokenFromHeaders, validateCsrfToken } from "@/lib/csrf";
+import { sanitizeError } from "@/lib/errors";
 
 /**
  * GET /api/sessions
@@ -78,7 +79,7 @@ export async function GET() {
     return NextResponse.json(
       {
         error: "Failed to fetch sessions",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: sanitizeError(error)
       },
       { status: 500 }
     );
@@ -178,7 +179,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: "Failed to create session",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: sanitizeError(error)
       },
       { status: 500 }
     );

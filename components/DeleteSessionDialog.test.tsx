@@ -9,7 +9,7 @@ describe('DeleteSessionDialog', () => {
         sessionId="test-id"
         sessionName="Test Session"
         lang="en"
-        open={true}
+        open
         onOpenChange={() => {}}
         onDelete={vi.fn()}
       />
@@ -25,7 +25,7 @@ describe('DeleteSessionDialog', () => {
         sessionId="test-id"
         sessionName="Test Session"
         lang="en"
-        open={true}
+        open
         onOpenChange={() => {}}
         onDelete={mockOnDelete}
       />
@@ -45,7 +45,7 @@ describe('DeleteSessionDialog', () => {
         sessionId="test-id"
         sessionName="Test Session"
         lang="en"
-        open={true}
+        open
         onOpenChange={mockOnOpenChange}
         onDelete={vi.fn()}
       />

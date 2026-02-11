@@ -10,6 +10,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { extractCsrfTokenFromHeaders, validateCsrfToken } from "@/lib/csrf";
 import { sessionIdParamSchema } from "@/app/api/sessions/validation";
+import { sanitizeError } from "@/lib/errors";
 
 /**
  * DELETE /api/sessions/[id]
@@ -112,7 +113,7 @@ export async function DELETE(
     return NextResponse.json(
       {
         error: "Failed to delete session",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: sanitizeError(error)
       },
       { status: 500 }
     );

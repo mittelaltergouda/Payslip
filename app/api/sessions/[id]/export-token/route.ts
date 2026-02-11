@@ -11,6 +11,7 @@ import { generateSecureToken } from "@/lib/crypto";
 import { exportTokenSchema, sessionIdParamSchema } from "@/app/api/sessions/validation";
 import { Prisma } from "@prisma/client";
 import { extractCsrfTokenFromHeaders, validateCsrfToken } from "@/lib/csrf";
+import { sanitizeError } from "@/lib/errors";
 
 /**
  * POST /api/sessions/[id]/export-token
@@ -143,7 +144,7 @@ export async function POST(
     // Handle validation errors from Zod schema
     if (error instanceof Error && error.name === "ZodError") {
       return NextResponse.json(
-        { error: "Validation error", details: error.message },
+        { error: "Validation error", details: sanitizeError(error) },
         { status: 400 }
       );
     }
@@ -155,7 +156,7 @@ export async function POST(
     return NextResponse.json(
       {
         error: "Failed to generate export token",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: sanitizeError(error)
       },
       { status: 500 }
     );
