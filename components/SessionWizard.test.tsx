@@ -319,18 +319,18 @@ describe('SessionWizard - Member Management', () => {
     renderWithToast(<SessionWizard />);
 
     const numberInputs = screen.getAllByRole('textbox');
-    const revenueInput = numberInputs[0] as HTMLInputElement;
+    const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
 
     fireEvent.change(revenueInput, { target: { value: '1000' } });
 
-    expect(revenueInput.value).toBe('1000');
+    expect(revenueInput.value).toBe('1.000'); // Formatted with thousand separator
   });
 
   it('should update member investment when input is changed', () => {
     renderWithToast(<SessionWizard />);
 
     const numberInputs = screen.getAllByRole('textbox');
-    const investmentInput = numberInputs[1] as HTMLInputElement;
+    const investmentInput = numberInputs[3] as HTMLInputElement;  // Player 1 investment
 
     fireEvent.change(investmentInput, { target: { value: '500' } });
 
@@ -592,7 +592,7 @@ describe('SessionWizard - Results Display', () => {
 
     // Add revenue to trigger results display (empty state shows with zero revenue)
     const numberInputs = screen.getAllByRole('textbox');
-    const revenueInput = numberInputs[0] as HTMLInputElement;
+    const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and handle
     fireEvent.change(revenueInput, { target: { value: '1000' } });
 
     await waitFor(() => {
@@ -612,7 +612,7 @@ describe('SessionWizard - Results Display', () => {
 
     // Add revenue to trigger results display
     const numberInputs = screen.getAllByRole('textbox');
-    const revenueInput = numberInputs[0] as HTMLInputElement;
+    const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
     fireEvent.change(revenueInput, { target: { value: '1000' } });
 
     expect(screen.getByText('Vorgeschlagene Überweisungen')).toBeInTheDocument();
@@ -623,8 +623,8 @@ describe('SessionWizard - Results Display', () => {
 
     // Add equal revenue to both members
     const numberInputs = screen.getAllByRole('textbox');
-    const revenueInput1 = numberInputs[0] as HTMLInputElement;
-    const revenueInput2 = numberInputs[2] as HTMLInputElement; // Skip investment input
+    const revenueInput1 = numberInputs[2] as HTMLInputElement;  // Player 1 revenue
+    const revenueInput2 = numberInputs[5] as HTMLInputElement;  // Player 2 revenue
     fireEvent.change(revenueInput1, { target: { value: '1000' } });
     fireEvent.change(revenueInput2, { target: { value: '1000' } });
 
@@ -635,7 +635,7 @@ describe('SessionWizard - Results Display', () => {
     renderWithToast(<SessionWizard />);
 
     const numberInputs = screen.getAllByRole('textbox');
-    const revenueInput = numberInputs[0] as HTMLInputElement;
+    const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
 
     fireEvent.change(revenueInput, { target: { value: '1000' } });
 
@@ -648,7 +648,7 @@ describe('SessionWizard - Results Display', () => {
 
     // Add revenue to trigger results display
     const numberInputs = screen.getAllByRole('textbox');
-    const revenueInput = numberInputs[0] as HTMLInputElement;
+    const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
     fireEvent.change(revenueInput, { target: { value: '1000' } });
 
     // Results section renders and contains member results
@@ -669,7 +669,7 @@ describe('SessionWizard - Integration Scenarios', () => {
     fireEvent.click(addButton);
 
     const numberInputs = screen.getAllByRole('textbox');
-    const firstRevenueInput = numberInputs[0] as HTMLInputElement;
+    const firstRevenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
     fireEvent.change(firstRevenueInput, { target: { value: '5000' } });
 
     expect(screen.getByText('Gesamt')).toBeInTheDocument();
@@ -681,7 +681,7 @@ describe('SessionWizard - Integration Scenarios', () => {
     selectDistributionMode('Prozent');
 
     const numberInputs = screen.getAllByRole('textbox');
-    const revenueInput = numberInputs[0] as HTMLInputElement;
+    const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
     fireEvent.change(revenueInput, { target: { value: '2000' } });
 
     selectDistributionMode('Gleich');
@@ -693,7 +693,7 @@ describe('SessionWizard - Integration Scenarios', () => {
     renderWithToast(<SessionWizard />);
 
     const numberInputs = screen.getAllByRole('textbox');
-    const revenueInput = numberInputs[0] as HTMLInputElement;
+    const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
     fireEvent.change(revenueInput, { target: { value: '1000' } });
 
     const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
@@ -723,7 +723,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('textbox');
-      const revenueInput = numberInputs[0] as HTMLInputElement;
+      const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
 
       fireEvent.change(revenueInput, { target: { value: '-1000' } });
 
@@ -734,7 +734,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('textbox');
-      const investmentInput = numberInputs[1] as HTMLInputElement;
+      const investmentInput = numberInputs[3] as HTMLInputElement;  // Player 1 investment
 
       fireEvent.change(investmentInput, { target: { value: '-500' } });
 
@@ -768,7 +768,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('textbox');
-      const revenueInput = numberInputs[0] as HTMLInputElement;
+      const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
 
       // Set revenue to zero
       fireEvent.change(revenueInput, { target: { value: '0' } });
@@ -782,7 +782,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('textbox');
-      const revenueInput = numberInputs[0] as HTMLInputElement;
+      const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
 
       // Add very large revenue to trigger results
       fireEvent.change(revenueInput, { target: { value: '999999999' } });
@@ -794,7 +794,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('textbox');
-      const revenueInput = numberInputs[0] as HTMLInputElement;
+      const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
 
       // Set revenue to empty string (treated as zero)
       fireEvent.change(revenueInput, { target: { value: '' } });
@@ -833,7 +833,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
       // Add revenue first to trigger results display
       const numberInputs = screen.getAllByRole('textbox');
-      const revenueInput = numberInputs[0] as HTMLInputElement;
+      const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
       fireEvent.change(revenueInput, { target: { value: '1000' } });
 
       const checkboxes = screen.getAllByRole('checkbox').filter(checkbox => {
@@ -855,7 +855,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
       // Add revenue first to trigger results display
       const numberInputs = screen.getAllByRole('textbox');
-      const revenueInput = numberInputs[0] as HTMLInputElement;
+      const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
       fireEvent.change(revenueInput, { target: { value: '1000' } });
 
       const deleteButtons = screen.getAllByTitle('Entfernen');
@@ -873,7 +873,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
       // Add revenue first to trigger results display
       const numberInputs = screen.getAllByRole('textbox');
-      const revenueInput = numberInputs[0] as HTMLInputElement;
+      const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
       fireEvent.change(revenueInput, { target: { value: '1000' } });
 
       const addButton = screen.getByRole('button', { name: '+ Mitglied' });
@@ -893,7 +893,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       fireEvent.click(memberDeleteButtons[1]);
 
       const numberInputs = screen.getAllByRole('textbox');
-      const revenueInput = numberInputs[0] as HTMLInputElement;
+      const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
       fireEvent.change(revenueInput, { target: { value: '0' } });
 
       // Zero revenue should show empty state
@@ -907,8 +907,8 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('textbox');
-      const revenueInput = numberInputs[0] as HTMLInputElement;
-      const investmentInput = numberInputs[1] as HTMLInputElement;
+      const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
+      const investmentInput = numberInputs[3] as HTMLInputElement;  // Player 1 investment
 
       fireEvent.change(revenueInput, { target: { value: '100' } });
       fireEvent.change(investmentInput, { target: { value: '500' } });
@@ -920,7 +920,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('textbox');
-      const revenueInput = numberInputs[0] as HTMLInputElement;
+      const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
       fireEvent.change(revenueInput, { target: { value: '100' } });
 
       const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
@@ -944,8 +944,8 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('textbox');
-      const revenueInput = numberInputs[0] as HTMLInputElement;
-      const investmentInput = numberInputs[1] as HTMLInputElement;
+      const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
+      const investmentInput = numberInputs[3] as HTMLInputElement;  // Player 1 investment
 
       fireEvent.change(revenueInput, { target: { value: '0' } });
       fireEvent.change(investmentInput, { target: { value: '1000' } });
@@ -959,7 +959,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('textbox');
-      const revenueInput = numberInputs[0] as HTMLInputElement;
+      const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
       fireEvent.change(revenueInput, { target: { value: '100' } });
 
       const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
@@ -975,7 +975,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('textbox');
-      const revenueInput = numberInputs[0] as HTMLInputElement;
+      const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
 
       fireEvent.change(revenueInput, { target: { value: '1000.50' } });
 
@@ -1029,7 +1029,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       selectDistributionMode('Anpassbar');
 
       const allInputs = screen.getAllByRole('textbox');
-      const revenueInput = allInputs[0] as HTMLInputElement;
+      const revenueInput = allInputs[2] as HTMLInputElement;  // Player 1 revenue
       fireEvent.change(revenueInput, { target: { value: '1000' } });
 
       const fixedPayoutInputs = allInputs.slice(-2);
@@ -1045,7 +1045,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
       // Add revenue first to trigger results display
       const numberInputs = screen.getAllByRole('textbox');
-      const revenueInput = numberInputs[0] as HTMLInputElement;
+      const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
       fireEvent.change(revenueInput, { target: { value: '1000' } });
 
       selectDistributionMode('Prozent');
@@ -1070,7 +1070,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
       // Add revenue first to trigger results display
       const numberInputs = screen.getAllByRole('textbox');
-      const revenueInput = numberInputs[0] as HTMLInputElement;
+      const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
       fireEvent.change(revenueInput, { target: { value: '1000' } });
 
       const addButton = screen.getByRole('button', { name: '+ Mitglied' });
@@ -1091,7 +1091,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
       // Add revenue first to trigger results display
       const numberInputs = screen.getAllByRole('textbox');
-      const revenueInput = numberInputs[0] as HTMLInputElement;
+      const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
       fireEvent.change(revenueInput, { target: { value: '1000' } });
 
       const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
@@ -1116,7 +1116,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
       // Add revenue first to trigger results display
       const numberInputs = screen.getAllByRole('textbox');
-      const revenueInput = numberInputs[0] as HTMLInputElement;
+      const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
       fireEvent.change(revenueInput, { target: { value: '1000' } });
 
       const taxCheckbox = screen.getByRole('checkbox', {
@@ -1185,8 +1185,8 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('textbox');
-      const revenueInput = numberInputs[0] as HTMLInputElement;
-      const investmentInput = numberInputs[1] as HTMLInputElement;
+      const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
+      const investmentInput = numberInputs[3] as HTMLInputElement;  // Player 1 investment
 
       fireEvent.change(revenueInput, { target: { value: '0' } });
       fireEvent.change(investmentInput, { target: { value: '1000' } });
@@ -1200,7 +1200,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       renderWithToast(<SessionWizard />);
 
       const numberInputs = screen.getAllByRole('textbox');
-      const revenueInput = numberInputs[0] as HTMLInputElement;
+      const revenueInput = numberInputs[2] as HTMLInputElement;  // Skip session name and Player 1 handle
       fireEvent.change(revenueInput, { target: { value: '0' } });
 
       const addExpenseButtons = screen.getAllByRole('button', { name: '+ Kosten' });
@@ -1229,7 +1229,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       fireEvent.click(addButton);
 
       const numberInputs = screen.getAllByRole('textbox');
-      fireEvent.change(numberInputs[0], { target: { value: '5000' } });
+      fireEvent.change(numberInputs[2], { target: { value: '5000' } });  // Skip session name and Player 1 handle
 
       selectDistributionMode('Prozent');
 
