@@ -65,8 +65,8 @@ describe('middleware - CSP nonce generation', () => {
 
     // Verify all CSP directives are present
     expect(cspHeader).toContain("default-src 'self'");
-    expect(cspHeader).toContain("script-src 'self' 'nonce-nonce-123' 'unsafe-eval' 'unsafe-inline'");
-    expect(cspHeader).toContain("style-src 'self' 'nonce-nonce-123' 'unsafe-inline'");
+    expect(cspHeader).toContain("script-src 'self' 'nonce-nonce-123'");
+    expect(cspHeader).toContain("style-src 'self' 'nonce-nonce-123'");
     expect(cspHeader).toContain("img-src 'self' data: blob:");
     expect(cspHeader).toContain("font-src 'self' data:");
     expect(cspHeader).toContain("connect-src 'self'");
@@ -210,5 +210,18 @@ describe('middleware - CSP nonce generation', () => {
     // Verify Google Fonts domains are not present (fonts are now self-hosted via next/font)
     expect(cspHeader).not.toContain('fonts.googleapis.com');
     expect(cspHeader).not.toContain('fonts.gstatic.com');
+  });
+
+  it('should not include unsafe directives in CSP header', () => {
+    const request = new NextRequest(new Request('http://localhost:3000/'));
+
+    const response = middleware(request);
+
+    const cspHeader = response.headers.get('Content-Security-Policy');
+    expect(cspHeader).toBeDefined();
+
+    // Verify unsafe directives are not present
+    expect(cspHeader).not.toContain('unsafe-eval');
+    expect(cspHeader).not.toContain('unsafe-inline');
   });
 });
