@@ -128,7 +128,6 @@ describe('duplicate', () => {
       const original = createTestSessionInput();
       const saveResult = save(original);
       const originalId = saveResult.data!.id;
-      const _originalCreatedAt = saveResult.data!.createdAt;
 
       // Small delay to ensure different timestamp
       const result = duplicate(originalId);
