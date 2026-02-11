@@ -6,6 +6,7 @@ import { SummaryStats } from "./SummaryStats";
 import { TransfersList } from "./TransfersList";
 import { generateSummaryCSV, generateDetailedCSV, downloadCSV } from "@/lib/csv/export";
 import { ExportPDFButton } from "./ExportPDFButton";
+import { ExportClipboardButton } from "./ExportClipboardButton";
 
 // CSV export translation strings
 const csvTranslations = {
@@ -133,6 +134,13 @@ export function ResultsDisplay({
           <div className="flex items-center gap-3 flex-wrap">
             {/* PDF Export Button */}
             <ExportPDFButton
+              session={session}
+              result={result}
+              lang={lang}
+              currency={currency}
+            />
+            {/* Clipboard Export Button */}
+            <ExportClipboardButton
               session={session}
               result={result}
               lang={lang}
