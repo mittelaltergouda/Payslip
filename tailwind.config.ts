@@ -8,32 +8,32 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Base palette
-        night: "#0b1021",
-        slate: "#1a2b3c",
-        neon: "#4de8e4",
-        aura: "#9b7bff",
-        sand: "#f5f0e6",
+        // Base palette - use CSS variables for theme switching
+        night: "var(--color-night)",
+        slate: "var(--color-surface-elevated)",
+        neon: "var(--color-primary)",
+        aura: "var(--color-secondary)",
+        sand: "var(--color-text-primary)",
 
         // Semantic tokens - Surface
         surface: {
-          base: "#0b1021",      // night - main background
-          elevated: "#1a2b3c",  // slate - cards, modals
-          overlay: "#2a3b4c",   // lighter variant for overlays
-          muted: "#f5f0e6",     // sand - light surface variant
+          base: "var(--color-surface-base)",
+          elevated: "var(--color-surface-elevated)",
+          overlay: "var(--color-surface-overlay)",
+          muted: "var(--color-surface-muted)",
         },
 
         // Semantic tokens - Interaction
         interaction: {
-          primary: "#4de8e4",        // neon - primary actions
-          "primary-hover": "#3dd8d4", // darker neon
-          secondary: "#9b7bff",      // aura - secondary actions
-          "secondary-hover": "#8b6bef", // darker aura
-          ghost: "rgba(77, 232, 228, 0.1)", // subtle interaction
-          disabled: "#6b7280",       // gray for disabled state
+          primary: "var(--color-primary)",
+          "primary-hover": "var(--color-primary)",
+          secondary: "var(--color-secondary)",
+          "secondary-hover": "var(--color-secondary)",
+          ghost: "var(--color-ghost)",
+          disabled: "var(--color-disabled)",
         },
 
-        // Semantic tokens - Feedback
+        // Semantic tokens - Feedback (keeping original feedback colors)
         feedback: {
           success: "#10b981",        // green
           "success-bg": "rgba(16, 185, 129, 0.1)",
@@ -47,19 +47,19 @@ const config: Config = {
 
         // Semantic tokens - Text
         text: {
-          primary: "#f5f0e6",        // sand - main text
-          secondary: "#9ca3af",      // gray - secondary text
-          muted: "#6b7280",          // darker gray - muted text
-          inverse: "#0b1021",        // night - text on light backgrounds
-          accent: "#4de8e4",         // neon - accent text/links
+          primary: "var(--color-text-primary)",
+          secondary: "var(--color-text-secondary)",
+          muted: "var(--color-text-muted)",
+          inverse: "var(--color-text-inverse)",
+          accent: "var(--color-text-accent)",
         },
 
         // Semantic tokens - Border
         border: {
-          default: "rgba(156, 163, 175, 0.2)", // subtle borders
-          hover: "rgba(77, 232, 228, 0.4)",    // interactive borders
-          focus: "#4de8e4",                    // focus ring
-          error: "#ef4444",                    // error state borders
+          default: "var(--color-border-default)",
+          hover: "var(--color-border-hover)",
+          focus: "var(--color-border-focus)",
+          error: "var(--color-border-error)",
         },
       },
       fontFamily: {

@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { ToastProvider } from "@/components/Toast";
+import { LayoutClient } from "@/app/layout-client";
 import { Space_Grotesk, Inter } from "next/font/google";
 
 const spaceGrotesk = Space_Grotesk({
@@ -28,10 +29,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="de" className={`${spaceGrotesk.variable} ${inter.variable}`}>
+    <html lang="de" className={`${spaceGrotesk.variable} ${inter.variable}`} suppressHydrationWarning>
       <body className="font-body">
         <ToastProvider>
-          {children}
+          <LayoutClient>
+            {children}
+          </LayoutClient>
         </ToastProvider>
       </body>
     </html>

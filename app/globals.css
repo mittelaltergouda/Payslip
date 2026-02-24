@@ -6,6 +6,37 @@
   color-scheme: dark;
   background: #0b1021;
 
+  /* ========== DARK MODE COLORS (Default) ========== */
+  /* Surface Colors */
+  --color-surface-base: #0b1021;
+  --color-surface-elevated: #1a2b3c;
+  --color-surface-overlay: #0f1628;
+  --color-surface-muted: #151c2d;
+
+  /* Interaction Colors */
+  --color-primary: #4de8e4;
+  --color-secondary: #9b7bff;
+  --color-ghost: rgba(77, 232, 228, 0.1);
+  --color-disabled: rgba(255, 255, 255, 0.2);
+
+  /* Text Colors */
+  --color-text-primary: #f5f0e6;
+  --color-text-secondary: #9ca3af;
+  --color-text-muted: #6b7280;
+  --color-text-inverse: #0b1021;
+  --color-text-accent: #4de8e4;
+
+  /* Border Colors */
+  --color-border-default: rgba(255, 255, 255, 0.1);
+  --color-border-hover: rgba(255, 255, 255, 0.2);
+  --color-border-focus: #4de8e4;
+  --color-border-error: #ef4444;
+
+  /* Semantic Aliases (for backward compatibility) */
+  --color-night: #0b1021;
+  --color-sand: #f5f0e6;
+  --color-neon: #4de8e4;
+
   /* Spacing Scale - 8px base grid */
   --spacing-0: 0rem;
   --spacing-1: 0.25rem;    /* 4px */
@@ -52,8 +83,57 @@
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
 }
 
+/* ========== LIGHT MODE COLORS ========== */
+[data-theme='light'] {
+  color-scheme: light;
+  background: #ffffff;
+
+  /* Surface Colors */
+  --color-surface-base: #ffffff;
+  --color-surface-elevated: #f9fafb;
+  --color-surface-overlay: #f3f4f6;
+  --color-surface-muted: #e5e7eb;
+
+  /* Interaction Colors */
+  --color-primary: #06b6d4;
+  --color-secondary: #8b5cf6;
+  --color-ghost: rgba(6, 182, 212, 0.1);
+  --color-disabled: rgba(0, 0, 0, 0.2);
+
+  /* Text Colors */
+  --color-text-primary: #1f2937;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #9ca3af;
+  --color-text-inverse: #ffffff;
+  --color-text-accent: #06b6d4;
+
+  /* Border Colors */
+  --color-border-default: rgba(0, 0, 0, 0.1);
+  --color-border-hover: rgba(0, 0, 0, 0.15);
+  --color-border-focus: #06b6d4;
+  --color-border-error: #dc2626;
+
+  /* Semantic Aliases */
+  --color-night: #ffffff;
+  --color-sand: #1f2937;
+  --color-neon: #06b6d4;
+
+  /* Adjust shadows for light mode */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  --shadow-glow: 0 0 20px rgba(6, 182, 212, 0.2);
+  --shadow-glow-strong: 0 0 30px rgba(6, 182, 212, 0.3);
+}
+
 body {
   @apply bg-night text-sand font-body antialiased;
+  background-color: var(--color-surface-base);
+  color: var(--color-text-primary);
+  transition: background-color var(--duration-normal) var(--ease-in-out),
+              color var(--duration-normal) var(--ease-in-out);
 }
 
 a {

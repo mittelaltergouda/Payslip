@@ -26,6 +26,7 @@
 ✅ Payslip generation & detailed breakdown
 ✅ Shareable read-only session links
 ✅ Schema validation for data integrity
+✅ Light/Dark theme toggle with persistent preferences
 
 ## Quick Start
 
