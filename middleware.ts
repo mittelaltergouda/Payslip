@@ -60,6 +60,7 @@ export function middleware(request: NextRequest) {
 
 // Apply middleware to all routes
 export const config = {
+  runtime: 'nodejs', // Fix: Edge runtime doesn't support Node.js crypto
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
