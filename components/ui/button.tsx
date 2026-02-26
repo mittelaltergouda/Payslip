@@ -141,6 +141,13 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const [ripples, setRipples] = React.useState<Ripple[]>([]);
     const rippleIdRef = React.useRef(0);
+    const isMountedRef = React.useRef(true);
+
+    React.useEffect(() => {
+      return () => {
+        isMountedRef.current = false;
+      };
+    }, []);
 
     /**
      * Creates a ripple effect at the click position
@@ -164,7 +171,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
         // Remove ripple after animation completes (600ms)
         setTimeout(() => {
-          setRipples((prev) => prev.filter((r) => r.id !== newRipple.id));
+          if (isMountedRef.current) {
+            setRipples((prev) => prev.filter((r) => r.id !== newRipple.id));
+          }
         }, 600);
       },
       []
