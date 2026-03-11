@@ -113,6 +113,7 @@ export const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps
     return (
       <Input
         ref={ref}
+        {...inputProps}
         type="text"
         inputMode="numeric"
         pattern="[0-9]*"
@@ -121,7 +122,6 @@ export const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps
         onBlur={handlers.onBlur}
         onChange={handlers.onChange}
         disabled={disabled}
-        {...inputProps}
       />
     );
   }
