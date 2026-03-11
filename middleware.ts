@@ -6,14 +6,15 @@ export function middleware(request: NextRequest) {
   // Generate a unique nonce for this request
   const nonce = crypto.randomUUID();
 
-  // Generate a CSRF token for this request
-  const csrfToken = generateCsrfToken();
+  // Reuse an existing CSRF token so mutating requests don't break across navigations.
+  const csrfToken = request.cookies.get("csrf-token")?.value || generateCsrfToken();
 
   // Create Content-Security-Policy header with nonce
   const cspHeader = [
     `default-src 'self'`,
-    `script-src 'self' 'nonce-${nonce}'`,
-    `style-src 'self' 'nonce-${nonce}'`,
+    // Next.js app-router emits inline hydration/runtime scripts in production.
+    `script-src 'self' 'unsafe-inline'`,
+    `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' data: blob:`,
     `font-src 'self' data:`,
     `connect-src 'self'`,

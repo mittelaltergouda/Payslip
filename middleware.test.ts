@@ -34,7 +34,7 @@ describe('middleware - CSP nonce generation', () => {
     expect(mockUUID).toHaveBeenCalledTimes(2);
   });
 
-  it('should include nonce in CSP header', () => {
+  it('should allow Next inline hydration scripts in CSP header', () => {
     mockUUID.mockReturnValue('abc-123-def-456');
     const request = new NextRequest(new Request('http://localhost:3000/'));
 
@@ -42,7 +42,7 @@ describe('middleware - CSP nonce generation', () => {
 
     const cspHeader = response.headers.get('Content-Security-Policy');
     expect(cspHeader).toBeDefined();
-    expect(cspHeader).toContain("'nonce-abc-123-def-456'");
+    expect(cspHeader).toContain("script-src 'self' 'unsafe-inline'");
   });
 
   it('should set x-nonce header on response', () => {
@@ -65,8 +65,8 @@ describe('middleware - CSP nonce generation', () => {
 
     // Verify all CSP directives are present
     expect(cspHeader).toContain("default-src 'self'");
-    expect(cspHeader).toContain("script-src 'self' 'nonce-nonce-123'");
-    expect(cspHeader).toContain("style-src 'self' 'nonce-nonce-123'");
+    expect(cspHeader).toContain("script-src 'self' 'unsafe-inline'");
+    expect(cspHeader).toContain("style-src 'self' 'unsafe-inline'");
     expect(cspHeader).toContain("img-src 'self' data: blob:");
     expect(cspHeader).toContain("font-src 'self' data:");
     expect(cspHeader).toContain("connect-src 'self'");
@@ -75,15 +75,15 @@ describe('middleware - CSP nonce generation', () => {
     expect(cspHeader).toContain("form-action 'self'");
   });
 
-  it('should include nonce in both script-src and style-src directives', () => {
+  it('should allow inline script and style execution for app hydration', () => {
     mockUUID.mockReturnValue('my-nonce');
     const request = new NextRequest(new Request('http://localhost:3000/'));
 
     const response = middleware(request);
 
     const cspHeader = response.headers.get('Content-Security-Policy');
-    expect(cspHeader).toContain("script-src 'self' 'nonce-my-nonce'");
-    expect(cspHeader).toContain("style-src 'self' 'nonce-my-nonce'");
+    expect(cspHeader).toContain("script-src 'self' 'unsafe-inline'");
+    expect(cspHeader).toContain("style-src 'self' 'unsafe-inline'");
   });
 
   it('should return NextResponse with CSP headers', () => {
@@ -107,7 +107,7 @@ describe('middleware - CSP nonce generation', () => {
     const cspHeader = response.headers.get('Content-Security-Policy');
 
     expect(responseNonce).toBe('consistent-nonce');
-    expect(cspHeader).toContain("'nonce-consistent-nonce'");
+    expect(cspHeader).toContain("script-src 'self' 'unsafe-inline'");
   });
 
   it('should generate different nonces for different requests', () => {
@@ -212,7 +212,7 @@ describe('middleware - CSP nonce generation', () => {
     expect(cspHeader).not.toContain('fonts.gstatic.com');
   });
 
-  it('should not include unsafe directives in CSP header', () => {
+  it('should not include unsafe-eval in CSP header', () => {
     const request = new NextRequest(new Request('http://localhost:3000/'));
 
     const response = middleware(request);
@@ -220,9 +220,9 @@ describe('middleware - CSP nonce generation', () => {
     const cspHeader = response.headers.get('Content-Security-Policy');
     expect(cspHeader).toBeDefined();
 
-    // Verify unsafe directives are not present
+    // Inline execution is intentionally allowed for Next.js hydration.
     expect(cspHeader).not.toContain('unsafe-eval');
-    expect(cspHeader).not.toContain('unsafe-inline');
+    expect(cspHeader).toContain('unsafe-inline');
   });
 });
 
