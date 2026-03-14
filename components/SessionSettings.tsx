@@ -123,7 +123,7 @@ export function SessionSettings({
   };
 
   return (
-    <div className={`glass p-6 space-y-4 ${className}`}>
+    <div className={`glass p-6 space-y-4 relative z-10 ${className}`}>
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h2 className="text-xl font-display">{t.sessionSettings}</h2>
         <button className="btn" onClick={onReset}>
