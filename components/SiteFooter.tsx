@@ -2,7 +2,8 @@ import Link from "next/link";
 
 const footerLinks = [
   { label: "Impressum", href: "/impressum" },
-  { label: "Datenschutz", href: "/datenschutz" }
+  { label: "Datenschutz", href: "/datenschutz" },
+  { label: "Tool-Tipps", href: "/tool-tipps" }
 ];
 
 export function SiteFooter() {

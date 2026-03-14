@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import type { DistributionMode, IndividualExpenseInput, MemberInput, PayslipResult } from "@/lib/types";
 import { MemberRow } from "./MemberRow";
 import { MemberCard } from "./MemberCard";
 import { Button } from "@/components/ui/button";
+import { useColumnEnterNavigation } from "@/hooks/useColumnEnterNavigation";
 
 type Lang = "de" | "en";
 
@@ -106,6 +107,9 @@ export function MembersTable({
     return map;
   }, [individualExpenses]);
 
+  const tableRef = useRef<HTMLTableElement | null>(null);
+  useColumnEnterNavigation(tableRef);
+
   return (
     <div className="glass p-6 space-y-4" role="region" aria-labelledby="members-heading">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -142,7 +146,12 @@ export function MembersTable({
 
       {/* Desktop Table View - hidden on mobile */}
       <div className="hidden md:block overflow-x-auto">
-        <table className="min-w-full text-base" aria-label={t.members} aria-describedby="members-heading">
+        <table
+          ref={tableRef}
+          className="min-w-full text-base"
+          aria-label={t.members}
+          aria-describedby="members-heading"
+        >
           <caption className="sr-only">{t.members}</caption>
           <thead className="text-white/60 border-b border-white/10">
             <tr className="whitespace-nowrap">
@@ -158,12 +167,13 @@ export function MembersTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-white/10 [&>tr]:transition-colors [&>tr]:duration-200 [&>tr:hover]:bg-white/[0.02]">
-            {members.map((m) => {
+            {members.map((m, rowIndex) => {
               const resultMember = resultMemberMap.get(m.id);
               const memberExpenses = m.id ? (expensesByMember.get(m.id) ?? []) : [];
               return (
                 <MemberRow
                   key={m.id}
+                  rowIndex={rowIndex}
                   member={m}
                   showRole={showRole}
                   distributionMode={distributionMode}

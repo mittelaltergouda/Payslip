@@ -78,6 +78,9 @@ interface MemberRowProps {
    * Callback to remove an individual expense.
    */
   removeIndividualExpense: (id: string) => void;
+
+  /** Zero-based row index within the table (used for Enter-Navigation). */
+  rowIndex: number;
 }
 
 /**
@@ -129,7 +132,8 @@ export function MemberRow({
   removeMember,
   addIndividualExpense,
   updateIndividualExpense,
-  removeIndividualExpense
+  removeIndividualExpense,
+  rowIndex
 }: MemberRowProps) {
   // individualExpenses is now pre-filtered by MembersTable, no need to filter again
   const exp = individualExpenses;
@@ -140,6 +144,8 @@ export function MemberRow({
       <td className="py-3 px-3">
         <input
           className="input w-36"
+          data-nav-col="handle"
+          data-nav-row={rowIndex}
           value={member.handle}
           onChange={(e) => updateMember(member.id!, { handle: e.target.value })}
         />
@@ -148,6 +154,8 @@ export function MemberRow({
         <td className="py-3 px-3">
           <input
             className="input w-32"
+            data-nav-col="role"
+            data-nav-row={rowIndex}
             value={member.role ?? ""}
             onChange={(e) => updateMember(member.id!, { role: e.target.value })}
           />
@@ -156,6 +164,8 @@ export function MemberRow({
       <td className="py-3 px-3 w-[300px]">
         <NumericInput
           className="input w-full"
+          data-nav-col="revenue"
+          data-nav-row={rowIndex}
           value={member.revenue ?? 0}
           onValueChange={(v) => updateMember(member.id!, { revenue: v })}
           lang={lang}
@@ -164,6 +174,8 @@ export function MemberRow({
       <td className="py-3 px-3 w-[300px]">
         <NumericInput
           className="input w-full"
+          data-nav-col="investment"
+          data-nav-row={rowIndex}
           value={member.investment ?? 0}
           onValueChange={(v) => updateMember(member.id!, { investment: v })}
           lang={lang}
@@ -202,6 +214,8 @@ export function MemberRow({
       <td className="py-3 px-3 w-[160px]">
         <NumericInput
           className="input w-full"
+          data-nav-col="percentShare"
+          data-nav-row={rowIndex}
           value={member.percentShare ?? 0}
           onValueChange={(v) => updateMember(member.id!, { percentShare: v })}
           lang={lang}
@@ -211,6 +225,8 @@ export function MemberRow({
       <td className="py-3 px-3 w-[240px]">
         <NumericInput
           className="input w-full"
+          data-nav-col="fixedBonus"
+          data-nav-row={rowIndex}
           value={(member as any).fixedBonus ?? 0}
           onValueChange={(v) => updateMember(member.id!, { fixedBonus: v as any })}
           lang={lang}
@@ -220,6 +236,8 @@ export function MemberRow({
       <td className="py-3 px-3 w-[240px]">
         <NumericInput
           className="input w-full"
+          data-nav-col="fixedPayout"
+          data-nav-row={rowIndex}
           value={member.fixedPayout ?? 0}
           onValueChange={(v) => updateMember(member.id!, { fixedPayout: v })}
           lang={lang}

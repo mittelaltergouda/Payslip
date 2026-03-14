@@ -481,3 +481,46 @@ describe('MembersTable - Distribution Modes', () => {
     expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
   });
 });
+
+describe('MembersTable - Enter Navigation', () => {
+  const mockCallbacks = {
+    onAddMember: vi.fn(),
+    updateMember: vi.fn(),
+    removeMember: vi.fn(),
+    addIndividualExpense: vi.fn(),
+    updateIndividualExpense: vi.fn(),
+    removeIndividualExpense: vi.fn(),
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('moves focus to the same column one row below on Enter', () => {
+    const { container } = render(
+      <MembersTable
+        members={sampleMembers}
+        individualExpenses={sampleIndividualExpenses}
+        result={sampleResult}
+        showRole={false}
+        distributionMode="EQUAL"
+        feeByPayer={{}}
+        lang="en"
+        t={mockTranslationsEN}
+        format={mockFormat}
+        {...mockCallbacks}
+      />
+    );
+
+    const handleInputs = container.querySelectorAll<HTMLInputElement>('input[data-nav-col="handle"]');
+    expect(handleInputs.length).toBeGreaterThanOrEqual(2);
+
+    const firstHandle = handleInputs[0];
+    const secondHandle = handleInputs[1];
+    firstHandle.focus();
+
+    fireEvent.keyDown(firstHandle, { key: 'Enter', code: 'Enter' });
+
+    expect(document.activeElement).toBe(secondHandle);
+  });
+});
