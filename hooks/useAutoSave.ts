@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import type { SessionInput } from '../lib/types';
+import type { SavedSession, SessionInput } from '../lib/types';
 import { save } from '../lib/storage/sessionStorage';
 
 // ============================================================================
@@ -20,6 +20,10 @@ export type UseAutoSaveReturn = {
   error: string | null;
 };
 
+type UseAutoSaveOptions = {
+  onSaveSuccess?: (savedSession: SavedSession) => void;
+};
+
 // ============================================================================
 // CONSTANTS
 // ============================================================================
@@ -33,40 +37,10 @@ const DEBOUNCE_DELAY_MS = 1000;
 // HOOK
 // ============================================================================
 
-/**
- * Auto-save hook with 1-second debouncing for session data.
- *
- * Automatically saves session changes to localStorage after a 1-second delay
- * to prevent excessive writes during rapid input. Tracks save status and
- * provides manual save capability.
- *
- * @param session - The session data to auto-save
- * @param enabled - Whether auto-save is enabled (default: true)
- * @returns Object containing saveStatus, manualSave function, and error state
- *
- * @example
- * ```tsx
- * const { saveStatus, manualSave, error } = useAutoSave(sessionData);
- *
- * // Show save status indicator
- * <SaveStatusIndicator status={saveStatus} />
- *
- * // Manual save on Ctrl+S
- * useEffect(() => {
- *   const handleKeyDown = (e: KeyboardEvent) => {
- *     if (e.ctrlKey && e.key === 's') {
- *       e.preventDefault();
- *       manualSave();
- *     }
- *   };
- *   window.addEventListener('keydown', handleKeyDown);
- *   return () => window.removeEventListener('keydown', handleKeyDown);
- * }, [manualSave]);
- * ```
- */
 export function useAutoSave(
   session: SessionInput | null,
-  enabled: boolean = true
+  enabled: boolean = true,
+  options?: UseAutoSaveOptions
 ): UseAutoSaveReturn {
   // State
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
@@ -75,6 +49,7 @@ export function useAutoSave(
   // Refs
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const previousSessionRef = useRef<string | null>(null);
+  const onSaveSuccess = options?.onSaveSuccess;
 
   /**
    * Performs the actual save operation
@@ -92,8 +67,10 @@ export function useAutoSave(
 
       if (result.success) {
         setSaveStatus('saved');
-        // Update previous session reference
         previousSessionRef.current = JSON.stringify(session);
+        if (result.data) {
+          onSaveSuccess?.(result.data);
+        }
       } else {
         setSaveStatus('unsaved');
         setError(result.error || 'Failed to save session');
@@ -102,7 +79,7 @@ export function useAutoSave(
       setSaveStatus('unsaved');
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
     }
-  }, [session]);
+  }, [session, onSaveSuccess]);
 
   /**
    * Manual save function (can be called directly, e.g., on Ctrl+S)
@@ -143,7 +120,7 @@ export function useAutoSave(
 
     // Set up debounced save
     debounceTimerRef.current = setTimeout(() => {
-      void performSave();
+      performSave();
       debounceTimerRef.current = null;
     }, DEBOUNCE_DELAY_MS);
 

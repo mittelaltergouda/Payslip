@@ -654,6 +654,41 @@ describe('sessionStorage - clearAll()', () => {
   });
 });
 
+
+
+describe('sessionStorage - draft reference', () => {
+  beforeEach(() => {
+    localStorageMock.clear();
+    vi.clearAllMocks();
+    idCounter = 0;
+  });
+
+  it('should remember the current draft id after save', () => {
+    const session = createTestSession();
+    const result = sessionStorage.save(session);
+
+    expect(result.success).toBe(true);
+    expect(result.data?.id).toBe(sessionStorage.getCurrentDraftId());
+  });
+
+  it('should return the draft session object', () => {
+    const session = createTestSession({ name: 'Draft Session' });
+    const saved = sessionStorage.save(session);
+
+    const draft = sessionStorage.getCurrentDraft();
+    expect(draft).toBeDefined();
+    expect(draft?.id).toBe(saved.data?.id);
+    expect(draft?.session.name).toBe('Draft Session');
+  });
+
+  it('should clear the draft reference', () => {
+    const session = createTestSession();
+    sessionStorage.save(session);
+    sessionStorage.clearCurrentDraftId();
+
+    expect(sessionStorage.getCurrentDraftId()).toBeNull();
+  });
+});
 describe('sessionStorage - edge cases', () => {
   beforeEach(() => {
     localStorageMock.clear();

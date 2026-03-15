@@ -16,11 +16,19 @@ import { SessionHistory } from "./SessionHistory";
 import { SessionActions } from "./SessionActions";
 import { CrewPresetManager } from "./CrewPresetManager";
 import { useToast } from "./Toast";
-import { getAll, deleteSession as deleteStoredSession, duplicate as duplicateSession } from "@/lib/storage/sessionStorage";
+import {
+  getAll,
+  deleteSession as deleteStoredSession,
+  duplicate as duplicateSession,
+  getCurrentDraft,
+  getCurrentDraftId,
+  setCurrentDraftId as setStoredCurrentDraftId,
+} from "@/lib/storage/sessionStorage";
 import { DuplicateSessionDialog } from "./DuplicateSessionDialog";
 import { Button } from "./ui/button";
 import { FormField } from "./ui/form-field";
 import type { PresetMember } from "@/lib/types";
+import { clearCsrfToken, getCsrfHeaders } from "@/lib/csrf-client";
 
 const rndId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -55,7 +63,13 @@ type Props = { initialLang?: Lang };
 export function SessionWizard({ initialLang = "de" }: Props) {
   const [lang, setLang] = useState<Lang>(initialLang);
   const t = translations[lang];
-  const [session, setSession] = useState<SessionInput>(buildInitialSession());
+  const [session, setSession] = useState<SessionInput>(() => {
+    if (typeof window === "undefined") {
+      return buildInitialSession();
+    }
+    const draft = getCurrentDraft();
+    return draft ? draft.session : buildInitialSession();
+  });
   const updateSession = setSession;
   const [error, setError] = useState<string | null>(null);
   const [showRole, setShowRole] = useState(false);
@@ -64,10 +78,14 @@ export function SessionWizard({ initialLang = "de" }: Props) {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isPresetManagerOpen, setIsPresetManagerOpen] = useState(false);
   const [savedSessions, setSavedSessions] = useState<SavedSession[]>([]);
+  const [currentDraftId, setCurrentDraftIdState] = useState<string | null>(() => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+    return getCurrentDraftId();
+  });
   const [duplicateDialogSession, setDuplicateDialogSession] = useState<SavedSession | null>(null);
-
-  // Auto-save and toast hooks
-  const { saveStatus, manualSave, error: saveError } = useAutoSave(session, true);
+  const [isSavingSession, setIsSavingSession] = useState(false);
   const { showToast } = useToast();
 
   const result = useMemo(() => {
@@ -91,16 +109,32 @@ export function SessionWizard({ initialLang = "de" }: Props) {
     [result]
   );
 
-  // Load saved sessions on mount
-  useEffect(() => {
-    refreshSessionList();
-  }, []);
-
-  // Refresh session list from localStorage
   const refreshSessionList = useCallback(() => {
     const sessions = getAll();
     setSavedSessions(sessions);
+    setCurrentDraftIdState(getCurrentDraftId());
   }, []);
+
+  const handleDraftSaved = useCallback(
+    (savedSession: SavedSession) => {
+      setSession(savedSession.session);
+      setStoredCurrentDraftId(savedSession.id);
+      setCurrentDraftIdState(savedSession.id);
+      refreshSessionList();
+    },
+    [refreshSessionList]
+  );
+
+  const { saveStatus, manualSave, error: saveError } = useAutoSave(
+    session,
+    true,
+    { onSaveSuccess: handleDraftSaved }
+  );
+
+  // Load saved sessions on mount
+  useEffect(() => {
+    refreshSessionList();
+  }, [refreshSessionList]);
 
   // Show toast on save error
   useEffect(() => {
@@ -151,6 +185,8 @@ export function SessionWizard({ initialLang = "de" }: Props) {
   const handleLoadSession = useCallback(
     (savedSession: SavedSession) => {
       setSession(savedSession.session);
+      setStoredCurrentDraftId(savedSession.id);
+      setCurrentDraftIdState(savedSession.id);
       setIsHistoryOpen(false);
       showToast(`${t.sessionLoaded || "Session loaded"}: ${savedSession.session.name}`, "success");
     },
@@ -184,6 +220,8 @@ export function SessionWizard({ initialLang = "de" }: Props) {
       const result = duplicateSession(duplicateDialogSession.id, copyExpenses);
       if (result.success && result.data) {
         setSession(result.data.session);
+        setStoredCurrentDraftId(result.data.id);
+        setCurrentDraftIdState(result.data.id);
         setDuplicateDialogSession(null);
         setIsHistoryOpen(false);
         refreshSessionList();
@@ -197,6 +235,46 @@ export function SessionWizard({ initialLang = "de" }: Props) {
     },
     [duplicateDialogSession, refreshSessionList, showToast, t.duplicateSuccess]
   );
+
+  const handleSaveSession = useCallback(async () => {
+    setIsSavingSession(true);
+
+    try {
+      await manualSave();
+      refreshSessionList();
+
+      const headers = await getCsrfHeaders({
+        "Content-Type": "application/json",
+      });
+
+      const response = await fetch("/api/sessions", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          name: session.name,
+          type: session.type,
+          taxEnabled: session.taxEnabled,
+          distribution: session.distributionMode,
+          members: session.members,
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          clearCsrfToken();
+        }
+        throw new Error(t.sessionSaveFailed || "Failed to save session");
+      }
+
+      refreshSessionList();
+      showToast(t.sessionSaved || "Session saved", "success");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t.sessionSaveFailed || "Failed to save session";
+      showToast(message, "error");
+    } finally {
+      setIsSavingSession(false);
+    }
+  }, [manualSave, refreshSessionList, session, showToast, t.sessionSaveFailed, t.sessionSaved]);
 
   // Handle session name update
   const handleSessionNameChange = (name: string) => {
@@ -332,6 +410,16 @@ export function SessionWizard({ initialLang = "de" }: Props) {
             <SaveStatusIndicator status={saveStatus} error={saveError} />
 
             <Button
+              variant="secondary"
+              size="md"
+              isLoading={isSavingSession}
+              onClick={() => { void handleSaveSession(); }}
+              aria-label={t.saveSession || "Save session"}
+            >
+              {isSavingSession ? t.savingSession || "Saving session..." : t.saveSession || "Save session"}
+            </Button>
+
+            <Button
               variant="ghost"
               size="md"
               onClick={() => setIsHistoryOpen(true)}
@@ -420,6 +508,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
         onLoad={handleLoadSession}
         onDelete={handleDeleteSession}
         onDuplicate={handleDuplicateClick}
+        currentDraftId={currentDraftId}
         lang={lang}
         translations={{
           sessionHistory: t.sessionHistory || "Session History",
@@ -431,6 +520,9 @@ export function SessionWizard({ initialLang = "de" }: Props) {
           cancel: t.cancel || "Cancel",
           createdAt: t.createdAt || "Created",
           updatedAt: t.updatedAt || "Updated",
+          draftHistoryTitle: t.draftHistoryTitle || "Draft History",
+          draftHistoryHint: t.draftHistoryHint || "Local snapshots live here",
+          currentDraftTag: t.currentDraftTag || "Current draft",
         }}
       />
 

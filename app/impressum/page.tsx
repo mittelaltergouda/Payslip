@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BackToToolLink } from "@/components/BackToToolLink";
 
 const placeholder = (label: string) => <span className="text-neon">{label}</span>;
 
@@ -102,6 +103,10 @@ export default function ImpressumPage() {
           ({placeholder("Datum ergänzen")}), bevor SC Payslip öffentlich ausgerollt wird.
         </p>
       </section>
+
+      <div className="flex justify-center">
+        <BackToToolLink />
+      </div>
     </main>
   );
 }

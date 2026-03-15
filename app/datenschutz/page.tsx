@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BackToToolLink } from "@/components/BackToToolLink";
 
 const placeholder = (label: string) => <span className="text-neon">{label}</span>;
 
@@ -112,6 +113,10 @@ export default function DatenschutzPage() {
           sie verfügbar sind, damit die Erklärung zum Produktionsbetrieb passt.
         </p>
       </section>
+
+      <div className="flex justify-center">
+        <BackToToolLink />
+      </div>
     </main>
   );
 }
