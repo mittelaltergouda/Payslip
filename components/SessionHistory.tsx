@@ -26,7 +26,7 @@ export interface SessionHistoryProps {
   /**
    * Current draft ID for highlighting
    */
-  currentDraftId?: string;
+  currentDraftId?: string | null;
 
   /**
    * Callback function called when the user clicks the Load button.
