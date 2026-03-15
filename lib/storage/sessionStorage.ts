@@ -1,4 +1,4 @@
-import type { SessionInput, SavedSession} from '../types';
+import type { SessionInput, SavedSession } from '../types';
 import { savedSessionSchema } from '../types';
 import { generateId } from '../id';
 
@@ -7,9 +7,14 @@ import { generateId } from '../id';
 // ============================================================================
 
 /**
- * LocalStorage key for storing all saved sessions
+ * LocalStorage key for storing all saved sessions (history snapshots)
  */
-const STORAGE_KEY = 'sc-payslip-sessions';
+const HISTORY_KEY = 'sc-payslip-sessions';
+
+/**
+ * LocalStorage key for the current draft reference (last edited snapshot)
+ */
+const CURRENT_DRAFT_KEY = 'sc-payslip-current-draft';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -24,6 +29,10 @@ type StorageResult<T> = {
   error?: string;
 };
 
+type SaveOptions = {
+  recordDraft?: boolean;
+};
+
 // ============================================================================
 // STORAGE OPERATIONS
 // ============================================================================
@@ -33,9 +42,12 @@ type StorageResult<T> = {
  * If session has an ID, updates existing session. Otherwise creates new session.
  *
  * @param session - The session data to save
+ * @param options - Save options
  * @returns StorageResult with the saved session data
  */
-export function save(session: SessionInput): StorageResult<SavedSession> {
+export function save(session: SessionInput, options?: SaveOptions): StorageResult<SavedSession> {
+  const recordDraft = options?.recordDraft ?? true;
+
   try {
     // Get all existing sessions
     const sessions = getAllInternal();
@@ -62,7 +74,11 @@ export function save(session: SessionInput): StorageResult<SavedSession> {
     }
 
     // Save to localStorage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(sessions));
+
+    if (recordDraft) {
+      setCurrentDraftId(savedSession.id);
+    }
 
     return {
       success: true,
@@ -70,6 +86,9 @@ export function save(session: SessionInput): StorageResult<SavedSession> {
     };
   } catch (error) {
     if (error instanceof Error && error.name === 'QuotaExceededError') {
+      if (recordDraft) {
+        clearCurrentDraftId();
+      }
       return {
         success: false,
         error: 'Storage quota exceeded. Please export and delete old sessions.',
@@ -98,7 +117,7 @@ export function getAll(): SavedSession[] {
  */
 function getAllInternal(): SavedSession[] {
   try {
-    const data = localStorage.getItem(STORAGE_KEY);
+    const data = localStorage.getItem(HISTORY_KEY);
 
     if (!data) {
       return [];
@@ -132,6 +151,44 @@ function getAllInternal(): SavedSession[] {
   }
 }
 
+function persistCurrentDraftId(id: string | null) {
+  try {
+    if (id) {
+      localStorage.setItem(CURRENT_DRAFT_KEY, id);
+    } else {
+      localStorage.removeItem(CURRENT_DRAFT_KEY);
+    }
+  } catch (_error) {
+    // Best-effort; ignore failures
+  }
+}
+
+export function getCurrentDraftId(): string | null {
+  try {
+    return localStorage.getItem(CURRENT_DRAFT_KEY);
+  } catch (_error) {
+    return null;
+  }
+}
+
+export function setCurrentDraftId(id: string | null) {
+  persistCurrentDraftId(id);
+}
+
+export function clearCurrentDraftId() {
+  persistCurrentDraftId(null);
+}
+
+export function getCurrentDraft(): SavedSession | null {
+  const draftId = getCurrentDraftId();
+  if (!draftId) {
+    return null;
+  }
+
+  const sessions = getAllInternal();
+  return sessions.find((session) => session.id === draftId) ?? null;
+}
+
 /**
  * Deletes a session by ID from localStorage.
  *
@@ -146,7 +203,11 @@ export function deleteSession(sessionId: string): StorageResult<void> {
     const updatedSessions = sessions.filter((s) => s.id !== sessionId);
 
     // Save updated list
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSessions));
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(updatedSessions));
+
+    if (sessionId === getCurrentDraftId()) {
+      clearCurrentDraftId();
+    }
 
     return {
       success: true,
@@ -225,7 +286,7 @@ export function importAll(jsonData: string): StorageResult<{ count: number }> {
     const allSessions = [...existingSessions, ...validSessions];
 
     // Save to localStorage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(allSessions));
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(allSessions));
 
     return {
       success: true,
@@ -359,7 +420,7 @@ export function duplicate(
     sessions.push(savedSession);
 
     // Save to localStorage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(sessions));
 
     return {
       success: true,
@@ -387,7 +448,8 @@ export function duplicate(
  */
 export function clearAll(): StorageResult<void> {
   try {
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(HISTORY_KEY);
+    clearCurrentDraftId();
     return {
       success: true,
     };

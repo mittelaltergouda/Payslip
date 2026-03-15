@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BackToToolLink } from "@/components/BackToToolLink";
 
 const tipSections = [
   {
@@ -84,6 +85,10 @@ export default function ToolTippsPage() {
           Summen logisch aufgehen, kannst Du Deine Session mit einer kurzen Übersicht teilen – das reduziert Nachfragen.
         </p>
       </section>
+
+      <div className="flex justify-center">
+        <BackToToolLink />
+      </div>
     </main>
   );
 }

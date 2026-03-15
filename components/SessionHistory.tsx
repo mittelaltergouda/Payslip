@@ -24,6 +24,11 @@ export interface SessionHistoryProps {
   sessions: SavedSession[];
 
   /**
+   * Current draft ID for highlighting
+   */
+  currentDraftId?: string;
+
+  /**
    * Callback function called when the user clicks the Load button.
    * Receives the selected session as a parameter.
    */
@@ -59,6 +64,9 @@ export interface SessionHistoryProps {
     cancel: string;
     createdAt: string;
     updatedAt: string;
+    draftHistoryTitle: string;
+    draftHistoryHint: string;
+    currentDraftTag: string;
   };
 }
 
@@ -87,6 +95,7 @@ export function SessionHistory({
   onLoad,
   onDelete,
   onDuplicate,
+  currentDraftId,
   lang,
   translations,
 }: SessionHistoryProps) {
@@ -167,10 +176,15 @@ export function SessionHistory({
       >
         <div className="p-6 space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-neon">
-              {translations.sessionHistory}
-            </h2>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-neon">
+                {translations.sessionHistory}
+              </h2>
+              {translations.draftHistoryTitle && (
+                <p className="text-sm text-white/60">{translations.draftHistoryTitle}</p>
+              )}
+            </div>
             <button
               onClick={onClose}
               className="p-2 rounded-lg hover:bg-white/10 transition text-sand"
@@ -192,6 +206,9 @@ export function SessionHistory({
               </svg>
             </button>
           </div>
+          {translations.draftHistoryHint && (
+            <p className="text-sm text-white/60">{translations.draftHistoryHint}</p>
+          )}
 
           {/* Sessions List */}
           {sessions.length === 0 ? (
@@ -200,96 +217,106 @@ export function SessionHistory({
             </div>
           ) : (
             <div className="space-y-3">
-              {sessions.map((savedSession) => (
-                <div key={savedSession.id} className="glass p-4 space-y-3">
-                  {/* Session Info */}
-                  <div>
-                    <h3 className="font-semibold text-sand text-lg">
-                      {savedSession.session.name}
-                    </h3>
-                    <div className="text-xs text-white/60 mt-1 space-y-0.5">
-                      <p>
-                        {translations.createdAt}: {formatDate(savedSession.createdAt)}
-                      </p>
-                      <p>
-                        {translations.updatedAt}: {formatDate(savedSession.updatedAt)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  {deleteConfirmId === savedSession.id ? (
-                    <div className="space-y-2">
-                      <p className="text-sm text-white/80">
-                        {translations.confirmDelete}
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleDeleteConfirm(savedSession.id)}
-                          className="btn flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/50"
-                        >
-                          {translations.deleteSession}
-                        </button>
-                        <button
-                          onClick={handleDeleteCancel}
-                          className="btn flex-1"
-                        >
-                          {translations.cancel}
-                        </button>
+              {sessions.map((savedSession) => {
+                const isCurrentDraft = savedSession.id === currentDraftId;
+                return (
+                  <div key={savedSession.id} className="glass p-4 space-y-3">
+                    {/* Session Info */}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-sand text-lg">
+                          {savedSession.session.name}
+                        </h3>
+                        {isCurrentDraft && (
+                          <span className="text-[10px] tracking-wider uppercase text-white/60 bg-white/5 px-2 py-0.5 rounded-full">
+                            {translations.currentDraftTag}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-white/60 mt-1 space-y-0.5">
+                        <p>
+                          {translations.createdAt}: {formatDate(savedSession.createdAt)}
+                        </p>
+                        <p>
+                          {translations.updatedAt}: {formatDate(savedSession.updatedAt)}
+                        </p>
                       </div>
                     </div>
-                  ) : (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => onLoad(savedSession)}
-                        className="btn flex-1 bg-neon/20 hover:bg-neon/30 text-neon border border-neon/50"
-                      >
-                        {translations.loadSession}
-                      </button>
-                      <button
-                        onClick={() => onDuplicate(savedSession)}
-                        className="btn bg-white/10 hover:bg-white/20 text-white/80"
-                        aria-label={translations.duplicateSession}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
+
+                    {/* Actions */}
+                    {deleteConfirmId === savedSession.id ? (
+                      <div className="space-y-2">
+                        <p className="text-sm text-white/80">
+                          {translations.confirmDelete}
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleDeleteConfirm(savedSession.id)}
+                            className="btn flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/50"
+                          >
+                            {translations.deleteSession}
+                          </button>
+                          <button
+                            onClick={handleDeleteCancel}
+                            className="btn flex-1"
+                          >
+                            {translations.cancel}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => onLoad(savedSession)}
+                          className="btn flex-1 bg-neon/20 hover:bg-neon/30 text-neon border border-neon/50"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(savedSession.id)}
-                        className="btn bg-white/10 hover:bg-white/20 text-white/80"
-                        aria-label={translations.deleteSession}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
+                          {translations.loadSession}
+                        </button>
+                        <button
+                          onClick={() => onDuplicate(savedSession)}
+                          className="btn bg-white/10 hover:bg-white/20 text-white/80"
+                          aria-label={translations.duplicateSession}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(savedSession.id)}
+                          className="btn bg-white/10 hover:bg-white/20 text-white/80"
+                          aria-label={translations.deleteSession}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

@@ -6,6 +6,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ToastProvider } from './Toast';
 import * as sessionStorage from '@/lib/storage/sessionStorage';
 import * as useAutoSaveModule from '@/hooks/useAutoSave';
+import * as csrfClient from '@/lib/csrf-client';
 import type { SavedSession } from '@/lib/types';
 
 // Helper function to interact with custom distribution mode dropdown
@@ -68,6 +69,9 @@ beforeEach(() => {
   vi.spyOn(sessionStorage, 'getAll').mockReturnValue([]);
   vi.spyOn(sessionStorage, 'deleteSession').mockReturnValue({ success: true });
   vi.spyOn(sessionStorage, 'save').mockReturnValue({ success: true });
+  vi.spyOn(sessionStorage, 'getCurrentDraft').mockReturnValue(null);
+  vi.spyOn(sessionStorage, 'getCurrentDraftId').mockReturnValue(null);
+  vi.spyOn(sessionStorage, 'setCurrentDraftId').mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -1220,11 +1224,12 @@ const mockSavedSessions: SavedSession[] = [
 ];
 
 describe('SessionWizard - Session Management', () => {
-  let mockUseAutoSave: ReturnType<typeof vi.fn>;
-  let mockManualSave: ReturnType<typeof vi.fn>;
-  let mockGetAll: ReturnType<typeof vi.fn>;
-  let mockDeleteSession: ReturnType<typeof vi.fn>;
-  let mockSave: ReturnType<typeof vi.fn>;
+let mockUseAutoSave: ReturnType<typeof vi.fn>;
+let mockManualSave: ReturnType<typeof vi.fn>;
+let mockGetAll: ReturnType<typeof vi.fn>;
+let mockDeleteSession: ReturnType<typeof vi.fn>;
+let mockSave: ReturnType<typeof vi.fn>;
+let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -1246,6 +1251,16 @@ describe('SessionWizard - Session Management', () => {
     vi.spyOn(sessionStorage, 'getAll').mockImplementation(mockGetAll as unknown as typeof sessionStorage.getAll);
     vi.spyOn(sessionStorage, 'deleteSession').mockImplementation(mockDeleteSession as unknown as typeof sessionStorage.deleteSession);
     vi.spyOn(sessionStorage, 'save').mockImplementation(mockSave as unknown as typeof sessionStorage.save);
+
+    fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: 'server-session' }) });
+    vi.stubGlobal('fetch', fetchMock);
+
+    vi.spyOn(csrfClient, 'getCsrfHeaders').mockResolvedValue(new Headers({ 'Content-Type': 'application/json' }));
+    vi.spyOn(csrfClient, 'clearCsrfToken').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   describe('Session Name Input', () => {
@@ -1323,6 +1338,40 @@ describe('SessionWizard - Session Management', () => {
       renderWithToast(<SessionWizard />);
 
       expect(mockUseAutoSave).toHaveBeenCalled();
+    });
+  });
+
+  describe('Save Session Button', () => {
+    it('renders the save session button', () => {
+      renderWithToast(<SessionWizard />);
+
+      const saveButton = screen.getByRole('button', { name: /Session speichern|Save session/i });
+      expect(saveButton).toBeInTheDocument();
+    });
+
+    it('calls the API and manual save when clicked', async () => {
+      renderWithToast(<SessionWizard />);
+
+      const saveButton = screen.getByRole('button', { name: /Session speichern|Save session/i });
+      fireEvent.click(saveButton);
+
+      await waitFor(() => {
+        expect(fetchMock).toHaveBeenCalled();
+        expect(mockManualSave).toHaveBeenCalled();
+      });
+
+      const url = fetchMock.mock.calls[0][0];
+      const options = fetchMock.mock.calls[0][1] as RequestInit;
+      expect(url).toBe('/api/sessions');
+      expect(options.method).toBe('POST');
+      expect(options.headers).toBeDefined();
+      expect(options.body).toBeDefined();
+      const payload = JSON.parse(options.body as string);
+      expect(payload).toMatchObject({
+        name: 'SC Session',
+        distribution: 'EQUAL',
+        members: expect.any(Array),
+      });
     });
   });
 

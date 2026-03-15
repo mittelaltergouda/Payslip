@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useAutoSave } from '../../hooks/useAutoSave';
-import type { SessionInput } from '../../lib/types';
+import type { SavedSession, SessionInput } from '../../lib/types';
 import * as sessionStorage from '../../lib/storage/sessionStorage';
 
 // ============================================================================
@@ -698,4 +698,31 @@ describe('useAutoSave - Cleanup', () => {
     expect(sessionStorage.save).toHaveBeenCalledTimes(1);
     expect(sessionStorage.save).toHaveBeenCalledWith(updatedSession2);
   });
+
+describe('useAutoSave - Callbacks', () => {
+  it('calls onSaveSuccess when save returns data', async () => {
+    vi.clearAllMocks();
+    const session = createTestSession();
+    const savedSession: SavedSession = {
+      id: 'saved-draft',
+      session: { ...session, id: 'saved-draft' },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    vi.mocked(sessionStorage.save).mockReturnValue({ success: true, data: savedSession });
+
+    const callback = vi.fn();
+    renderHook(
+      ({ session }) => useAutoSave(session, true, { onSaveSuccess: callback }),
+      { initialProps: { session } }
+    );
+
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(callback).toHaveBeenCalledWith(savedSession);
+  });
+});
+
 });
