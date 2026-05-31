@@ -35,13 +35,14 @@ npm install && npm run dev
 
 Build for production: `npm run build`
 
-**Demo**: [TBD – GitHub Pages]
+**Demo**: _pending public deploy — see [DEPLOYMENT.md](./DEPLOYMENT.md)_
 
 ## Operational Info
 
 - **Code Review**: GitHub Copilot assistance
-- **CI/CD**: CodeQL scanning + GitHub Pages deployment
-- **Database**: PostgreSQL via Prisma ORM
+- **CI/CD**: GitHub Actions (build + unit tests, Playwright E2E) + CodeQL scanning
+- **Deployment**: Next.js standalone build — see [DEPLOYMENT.md](./DEPLOYMENT.md)
+- **Database**: SQLite (dev/local) via Prisma ORM; Postgres for serverless deploy (see DEPLOYMENT.md)
 - **Dependency Monitoring**: Dependabot integration
 
 Verify setup: `npm run check`
@@ -65,4 +66,4 @@ Verify setup: `npm run check`
 
 **Project Status**: Alpha (Active Development)
 **License**: MIT
-**Tech Stack**: Next.js 14 • React 18 • TypeScript • Prisma • Zod
+**Tech Stack**: Next.js 16 • React 18 • TypeScript • Prisma • Zod
