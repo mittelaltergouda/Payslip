@@ -9,11 +9,13 @@ Prisma. It builds to a self-contained server (`output: "standalone"` in
 calculator is client-side; the database is only used to persist sessions and the
 read-only share links.
 
-> **Status (2026-06-01):** Verified live end-to-end at **`https://payslip.cheesy.cloud/`**
-> (behind Cloudflare Access email). The Cloudflare route + Access were configured by the
-> CEO. For *reliable* (reboot-surviving) hosting the app is installed as a **systemd
-> service** — the CEO opted to run the install (needs `sudo`); committed unit at
-> `deploy/payslip.service`, sequence in [Persistence](#persistence--install-as-a-systemd-service-ceo-will-run-this-needs-sudo).
+> **Status (2026-06-01):** **DONE — live, durable, reboot-surviving.** Verified end-to-end
+> at **`https://payslip.cheesy.cloud/`** (behind Cloudflare Access email). The Cloudflare
+> route + Access were configured by the CEO. The app runs as a **linger-backed user systemd
+> service** (`systemctl --user`), installed **without `sudo`** — it auto-restarts on crash
+> and starts on boot. See [Persistence](#persistence--linger-backed-user-systemd-service-no-sudo).
+> A root-level system unit (`deploy/payslip.service`) is also committed for hosts where an
+> admin prefers a system service.
 
 ---
 
@@ -30,8 +32,19 @@ keeping it running.
 
 Because this is a single always-on host (not serverless), **SQLite on a local file path is
 reliable and zero-provisioning** — no Postgres needed. No schema change is required: the
-default `prisma/schema.prisma` (`provider = "sqlite"`, `url = "file:./dev.db"`) works as-is;
-the DB lives at `<app>/prisma/dev.db`.
+default `prisma/schema.prisma` (`provider = "sqlite"`, `url = "file:./dev.db"`) works as-is.
+
+> **Standalone DB-path gotcha (important for reproducibility):** the schema's relative
+> `file:./dev.db` is resolved by the Prisma query engine **relative to the bundled schema**
+> inside the standalone output, i.e. the running server reads/writes
+> `.next/standalone/node_modules/.prisma/client/dev.db` — **not** `<app>/prisma/dev.db`.
+> So after `prisma db push` (which creates `prisma/dev.db`), copy that schema-loaded file
+> into the standalone engine path before first start:
+> ```bash
+> cp prisma/dev.db .next/standalone/node_modules/.prisma/client/dev.db
+> ```
+> Without this the server starts fine and serves the homepage (HTTP 200), but every DB call
+> (`GET /api/sessions`, saving/sharing sessions) fails with an empty, schema-less DB.
 
 ### Verified end-to-end (2026-06-01)
 
@@ -43,6 +56,10 @@ the DB lives at `<app>/prisma/dev.db`.
   login — confirms the tunnel route + Access email gate are live and pointed at this origin.
 - The origin binds to **127.0.0.1 only** (not `0.0.0.0`), so it is reachable *only* through
   the Cloudflare tunnel — Access cannot be bypassed via the host's public IP.
+- **Durable service (linger-backed user systemd):** `systemctl --user status payslip` →
+  `active (running)`, `enabled`; `loginctl show-user` → `Linger=yes` (boot-persistent);
+  `GET /api/sessions` → `[]` HTTP 200 (DB reachable); crash test (`kill -9` MainPID) →
+  systemd auto-restarted, HTTP 200 again. Installed **without `sudo`**.
 
 ### Run it (the verified command)
 
@@ -58,37 +75,67 @@ NODE_ENV=production PORT=58412 HOSTNAME=127.0.0.1 \
 > NOTE: use `node .next/standalone/server.js` (the `output: "standalone"` artifact), **not**
 > `next start` — Next warns that `next start` is unsupported with standalone output.
 
-### Persistence — install as a systemd service (CEO will run this; needs `sudo`)
+### Persistence — linger-backed user systemd service (no `sudo`)
 
-A bare `node server.js` stops on reboot / when its parent shell exits. The committed unit
-**`deploy/payslip.service`** (port 58412, binds 127.0.0.1, `Restart=on-failure`) makes it
-reliable and reboot-surviving. **Canonical, reproducible install** — build from the repo
-into a persistent directory (does not depend on the ephemeral `/tmp` build):
+A bare `node server.js` stops on reboot / when its parent shell exits. **This is how the
+live deployment actually runs:** a *user* systemd service made boot-persistent with
+**linger** — no root required. `loginctl enable-linger` makes the user's systemd manager
+start at boot (independent of any login session), so a `--user` unit it manages is
+reboot-surviving and crash-restarting just like a system unit, without touching
+`/etc/systemd/system`.
+
+Canonical, reproducible install (run as the `paperclip` user; the persistent app dir lives
+under a writable, durable path — here `~/.config/payslip`):
 
 ```bash
-# on the host, as a user with sudo:
-sudo -u paperclip git clone https://github.com/mittelaltergouda/Payslip /home/paperclip/payslip
-cd /home/paperclip/payslip
-sudo -u paperclip npm ci
-sudo -u paperclip npx prisma generate
-sudo -u paperclip npx prisma db push                       # creates prisma/dev.db (SQLite)
-sudo -u paperclip npm run build
-sudo -u paperclip cp -r .next/static .next/standalone/.next/static   # standalone needs static assets
+# 1) Build into a persistent directory (NOT /tmp, which is cleared on reboot)
+git clone https://github.com/mittelaltergouda/Payslip ~/.config/payslip-src
+cd ~/.config/payslip-src
+npm ci
+npx prisma generate
+npx prisma db push                                  # creates prisma/dev.db (SQLite)
+npm run build
+cp -r .next/static .next/standalone/.next/static    # standalone needs static assets
+# place the schema-loaded DB where the standalone engine reads it (see gotcha above):
+cp prisma/dev.db .next/standalone/node_modules/.prisma/client/dev.db
 
-# install + secret + start:
-sudo cp deploy/payslip.service /etc/systemd/system/payslip.service
+# 2) Assemble a lean runtime dir (standalone bundle is self-contained)
+mkdir -p ~/.config/payslip
+cp -a .next/standalone ~/.config/payslip/standalone
+
+# 3) Enable linger (creates /run/user/$UID and starts the user manager at boot)
+loginctl enable-linger "$USER"
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+
+# 4) Install + enable + start the user unit (committed template: deploy/payslip.user.service)
+mkdir -p ~/.config/systemd/user
 SECRET=$(openssl rand -base64 32)
-sudo sed -i "s|CHANGE_ME_GENERATE_WITH_openssl_rand_base64_32|$SECRET|" /etc/systemd/system/payslip.service
-sudo systemctl daemon-reload && sudo systemctl enable --now payslip
-systemctl status payslip          # -> active (running); then payslip.cheesy.cloud stays up
+sed "s|CHANGE_ME_GENERATE_WITH_openssl_rand_base64_32|$SECRET|;
+     s|/home/paperclip/.config/payslip|$HOME/.config/payslip|g" \
+     deploy/payslip.user.service > ~/.config/systemd/user/payslip.service
+chmod 600 ~/.config/systemd/user/payslip.service
+systemctl --user daemon-reload
+systemctl --user enable --now payslip
+systemctl --user status payslip       # -> active (running); payslip.cheesy.cloud stays up
 ```
 
-> Shortcut (works only while it exists, pre-reboot): the build is already staged at
-> `/tmp/payslip-app`; `sudo cp -r /tmp/payslip-app /home/paperclip/payslip && sudo chown -R
-> paperclip:paperclip /home/paperclip/payslip` then install the unit as above.
+Verify it survives crashes and is boot-persistent:
+
+```bash
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+loginctl show-user "$USER" | grep Linger          # -> Linger=yes
+kill -9 "$(systemctl --user show -p MainPID --value payslip)"   # simulate crash
+sleep 4 && systemctl --user is-active payslip      # -> active (auto-restarted)
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:58412/   # -> 200
+```
+
+> Redeploy later: pull + rebuild in `~/.config/payslip-src`, recopy `standalone` (and the
+> static/DB-path steps), then `systemctl --user restart payslip`.
 >
-> Redeploy later: `cd /home/paperclip/payslip && git pull && npm ci && npm run build &&
-> cp -r .next/static .next/standalone/.next/static && sudo systemctl restart payslip`.
+> **Alternative — root system service:** on hosts where an admin prefers a system-wide
+> service, the committed **`deploy/payslip.service`** installs to `/etc/systemd/system`
+> (`sudo cp … && sudo systemctl enable --now payslip`). The user-service path above is
+> preferred here because it needed no elevated privileges.
 
 ### Cloudflare side (already configured by the CEO — for reference)
 
