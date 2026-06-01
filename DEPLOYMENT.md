@@ -10,8 +10,81 @@ calculator is client-side; the database is only used to persist sessions and the
 read-only share links.
 
 > **Status:** The build/run path is verified (see "Verified locally" below). The actual
-> public deploy is gated on a hosting account + credential — see
+> public deploy is gated on host-operator access — see
 > [Credentials required](#credentials-required).
+
+---
+
+## Chosen target (CEO decision, 2026-06-01): self-host at `payslip.cheesy.cloud`
+
+The CEO chose to host Payslip on the **same infrastructure as Paperclip itself** —
+behind the existing Cloudflare tunnel — at **`https://payslip.cheesy.cloud/`**, with
+**Cloudflare Access (email OTP)** for access control.
+
+On this host that means: run the app as a persistent service on a local port, then point
+the existing token-based Cloudflare tunnel's public hostname `payslip.cheesy.cloud` at
+that port, and attach a Cloudflare Access application/policy. The Vercel / container
+options below are kept as alternatives but are **not** the chosen path.
+
+Because this is a single always-on host (not serverless), **SQLite on a local file path is
+a reliable, zero-provisioning database** — no Postgres needed (though the host's local
+Postgres can be reused if preferred).
+
+### Runbook (one-time, requires host-operator privileges)
+
+Steps 1–2 are the only ones an agent could do unprivileged; steps 3–6 require `sudo`
+and/or Cloudflare account access (see [Credentials required](#credentials-required)).
+
+1. **Build the app** (verified working):
+   ```bash
+   cd /path/to/Payslip
+   npm ci && npx prisma generate && npm run build
+   ```
+2. **Pick a port + DB path.** Suggested: app on `127.0.0.1:3200` (Paperclip uses 3100),
+   SQLite at `/home/paperclip/payslip-data/payslip.db`. Make the datasource configurable:
+   in `prisma/schema.prisma` set `url = env("DATABASE_URL")` (keep `provider = "sqlite"`),
+   set a sqlite default in `.env`/`.env.example` for local dev (`file:./prisma/dev.db`),
+   then on the host run `DATABASE_URL="file:/home/paperclip/payslip-data/payslip.db" npx prisma db push`.
+3. **Install a systemd service** (needs `sudo`) — `/etc/systemd/system/payslip.service`:
+   ```ini
+   [Unit]
+   Description=SC Payslip
+   After=network.target
+
+   [Service]
+   Type=simple
+   User=paperclip
+   WorkingDirectory=/path/to/Payslip
+   Environment=NODE_ENV=production
+   Environment=PORT=3200
+   Environment=HOSTNAME=127.0.0.1
+   Environment=DATABASE_URL=file:/home/paperclip/payslip-data/payslip.db
+   Environment=NEXTAUTH_SECRET=<openssl rand -base64 32>
+   # standalone output: server.js lives in .next/standalone; copy static assets first:
+   #   cp -r .next/static .next/standalone/.next/static
+   ExecStart=/usr/bin/node .next/standalone/server.js
+   Restart=on-failure
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+   Then: `sudo systemctl daemon-reload && sudo systemctl enable --now payslip`.
+4. **Add the tunnel public hostname** (Cloudflare Zero Trust dashboard → Networks →
+   Tunnels → the running tunnel → Public Hostname): `payslip.cheesy.cloud` →
+   `HTTP` → `localhost:3200`. (The tunnel here is **token-based / remotely managed**, so
+   this is done in the dashboard or via the Cloudflare API — not a local config file. The
+   DNS `CNAME` is created automatically.)
+5. **Add Cloudflare Access** (Zero Trust → Access → Applications): self-hosted app for
+   `payslip.cheesy.cloud`, policy = allow specific emails / one-time-PIN email auth — the
+   same email-based gating the CEO requested.
+6. **Verify end to end**: visit `https://payslip.cheesy.cloud/` (pass Access email gate),
+   load the calculator, create a session, confirm payout math + a share link work. Record
+   the live URL in this file and `README.md`.
+
+> Reproducibility/CI: the build step (1) is already gated by
+> `.github/workflows/build.yml`. The service runs the same `npm run build` artifact, so a
+> deploy is "rebuild + `systemctl restart payslip`". A CI-driven push-to-deploy can be
+> added once an agent/CI has SSH or a deploy hook to the host.
 
 ---
 
@@ -92,7 +165,7 @@ install `openssl`).
 
 | Variable                       | Required | Notes                                                                 |
 |--------------------------------|----------|-----------------------------------------------------------------------|
-| `DATABASE_URL`                 | yes      | Postgres connection string (Vercel) or `file:/data/payslip.db` (volume). |
+| `DATABASE_URL`                 | yes      | `file:/home/paperclip/payslip-data/payslip.db` (cheesy.cloud self-host); Postgres URL (Vercel); or `file:/data/payslip.db` (container volume). |
 | `NEXTAUTH_SECRET`              | yes      | Random 32-byte secret: `openssl rand -base64 32`. Used for session encryption. |
 | `EXPORT_TOKEN_EXPIRATION_DAYS` | no       | Defaults to 30. Share-link expiry window.                             |
 
@@ -119,15 +192,22 @@ and `.github/workflows/e2e-tests.yml` (Playwright).
 
 ## Credentials required
 
-A public deploy cannot be completed from the agent workspace — there is no hosting
-account, deploy token, or `vercel`/`gh` CLI available. The following must be provided by
-the CEO (raised as a blocker on PIX-4):
+The chosen `payslip.cheesy.cloud` self-host path **cannot be completed from the agent
+workspace**. Verified on this host: there is **no passwordless `sudo`** (the
+`no-new-privileges` flag is set), **no Cloudflare account credential / `cert.pem` / API
+token**, and the Cloudflare tunnel is **token-based (remotely managed)** so its ingress
+and Access policies live in the Cloudflare dashboard/API, not a local file. An agent also
+can't host a *reliable* long-running service from an ephemeral per-heartbeat sandbox.
 
-- **Vercel path:** authorize connecting the `mittelaltergouda/Payslip` GitHub repo to a
-  Vercel account (one-time OAuth in the dashboard), **or** provide a `VERCEL_TOKEN`
-  (+ org/project IDs) as a workspace secret; plus a Postgres `DATABASE_URL` (Neon free tier).
-- **Container path:** provide the chosen host's deploy token (Render/Railway/Fly) and a
-  persistent volume.
+To unblock, the host operator (CEO) must either **run the runbook** above, or grant an
+agent the access to do it:
 
-Once a target is chosen and credentials are provided, the remaining work (datasource
-change, env wiring, first migration, and recording the final URL here) is push-button.
+- **`sudo` (or a pre-installed `payslip.service`)** so the app runs as a persistent,
+  reboot-surviving service — runbook steps 3.
+- **Cloudflare access** — either the operator adds the public hostname
+  `payslip.cheesy.cloud → localhost:3200` and the Access (email) policy in the dashboard
+  (runbook steps 4–5), **or** provides a **Cloudflare API token** scoped to the account's
+  Tunnel configuration + Access apps so an agent can do it via the API.
+
+Once those are in place, the remaining work (build, `prisma db push`, start the service,
+end-to-end smoke, and recording the live URL here + in `README.md`) is push-button.
