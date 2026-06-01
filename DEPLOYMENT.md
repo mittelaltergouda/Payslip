@@ -11,10 +11,9 @@ read-only share links.
 
 > **Status (2026-06-01):** Verified live end-to-end at **`https://payslip.cheesy.cloud/`**
 > (behind Cloudflare Access email). The Cloudflare route + Access were configured by the
-> CEO. The only remaining step for *reliable* (reboot-surviving) hosting is installing the
-> app as a systemd service, which needs `sudo` — see
-> [Persistence](#persistence--the-one-remaining-step-needs-sudo) and
-> [Credentials required](#credentials-required).
+> CEO. For *reliable* (reboot-surviving) hosting the app is installed as a **systemd
+> service** — the CEO opted to run the install (needs `sudo`); committed unit at
+> `deploy/payslip.service`, sequence in [Persistence](#persistence--install-as-a-systemd-service-ceo-will-run-this-needs-sudo).
 
 ---
 
@@ -59,44 +58,37 @@ NODE_ENV=production PORT=58412 HOSTNAME=127.0.0.1 \
 > NOTE: use `node .next/standalone/server.js` (the `output: "standalone"` artifact), **not**
 > `next start` — Next warns that `next start` is unsupported with standalone output.
 
-### Persistence — the one remaining step (needs `sudo`)
+### Persistence — install as a systemd service (CEO will run this; needs `sudo`)
 
-A bare `node server.js` stops on reboot / when its parent shell exits. For **reliable**
-hosting, install it as a systemd service. Put the app in a persistent path (e.g.
-`/home/paperclip/payslip` — **not** `/tmp`, which is cleared on reboot), then create
-`/etc/systemd/system/payslip.service`:
-
-```ini
-[Unit]
-Description=SC Payslip
-After=network.target
-
-[Service]
-Type=simple
-User=paperclip
-WorkingDirectory=/home/paperclip/payslip/.next/standalone
-Environment=NODE_ENV=production
-Environment=PORT=58412
-Environment=HOSTNAME=127.0.0.1
-Environment=NEXTAUTH_SECRET=REPLACE_WITH_openssl_rand_base64_32
-ExecStart=/usr/bin/node server.js
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-```
+A bare `node server.js` stops on reboot / when its parent shell exits. The committed unit
+**`deploy/payslip.service`** (port 58412, binds 127.0.0.1, `Restart=on-failure`) makes it
+reliable and reboot-surviving. **Canonical, reproducible install** — build from the repo
+into a persistent directory (does not depend on the ephemeral `/tmp` build):
 
 ```bash
-# one-time:
-sudo cp -r /tmp/payslip-app /home/paperclip/payslip          # or fresh build in a persistent dir
-sudo install -m644 payslip.service /etc/systemd/system/payslip.service
+# on the host, as a user with sudo:
+sudo -u paperclip git clone https://github.com/mittelaltergouda/Payslip /home/paperclip/payslip
+cd /home/paperclip/payslip
+sudo -u paperclip npm ci
+sudo -u paperclip npx prisma generate
+sudo -u paperclip npx prisma db push                       # creates prisma/dev.db (SQLite)
+sudo -u paperclip npm run build
+sudo -u paperclip cp -r .next/static .next/standalone/.next/static   # standalone needs static assets
+
+# install + secret + start:
+sudo cp deploy/payslip.service /etc/systemd/system/payslip.service
+SECRET=$(openssl rand -base64 32)
+sudo sed -i "s|CHANGE_ME_GENERATE_WITH_openssl_rand_base64_32|$SECRET|" /etc/systemd/system/payslip.service
 sudo systemctl daemon-reload && sudo systemctl enable --now payslip
-systemctl status payslip          # active (running)
+systemctl status payslip          # -> active (running); then payslip.cheesy.cloud stays up
 ```
 
-> No-`sudo` fallback (less robust, not reboot-surviving): run the command under a user
-> process supervisor — e.g. a `@reboot` + per-minute keepalive line in the **user crontab**
-> (`crontab -e`), or `tmux`/`screen` + `setsid node server.js`. systemd is preferred.
+> Shortcut (works only while it exists, pre-reboot): the build is already staged at
+> `/tmp/payslip-app`; `sudo cp -r /tmp/payslip-app /home/paperclip/payslip && sudo chown -R
+> paperclip:paperclip /home/paperclip/payslip` then install the unit as above.
+>
+> Redeploy later: `cd /home/paperclip/payslip && git pull && npm ci && npm run build &&
+> cp -r .next/static .next/standalone/.next/static && sudo systemctl restart payslip`.
 
 ### Cloudflare side (already configured by the CEO — for reference)
 
