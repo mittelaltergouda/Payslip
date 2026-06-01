@@ -144,8 +144,10 @@ curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:58412/   # -> 200
 5. Access application for `payslip.cheesy.cloud` with an email / one-time-PIN policy.
 
 > Reproducibility/CI: the build is gated by `.github/workflows/build.yml`. A redeploy is
-> "rebuild the standalone output, copy it into the service dir, `sudo systemctl restart
-> payslip`". A push-to-deploy hook can be added once CI has SSH/a deploy key to the host.
+> "rebuild the standalone output, copy it into the service dir, then restart the service".
+> For the canonical (user-systemd) install above that is `systemctl --user restart payslip`
+> (no `sudo`); on a root system-unit host it is `sudo systemctl restart payslip`. A
+> push-to-deploy hook can be added once CI has SSH/a deploy key to the host.
 
 ---
 

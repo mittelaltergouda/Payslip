@@ -11,6 +11,11 @@ on:
   push:
     branches: [main, master]
 
+# Restrict GITHUB_TOKEN to the minimum this workflow needs (CodeQL hardening).
+# It only checks out and builds — read access to repo contents is sufficient.
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Production build + unit tests
