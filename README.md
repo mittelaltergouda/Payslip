@@ -35,7 +35,7 @@ npm install && npm run dev
 
 Build for production: `npm run build`
 
-**Demo**: _pending public deploy — see [DEPLOYMENT.md](./DEPLOYMENT.md)_
+**Demo**: [payslip.cheesy.cloud](https://payslip.cheesy.cloud/) (Cloudflare Access — email login) • deploy details in [DEPLOYMENT.md](./DEPLOYMENT.md)
 
 ## Operational Info
 

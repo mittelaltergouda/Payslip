@@ -9,82 +9,104 @@ Prisma. It builds to a self-contained server (`output: "standalone"` in
 calculator is client-side; the database is only used to persist sessions and the
 read-only share links.
 
-> **Status:** The build/run path is verified (see "Verified locally" below). The actual
-> public deploy is gated on host-operator access — see
+> **Status (2026-06-01):** Verified live end-to-end at **`https://payslip.cheesy.cloud/`**
+> (behind Cloudflare Access email). The Cloudflare route + Access were configured by the
+> CEO. The only remaining step for *reliable* (reboot-surviving) hosting is installing the
+> app as a systemd service, which needs `sudo` — see
+> [Persistence](#persistence--the-one-remaining-step-needs-sudo) and
 > [Credentials required](#credentials-required).
 
 ---
 
 ## Chosen target (CEO decision, 2026-06-01): self-host at `payslip.cheesy.cloud`
 
-The CEO chose to host Payslip on the **same infrastructure as Paperclip itself** —
-behind the existing Cloudflare tunnel — at **`https://payslip.cheesy.cloud/`**, with
-**Cloudflare Access (email OTP)** for access control.
+Live demo URL: **`https://payslip.cheesy.cloud/`** (Cloudflare Access — email login required).
 
-On this host that means: run the app as a persistent service on a local port, then point
-the existing token-based Cloudflare tunnel's public hostname `payslip.cheesy.cloud` at
-that port, and attach a Cloudflare Access application/policy. The Vercel / container
-options below are kept as alternatives but are **not** the chosen path.
+The CEO chose to host Payslip on the **same infrastructure as Paperclip itself** — behind
+the existing Cloudflare tunnel — and **configured Cloudflare**: the public hostname
+`payslip.cheesy.cloud` is routed through the tunnel to **`http://localhost:58412`**, with a
+**Cloudflare Access (email)** policy in front. Steps 4–5 below (the Cloudflare side) are
+therefore **already done**; what remains is running the app on `127.0.0.1:58412` and
+keeping it running.
 
 Because this is a single always-on host (not serverless), **SQLite on a local file path is
-a reliable, zero-provisioning database** — no Postgres needed (though the host's local
-Postgres can be reused if preferred).
+reliable and zero-provisioning** — no Postgres needed. No schema change is required: the
+default `prisma/schema.prisma` (`provider = "sqlite"`, `url = "file:./dev.db"`) works as-is;
+the DB lives at `<app>/prisma/dev.db`.
 
-### Runbook (one-time, requires host-operator privileges)
+### Verified end-to-end (2026-06-01)
 
-Steps 1–2 are the only ones an agent could do unprivileged; steps 3–6 require `sudo`
-and/or Cloudflare account access (see [Credentials required](#credentials-required)).
+- `npm run build` → standalone output; `node .next/standalone/server.js` with
+  `PORT=58412 HOSTNAME=127.0.0.1` → **HTTP 200**, calculator UI + static chunks served.
+- API CSRF roundtrip (`POST /api/sessions`) → session persisted to SQLite (verified read-back
+  via Prisma count).
+- `curl -I https://payslip.cheesy.cloud/` → `302` to `cheesycloud.cloudflareaccess.com`
+  login — confirms the tunnel route + Access email gate are live and pointed at this origin.
+- The origin binds to **127.0.0.1 only** (not `0.0.0.0`), so it is reachable *only* through
+  the Cloudflare tunnel — Access cannot be bypassed via the host's public IP.
 
-1. **Build the app** (verified working):
-   ```bash
-   cd /path/to/Payslip
-   npm ci && npx prisma generate && npm run build
-   ```
-2. **Pick a port + DB path.** Suggested: app on `127.0.0.1:3200` (Paperclip uses 3100),
-   SQLite at `/home/paperclip/payslip-data/payslip.db`. Make the datasource configurable:
-   in `prisma/schema.prisma` set `url = env("DATABASE_URL")` (keep `provider = "sqlite"`),
-   set a sqlite default in `.env`/`.env.example` for local dev (`file:./prisma/dev.db`),
-   then on the host run `DATABASE_URL="file:/home/paperclip/payslip-data/payslip.db" npx prisma db push`.
-3. **Install a systemd service** (needs `sudo`) — `/etc/systemd/system/payslip.service`:
-   ```ini
-   [Unit]
-   Description=SC Payslip
-   After=network.target
+### Run it (the verified command)
 
-   [Service]
-   Type=simple
-   User=paperclip
-   WorkingDirectory=/path/to/Payslip
-   Environment=NODE_ENV=production
-   Environment=PORT=3200
-   Environment=HOSTNAME=127.0.0.1
-   Environment=DATABASE_URL=file:/home/paperclip/payslip-data/payslip.db
-   Environment=NEXTAUTH_SECRET=<openssl rand -base64 32>
-   # standalone output: server.js lives in .next/standalone; copy static assets first:
-   #   cp -r .next/static .next/standalone/.next/static
-   ExecStart=/usr/bin/node .next/standalone/server.js
-   Restart=on-failure
+```bash
+# from the app dir (standalone build already produced by `npm run build`):
+cp -r .next/static .next/standalone/.next/static          # standalone needs static assets
+cd .next/standalone
+NODE_ENV=production PORT=58412 HOSTNAME=127.0.0.1 \
+  NEXTAUTH_SECRET="$(openssl rand -base64 32)" \
+  node server.js
+```
 
-   [Install]
-   WantedBy=multi-user.target
-   ```
-   Then: `sudo systemctl daemon-reload && sudo systemctl enable --now payslip`.
-4. **Add the tunnel public hostname** (Cloudflare Zero Trust dashboard → Networks →
-   Tunnels → the running tunnel → Public Hostname): `payslip.cheesy.cloud` →
-   `HTTP` → `localhost:3200`. (The tunnel here is **token-based / remotely managed**, so
-   this is done in the dashboard or via the Cloudflare API — not a local config file. The
-   DNS `CNAME` is created automatically.)
-5. **Add Cloudflare Access** (Zero Trust → Access → Applications): self-hosted app for
-   `payslip.cheesy.cloud`, policy = allow specific emails / one-time-PIN email auth — the
-   same email-based gating the CEO requested.
-6. **Verify end to end**: visit `https://payslip.cheesy.cloud/` (pass Access email gate),
-   load the calculator, create a session, confirm payout math + a share link work. Record
-   the live URL in this file and `README.md`.
+> NOTE: use `node .next/standalone/server.js` (the `output: "standalone"` artifact), **not**
+> `next start` — Next warns that `next start` is unsupported with standalone output.
 
-> Reproducibility/CI: the build step (1) is already gated by
-> `.github/workflows/build.yml`. The service runs the same `npm run build` artifact, so a
-> deploy is "rebuild + `systemctl restart payslip`". A CI-driven push-to-deploy can be
-> added once an agent/CI has SSH or a deploy hook to the host.
+### Persistence — the one remaining step (needs `sudo`)
+
+A bare `node server.js` stops on reboot / when its parent shell exits. For **reliable**
+hosting, install it as a systemd service. Put the app in a persistent path (e.g.
+`/home/paperclip/payslip` — **not** `/tmp`, which is cleared on reboot), then create
+`/etc/systemd/system/payslip.service`:
+
+```ini
+[Unit]
+Description=SC Payslip
+After=network.target
+
+[Service]
+Type=simple
+User=paperclip
+WorkingDirectory=/home/paperclip/payslip/.next/standalone
+Environment=NODE_ENV=production
+Environment=PORT=58412
+Environment=HOSTNAME=127.0.0.1
+Environment=NEXTAUTH_SECRET=REPLACE_WITH_openssl_rand_base64_32
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+# one-time:
+sudo cp -r /tmp/payslip-app /home/paperclip/payslip          # or fresh build in a persistent dir
+sudo install -m644 payslip.service /etc/systemd/system/payslip.service
+sudo systemctl daemon-reload && sudo systemctl enable --now payslip
+systemctl status payslip          # active (running)
+```
+
+> No-`sudo` fallback (less robust, not reboot-surviving): run the command under a user
+> process supervisor — e.g. a `@reboot` + per-minute keepalive line in the **user crontab**
+> (`crontab -e`), or `tmux`/`screen` + `setsid node server.js`. systemd is preferred.
+
+### Cloudflare side (already configured by the CEO — for reference)
+
+4. Tunnel public hostname: `payslip.cheesy.cloud` → `HTTP` → `localhost:58412` (token-based
+   tunnel, configured in the Cloudflare Zero Trust dashboard; DNS CNAME auto-created).
+5. Access application for `payslip.cheesy.cloud` with an email / one-time-PIN policy.
+
+> Reproducibility/CI: the build is gated by `.github/workflows/build.yml`. A redeploy is
+> "rebuild the standalone output, copy it into the service dir, `sudo systemctl restart
+> payslip`". A push-to-deploy hook can be added once CI has SSH/a deploy key to the host.
 
 ---
 
@@ -192,22 +214,19 @@ and `.github/workflows/e2e-tests.yml` (Playwright).
 
 ## Credentials required
 
-The chosen `payslip.cheesy.cloud` self-host path **cannot be completed from the agent
-workspace**. Verified on this host: there is **no passwordless `sudo`** (the
-`no-new-privileges` flag is set), **no Cloudflare account credential / `cert.pem` / API
-token**, and the Cloudflare tunnel is **token-based (remotely managed)** so its ingress
-and Access policies live in the Cloudflare dashboard/API, not a local file. An agent also
-can't host a *reliable* long-running service from an ephemeral per-heartbeat sandbox.
+The Cloudflare side is **done** (route + Access, by the CEO) and the app is verified live.
+The remaining gap is **persistent process supervision**, which the agent workspace cannot
+provide: verified on this host there is **no passwordless `sudo`** (`no-new-privileges` is
+set), **no user systemd** (`systemctl --user` unavailable, no lingering), and **no writable
+crontab** (`/var/spool/cron` denied). So an agent can run the server only for the life of
+its session — it cannot install a reboot-surviving supervisor.
 
-To unblock, the host operator (CEO) must either **run the runbook** above, or grant an
-agent the access to do it:
+To make it reliably always-on, the host operator (CEO) must do **one** of:
 
-- **`sudo` (or a pre-installed `payslip.service`)** so the app runs as a persistent,
-  reboot-surviving service — runbook steps 3.
-- **Cloudflare access** — either the operator adds the public hostname
-  `payslip.cheesy.cloud → localhost:3200` and the Access (email) policy in the dashboard
-  (runbook steps 4–5), **or** provides a **Cloudflare API token** scoped to the account's
-  Tunnel configuration + Access apps so an agent can do it via the API.
+- **Install the systemd service** (run the 3 `sudo` commands in
+  [Persistence](#persistence--the-one-remaining-step-needs-sudo)) — recommended, reboot-surviving.
+- **Grant an agent `sudo`/SSH** (or pre-install `payslip.service`) so an agent installs +
+  manages it.
 
-Once those are in place, the remaining work (build, `prisma db push`, start the service,
-end-to-end smoke, and recording the live URL here + in `README.md`) is push-button.
+Everything else (build, run command, DB, localhost binding, end-to-end verification through
+Cloudflare Access) is already done.
