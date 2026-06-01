@@ -1,0 +1,35 @@
+# SC Payslip — *user* systemd unit (no root). This is how the live deploy at
+# payslip.cheesy.cloud runs. Cloudflare routes the host -> http://localhost:58412
+# (Access email in front).
+#
+# Install (as the app's user, no sudo) — see DEPLOYMENT.md "Persistence":
+#   loginctl enable-linger "$USER"            # makes the user manager start at boot
+#   export XDG_RUNTIME_DIR=/run/user/$(id -u)
+#   mkdir -p ~/.config/systemd/user
+#   SECRET=$(openssl rand -base64 32)
+#   sed "s|CHANGE_ME_GENERATE_WITH_openssl_rand_base64_32|$SECRET|" \
+#       deploy/payslip.user.service > ~/.config/systemd/user/payslip.service
+#   chmod 600 ~/.config/systemd/user/payslip.service
+#   systemctl --user daemon-reload && systemctl --user enable --now payslip
+#
+# Assumes the standalone build lives at ~/.config/payslip/standalone with its static
+# assets and the schema-loaded SQLite DB already in place (DEPLOYMENT.md covers both,
+# including the standalone DB-path gotcha). Adjust WorkingDirectory if you install elsewhere.
+
+[Unit]
+Description=SC Payslip (Next.js standalone) — linger-backed user service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/paperclip/.config/payslip/standalone
+Environment=NODE_ENV=production
+Environment=PORT=58412
+Environment=HOSTNAME=127.0.0.1
+Environment=NEXTAUTH_SECRET=CHANGE_ME_GENERATE_WITH_openssl_rand_base64_32
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target
