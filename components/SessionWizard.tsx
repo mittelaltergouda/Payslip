@@ -1,0 +1,558 @@
+"use client";
+
+import { useMemo, useState, useEffect, useCallback } from "react";
+import { calculatePayslip } from "@/lib/calc";
+import type { DistributionMode, IndividualExpenseInput, MemberInput, SessionInput, SavedSession } from "@/lib/types";
+import { calculateModePreviews } from "@/lib/modePreview";
+import type { Lang } from "@/lib/i18n/translations";
+import { translations } from "@/lib/i18n/translations";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { SessionSettings } from "./SessionSettings";
+import { MembersTable } from "./MembersTable";
+import { ResultsDisplay } from "./ResultsDisplay";
+import { useAutoSave } from "@/hooks/useAutoSave";
+import { SaveStatusIndicator } from "./SaveStatusIndicator";
+import { SessionHistory } from "./SessionHistory";
+import { SessionActions } from "./SessionActions";
+import { CrewPresetManager } from "./CrewPresetManager";
+import { useToast } from "./Toast";
+import {
+  getAll,
+  deleteSession as deleteStoredSession,
+  duplicate as duplicateSession,
+  getCurrentDraft,
+  getCurrentDraftId,
+  setCurrentDraftId as setStoredCurrentDraftId,
+} from "@/lib/storage/sessionStorage";
+import { DuplicateSessionDialog } from "./DuplicateSessionDialog";
+import { Button } from "./ui/button";
+import { FormField } from "./ui/form-field";
+import type { PresetMember } from "@/lib/types";
+import { clearCsrfToken, getCsrfHeaders } from "@/lib/csrf-client";
+
+const rndId = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `id-${Math.random().toString(16).slice(2)}`;
+
+const taxFixed = 0.005;
+
+function format(amount: number, lang: Lang) {
+  return Math.round(amount).toLocaleString(lang === "de" ? "de-DE" : "en-US");
+}
+
+function buildInitialSession(): SessionInput {
+  return {
+    name: "SC Session",
+    type: "TRADING",
+    currency: "aUEC",
+    distributionMode: "EQUAL",
+    taxEnabled: true,
+    taxRate: taxFixed,
+    members: [
+      { id: rndId(), handle: "Player 1", role: "Pilot", revenue: 0, investment: 0, active: true },
+      { id: rndId(), handle: "Player 2", role: "Crew", revenue: 0, investment: 0, active: true }
+    ],
+    individualExpenses: [],
+    sharedExpenses: []
+  };
+}
+
+type Props = { initialLang?: Lang };
+
+export function SessionWizard({ initialLang = "de" }: Props) {
+  const [lang, setLang] = useState<Lang>(initialLang);
+  const t = translations[lang];
+  const [session, setSession] = useState<SessionInput>(() => {
+    if (typeof window === "undefined") {
+      return buildInitialSession();
+    }
+    const draft = getCurrentDraft();
+    return draft ? draft.session : buildInitialSession();
+  });
+  const updateSession = setSession;
+  const [error, setError] = useState<string | null>(null);
+  const [showRole, setShowRole] = useState(false);
+
+  // Session management state
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isPresetManagerOpen, setIsPresetManagerOpen] = useState(false);
+  const [savedSessions, setSavedSessions] = useState<SavedSession[]>([]);
+  const [currentDraftId, setCurrentDraftIdState] = useState<string | null>(() => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+    return getCurrentDraftId();
+  });
+  const [duplicateDialogSession, setDuplicateDialogSession] = useState<SavedSession | null>(null);
+  const [isSavingSession, setIsSavingSession] = useState(false);
+  const { showToast } = useToast();
+
+  const result = useMemo(() => {
+    try {
+      setError(null);
+      return calculatePayslip(session);
+    } catch (err: any) {
+      setError(err?.message ?? "Unknown error");
+      return null;
+    }
+  }, [session]);
+
+  const modePreviews = useMemo(() => calculateModePreviews(session), [session]);
+
+  const feeByPayer = useMemo(
+    () =>
+      result?.suggestedTransfers.reduce<Record<string, number>>((acc, tr) => {
+        acc[tr.fromMemberId] = (acc[tr.fromMemberId] ?? 0) + tr.feeAmount;
+        return acc;
+      }, {}) ?? {},
+    [result]
+  );
+
+  const refreshSessionList = useCallback(() => {
+    const sessions = getAll();
+    setSavedSessions(sessions);
+    setCurrentDraftIdState(getCurrentDraftId());
+  }, []);
+
+  const handleDraftSaved = useCallback(
+    (savedSession: SavedSession) => {
+      setSession(savedSession.session);
+      setStoredCurrentDraftId(savedSession.id);
+      setCurrentDraftIdState(savedSession.id);
+      refreshSessionList();
+    },
+    [refreshSessionList]
+  );
+
+  const { saveStatus, manualSave, error: saveError } = useAutoSave(
+    session,
+    true,
+    { onSaveSuccess: handleDraftSaved }
+  );
+
+  // Load saved sessions on mount
+  useEffect(() => {
+    refreshSessionList();
+  }, [refreshSessionList]);
+
+  // Show toast on save error
+  useEffect(() => {
+    if (saveError) {
+      showToast(saveError, "error");
+    }
+  }, [saveError, showToast]);
+
+  // Keyboard shortcuts (Ctrl+S for save, Ctrl+O for history, Ctrl+P for presets)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+S: Manual save
+      if (e.ctrlKey && e.key === "s") {
+        e.preventDefault();
+        void manualSave();
+        showToast(t.sessionSaved || "Session saved", "success");
+      }
+      // Ctrl+O: Open history
+      if (e.ctrlKey && e.key === "o") {
+        e.preventDefault();
+        setIsHistoryOpen(true);
+      }
+      // Ctrl+P: Open preset manager
+      if (e.ctrlKey && e.key === "p") {
+        e.preventDefault();
+        setIsPresetManagerOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [manualSave, showToast, t.sessionSaved]);
+
+  // Unsaved changes warning
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (saveStatus === "unsaved" || saveStatus === "saving") {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [saveStatus]);
+
+  // Handle session load
+  const handleLoadSession = useCallback(
+    (savedSession: SavedSession) => {
+      setSession(savedSession.session);
+      setStoredCurrentDraftId(savedSession.id);
+      setCurrentDraftIdState(savedSession.id);
+      setIsHistoryOpen(false);
+      showToast(`${t.sessionLoaded || "Session loaded"}: ${savedSession.session.name}`, "success");
+    },
+    [showToast, t.sessionLoaded]
+  );
+
+  // Handle session delete
+  const handleDeleteSession = useCallback(
+    (sessionId: string) => {
+      const result = deleteStoredSession(sessionId);
+      if (result.success) {
+        showToast(t.sessionDeleted || "Session deleted", "success");
+        refreshSessionList();
+      } else {
+        showToast(result.error || "Failed to delete session", "error");
+      }
+    },
+    [showToast, refreshSessionList, t.sessionDeleted]
+  );
+
+  // Handle duplicate button click - opens the dialog
+  const handleDuplicateClick = useCallback((savedSession: SavedSession) => {
+    setDuplicateDialogSession(savedSession);
+  }, []);
+
+  // Handle duplicate confirmation from dialog
+  const handleDuplicateConfirm = useCallback(
+    (copyExpenses: boolean) => {
+      if (!duplicateDialogSession) { return; }
+
+      const result = duplicateSession(duplicateDialogSession.id, copyExpenses);
+      if (result.success && result.data) {
+        setSession(result.data.session);
+        setStoredCurrentDraftId(result.data.id);
+        setCurrentDraftIdState(result.data.id);
+        setDuplicateDialogSession(null);
+        setIsHistoryOpen(false);
+        refreshSessionList();
+        showToast(
+          `${t.duplicateSuccess || "Session duplicated"}: ${result.data.session.name}`,
+          "success"
+        );
+      } else {
+        showToast(result.error || "Failed to duplicate session", "error");
+      }
+    },
+    [duplicateDialogSession, refreshSessionList, showToast, t.duplicateSuccess]
+  );
+
+  const handleSaveSession = useCallback(async () => {
+    setIsSavingSession(true);
+
+    try {
+      await manualSave();
+      refreshSessionList();
+
+      const headers = await getCsrfHeaders({
+        "Content-Type": "application/json",
+      });
+
+      const response = await fetch("/api/sessions", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          name: session.name,
+          type: session.type,
+          taxEnabled: session.taxEnabled,
+          distribution: session.distributionMode,
+          members: session.members,
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          clearCsrfToken();
+        }
+        throw new Error(t.sessionSaveFailed || "Failed to save session");
+      }
+
+      refreshSessionList();
+      showToast(t.sessionSaved || "Session saved", "success");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t.sessionSaveFailed || "Failed to save session";
+      showToast(message, "error");
+    } finally {
+      setIsSavingSession(false);
+    }
+  }, [manualSave, refreshSessionList, session, showToast, t.sessionSaveFailed, t.sessionSaved]);
+
+  // Handle session name update
+  const handleSessionNameChange = (name: string) => {
+    setSession((prev) => ({ ...prev, name }));
+  };
+
+  // Handle loading a crew preset
+  const handleLoadPreset = useCallback(
+    (presetMembers: PresetMember[], distributionMode?: DistributionMode) => {
+      // Create fresh MemberInput objects from PresetMember data
+      const newMembers: MemberInput[] = presetMembers.map((pm) => ({
+        id: rndId(),
+        handle: pm.handle,
+        role: pm.role,
+        revenue: 0,
+        investment: 0,
+        active: true,
+        percentShare: pm.percentShare,
+      }));
+
+      setSession((prev) => ({
+        ...prev,
+        members: newMembers,
+        // Update distribution mode if preset includes it
+        distributionMode: distributionMode ?? prev.distributionMode,
+        // Clear individual expenses since members changed
+        individualExpenses: [],
+      }));
+
+      showToast(t.presetLoaded || "Crew preset loaded", "success");
+    },
+    [showToast, t.presetLoaded]
+  );
+
+  const updateMember = (id: string, patch: Partial<MemberInput>) => {
+    setSession((prev) => ({
+      ...prev,
+      members: prev.members.map((m) => (m.id === id ? { ...m, ...patch } : m))
+    }));
+  };
+
+  const addMember = () => {
+    setSession((prev) => {
+      const newMemberNumber = prev.members.length + 1;
+      return {
+        ...prev,
+        members: [
+          ...prev.members,
+          { id: rndId(), handle: `Player ${newMemberNumber}`, role: "Crew", revenue: 0, investment: 0, active: true }
+        ]
+      };
+    });
+  };
+
+  const addIndividualExpense = (memberId: string) => {
+    setSession((prev) => ({
+      ...prev,
+      individualExpenses: [
+        ...(prev.individualExpenses ?? []),
+        { id: rndId(), memberId, label: t.expenses, amount: 0 }
+      ]
+    }));
+  };
+
+  const updateIndividualExpense = (id: string, patch: Partial<IndividualExpenseInput>) => {
+    setSession((prev) => ({
+      ...prev,
+      individualExpenses: (prev.individualExpenses ?? []).map((exp) =>
+        exp.id === id ? { ...exp, ...patch } : exp
+      )
+    }));
+  };
+
+  const removeIndividualExpense = (id: string) => {
+    setSession((prev) => ({
+      ...prev,
+      individualExpenses: (prev.individualExpenses ?? []).filter((exp) => exp.id !== id)
+    }));
+  };
+
+  const removeMember = (id: string) => {
+    setSession((prev) => ({
+      ...prev,
+      members: prev.members.filter((m) => m.id !== id),
+      individualExpenses: (prev.individualExpenses ?? []).filter((exp) => exp.memberId !== id)
+    }));
+  };
+
+  const onDistributionChange = (mode: DistributionMode) => {
+    if (mode === "PERCENT") {
+      setSession((prev) => {
+        const active = prev.members.filter((m) => m.active !== false);
+        const share = active.length ? 100 / active.length : 0;
+        return {
+          ...prev,
+          distributionMode: mode,
+          members: prev.members.map((m) => (m.active === false ? m : { ...m, percentShare: share }))
+        };
+      });
+    } else {
+      setSession((prev) => ({ ...prev, distributionMode: mode }));
+    }
+  };
+
+  return (
+    <div className="space-y-8" role="main" aria-label={t.appName}>
+      {/* Header with app name and language switcher */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <p className="text-sm uppercase text-neon/80 font-semibold">{t.appName}</p>
+          <p className="text-white/70 max-w-2xl text-sm">{t.heroSubtitle}</p>
+        </div>
+        <LanguageSwitcher lang={lang} onLangChange={setLang} />
+      </div>
+
+      {/* Session name and management controls */}
+      <div className="glass p-6 space-y-4" role="region" aria-label={t.sessionSettings || "Session Settings"}>
+        <div className="flex items-start justify-between flex-wrap gap-4">
+          <div className="flex-1 min-w-[250px]">
+            <FormField
+              id="session-name"
+              label={t.sessionName || "Session Name"}
+              inputProps={{
+                type: "text",
+                value: session.name,
+                onChange: (e) => handleSessionNameChange(e.target.value),
+                placeholder: t.sessionNamePlaceholder || "Enter session name",
+              }}
+            />
+          </div>
+
+          <div className="flex items-center gap-3 flex-wrap">
+            <SaveStatusIndicator status={saveStatus} error={saveError} />
+
+            <Button
+              variant="secondary"
+              size="md"
+              isLoading={isSavingSession}
+              onClick={() => { void handleSaveSession(); }}
+              aria-label={t.saveSession || "Save session"}
+            >
+              {isSavingSession ? t.savingSession || "Saving session..." : t.saveSession || "Save session"}
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="md"
+              onClick={() => setIsHistoryOpen(true)}
+              title={t.openHistory || "Open History (Ctrl+O)"}
+              aria-label={t.openHistory || "Open History"}
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              {t.history || "History"}
+            </Button>
+
+            <SessionActions
+              lang={lang}
+              onExportSuccess={() => showToast(t.exportSuccess || "Sessions exported", "success")}
+              onExportError={(error) => showToast(error, "error")}
+              onImportSuccess={(count) =>
+                showToast(
+                  `${t.importSuccess || "Imported"} ${count} ${t.sessions || "sessions"}`,
+                  "success"
+                )
+              }
+              onImportError={(error) => showToast(error, "error")}
+              onSessionsImported={refreshSessionList}
+            />
+          </div>
+        </div>
+      </div>
+
+      <SessionSettings
+        session={session}
+        onSessionUpdate={(updates) => setSession((prev) => ({ ...prev, ...updates }))}
+        onDistributionChange={onDistributionChange}
+        onReset={() => updateSession(buildInitialSession())}
+        showRole={showRole}
+        onShowRoleChange={setShowRole}
+        translations={t}
+        modePreviews={modePreviews}
+        taxRate={taxFixed}
+      />
+
+      <MembersTable
+        members={session.members}
+        individualExpenses={session.individualExpenses ?? []}
+        result={result}
+        showRole={showRole}
+        distributionMode={session.distributionMode}
+        feeByPayer={feeByPayer}
+        lang={lang}
+        t={t}
+        format={format}
+        onAddMember={addMember}
+        updateMember={updateMember}
+        removeMember={removeMember}
+        addIndividualExpense={addIndividualExpense}
+        updateIndividualExpense={updateIndividualExpense}
+        removeIndividualExpense={removeIndividualExpense}
+        onOpenPresetManager={() => setIsPresetManagerOpen(true)}
+      />
+
+      <ResultsDisplay
+        result={result}
+        session={session}
+        error={error}
+        translations={t}
+        lang={lang}
+        currency="aUEC"
+      />
+
+      {/* Session History Sidebar */}
+      <SessionHistory
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        sessions={savedSessions}
+        onLoad={handleLoadSession}
+        onDelete={handleDeleteSession}
+        onDuplicate={handleDuplicateClick}
+        currentDraftId={currentDraftId}
+        lang={lang}
+        translations={{
+          sessionHistory: t.sessionHistory || "Session History",
+          noSessions: t.noSessions || "No saved sessions",
+          loadSession: t.loadSession || "Load",
+          deleteSession: t.deleteSession || "Delete",
+          duplicateSession: t.duplicateSession || "Duplicate",
+          confirmDelete: t.confirmDelete || "Confirm Delete",
+          cancel: t.cancel || "Cancel",
+          createdAt: t.createdAt || "Created",
+          updatedAt: t.updatedAt || "Updated",
+          draftHistoryTitle: t.draftHistoryTitle || "Draft History",
+          draftHistoryHint: t.draftHistoryHint || "Local snapshots live here",
+          currentDraftTag: t.currentDraftTag || "Current draft",
+        }}
+      />
+
+      {/* Duplicate Session Dialog */}
+      <DuplicateSessionDialog
+        isOpen={duplicateDialogSession !== null}
+        onOpenChange={(open) => {
+          if (!open) { setDuplicateDialogSession(null); }
+        }}
+        sessionName={duplicateDialogSession?.session.name || ""}
+        onConfirm={handleDuplicateConfirm}
+        translations={{
+          duplicateSessionTitle: t.duplicateSessionTitle || "Duplicate Session",
+          duplicateSessionDescription: t.duplicateSessionDescription || "Create a copy of this session",
+          copyExpenses: t.copyExpenses || "Copy expenses",
+          duplicateSession: t.duplicateSession || "Duplicate",
+          cancel: t.cancel || "Cancel",
+        }}
+      />
+
+      {/* Crew Preset Manager Dialog */}
+      <CrewPresetManager
+        isOpen={isPresetManagerOpen}
+        onClose={() => setIsPresetManagerOpen(false)}
+        currentMembers={session.members}
+        currentDistributionMode={session.distributionMode}
+        onLoadPreset={handleLoadPreset}
+        lang={lang}
+        translations={t}
+      />
+    </div>
+  );
+}

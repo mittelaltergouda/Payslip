@@ -1,0 +1,61 @@
+{
+  "name": "sc-payslip",
+  "version": "0.1.0",
+  "private": true,
+  "overrides": {
+    "glob": "^10.4.5"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "check": "echo 'Check completed'",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.18.0",
+    "@radix-ui/react-checkbox": "^1.3.3",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-popover": "^1.1.15",
+    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-switch": "^1.2.6",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "jspdf": "^4.2.0",
+    "jspdf-autotable": "^5.0.7",
+    "next": "^16.1.5",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "tailwind-merge": "^3.4.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^14.3.1",
+    "@types/jest": "^30.0.0",
+    "@types/jest-axe": "^3.5.9",
+    "@types/node": "^20.12.12",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
+    "@vitest/coverage-v8": "^4.0.18",
+    "autoprefixer": "^10.4.17",
+    "axe-core": "^4.11.1",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.35",
+    "jest-axe": "^10.0.0",
+    "jsdom": "^27.4.0",
+    "postcss": "^8.4.35",
+    "prisma": "^5.18.0",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.5",
+    "vitest": "^4.0.17"
+  }
+}

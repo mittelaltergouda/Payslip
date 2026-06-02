@@ -1,0 +1,38 @@
+.next
+.turbo
+node_modules
+
+# env
+.env
+.env.*
+!.env.example
+
+dist
+coverage
+playwright-report
+test-results
+
+# only ignore non-used lockfiles
+yarn.lock
+pnpm-lock.yaml
+.pnpm-debug.log
+
+# Auto Claude data directory
+.auto-claude/
+
+# Auto Claude generated files
+.auto-claude-security.json
+.auto-claude-status
+.claude_settings.json
+.worktrees/
+.security-key
+logs/security/
+
+# Test result and coverage output files
+BROWSER-TEST-RESULTS.md
+TEST_RUN_REPORT.md
+coverage-*.txt
+coverage-*.json
+*-coverage.txt
+final-coverage.txt
+full-coverage.txt

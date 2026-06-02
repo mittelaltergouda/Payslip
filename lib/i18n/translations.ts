@@ -1,0 +1,227 @@
+/**
+ * Supported language codes for the application.
+ * - "de": German
+ * - "en": English
+ */
+export type Lang = "de" | "en";
+
+/**
+ * Translation strings for all supported languages.
+ *
+ * This object contains UI text translations for German (de) and English (en).
+ * Each language has a complete set of translation keys covering:
+ * - App branding and hero text
+ * - Session settings and controls
+ * - Distribution mode labels and descriptions
+ * - Member table headers and labels
+ * - Results display labels
+ * - Summary labels
+ * - Transfer-related messages
+ *
+ * Usage:
+ * ```tsx
+ * const t = translations[lang];
+ * <h1>{t.appName}</h1>
+ * <button>{t.addMember}</button>
+ * ```
+ *
+ * @example
+ * ```tsx
+ * import { translations, Lang } from "@/lib/i18n/translations";
+ *
+ * function MyComponent({ lang }: { lang: Lang }) {
+ *   const t = translations[lang];
+ *   return <h1>{t.appName}</h1>;
+ * }
+ * ```
+ */
+export const translations: Record<Lang, Record<string, string>> = {
+  de: {
+    appName: "SC Payslip",
+    heroSubtitle: "Profite und Kosten crew-weise erfassen, fair verteilen und SC-Transfergebühren berücksichtigen.",
+    sessionSettings: "Session Einstellungen",
+    distribution: "Verteilungsmodus",
+    equal: "Gleich (alle bekommen denselben Anteil)",
+    percent: "Prozent (Gewichte müssen 100% ergeben)",
+    adjustable: "Anpassbar (Fix-Auszahlungen/Bonusse zuerst, Rest gleich oder prozentual)",
+    taxToggle: "Transfer Tax berücksichtigen (0,5%)",
+    members: "Eingabe",
+    addMember: "+ Mitglied",
+    handle: "Handle",
+    role: "Rolle",
+    revenue: "Umsatz",
+    investment: "Investment",
+    percentShare: "Anteil %",
+    fixedBonus: "Fix-Bonus",
+    fixedPayout: "Fix-Auszahlung",
+    expenses: "Kosten",
+    addExpense: "+ Kosten",
+    remove: "Entfernen",
+    reset: "Reset",
+    results: "Payout",
+    saleRevenue: "Umsatz",
+    netProfit: "Gewinn (Brutto)",
+    netAfterTax: "Gewinn (Netto)",
+    noTransfers: "Keine Transfers nötig.",
+    suggestedTransfers: "Vorgeschlagene Überweisungen",
+    receive: "Erhält",
+    pay: "Zahlt",
+    explanation: "Erklärung",
+    showRole: "Rollen anzeigen",
+    summary: "Gesamt",
+    revenueLabel: "Umsatz",
+    investmentLabel: "Investment",
+    expensesLabel: "Kosten",
+    netProfitLabel: "Gewinn (Netto)",
+    taxesLabel: "Steuern (Fees)",
+    sessionName: "Session Name",
+    sessionNamePlaceholder: "Session Name eingeben",
+    openHistory: "Verlauf öffnen (Strg+O)",
+    history: "Verlauf",
+    sessionHistory: "Session Verlauf",
+    draftHistoryTitle: "Draft-Verlauf",
+    draftHistoryHint: "Lokale Snapshots, getrennt von gespeicherten Sessions",
+    currentDraftTag: "Aktueller Draft",
+    noSessions: "Keine gespeicherten Sessions",
+    loadSession: "Laden",
+    deleteSession: "Löschen",
+    confirmDelete: "Löschen bestätigen",
+    deleteConfirmMessage: "Möchten Sie die Session '{sessionName}' wirklich löschen?",
+    cancel: "Abbrechen",
+    createdAt: "Erstellt",
+    updatedAt: "Aktualisiert",
+    sessionSaved: "Session gespeichert",
+    sessionLoaded: "Session geladen",
+    sessionDeleted: "Session gelöscht",
+    saveSession: "Session speichern",
+    savingSession: "Session wird gespeichert...",
+    sessionSaveFailed: "Konnte Session nicht speichern",
+    exportSuccess: "Sessions exportiert",
+    importSuccess: "Importiert",
+    sessions: "Sessions",
+    exportSummary: "Zusammenfassung (CSV)",
+    exportDetailed: "Detailliert (CSV)",
+    exportSummaryTooltip: "Zusammenfassung als CSV herunterladen",
+    exportDetailedTooltip: "Detaillierte Daten als CSV herunterladen",
+    exportPdf: "PDF exportieren",
+    exportingPdf: "PDF wird erstellt...",
+    pdfExportSuccess: "PDF erfolgreich exportiert",
+    pdfExportError: "Fehler beim PDF-Export",
+    downloadPdf: "PDF herunterladen",
+    duplicateSession: "Duplizieren",
+    duplicateSessionTitle: "Session duplizieren",
+    duplicateSessionDescription: "Eine Kopie dieser Session erstellen",
+    copyExpenses: "Ausgaben kopieren",
+    duplicateSuccess: "Session dupliziert",
+    crewPresets: "Crew Vorlagen",
+    saveCrewPreset: "Crew speichern",
+    loadCrewPreset: "Crew laden",
+    managePresets: "Vorlagen verwalten",
+    presetName: "Vorlagen-Name",
+    presetNamePlaceholder: "Name der Vorlage eingeben",
+    noPresets: "Keine Vorlagen gespeichert",
+    presetSaved: "Vorlage gespeichert",
+    presetLoaded: "Vorlage geladen",
+    presetDeleted: "Vorlage gelöscht",
+    presetUpdated: "Vorlage aktualisiert",
+    confirmDeletePreset: "Vorlage wirklich löschen?",
+    saveCurrentCrew: "Aktuelle Crew speichern",
+    presetMembers: "Mitglieder",
+    validationErrors: "Validierungsfehler",
+    noValidationErrors: "Keine Validierungsfehler"
+  },
+  en: {
+    appName: "SC Payslip",
+    heroSubtitle: "Track profits and costs per crew, split fairly, and account for SC transfer fees.",
+    sessionSettings: "Session Settings",
+    distribution: "Distribution Mode",
+    equal: "Equal (everyone gets the same share)",
+    percent: "Percent (weights must sum to 100%)",
+    adjustable: "Adjustable (fixed payouts/bonuses first, remainder equal or by percent)",
+    taxToggle: "Include transfer tax (0.5%)",
+    members: "Members",
+    addMember: "+ Member",
+    handle: "Handle",
+    role: "Role",
+    revenue: "Revenue",
+    investment: "Investment",
+    percentShare: "Share %",
+    fixedBonus: "Fixed Bonus",
+    fixedPayout: "Fixed Payout",
+    expenses: "Expenses",
+    addExpense: "+ Expense",
+    remove: "Remove",
+    reset: "Reset",
+    results: "Payout",
+    saleRevenue: "Revenue",
+    netProfit: "Profit (Gross)",
+    netAfterTax: "Profit (Net)",
+    noTransfers: "No transfers required.",
+    suggestedTransfers: "Suggested Transfers",
+    receive: "Receive",
+    pay: "Pay",
+    explanation: "Explanation",
+    showRole: "Show role field",
+    summary: "Totals",
+    revenueLabel: "Revenue",
+    investmentLabel: "Investment",
+    expensesLabel: "Expenses",
+    netProfitLabel: "Profit (Net)",
+    taxesLabel: "Taxes (fees)",
+    sessionName: "Session Name",
+    sessionNamePlaceholder: "Enter session name",
+    openHistory: "Open History (Ctrl+O)",
+    history: "History",
+    sessionHistory: "Session History",
+    draftHistoryTitle: "Draft History",
+    draftHistoryHint: "Local snapshots are separate from the saved Sessions page",
+    currentDraftTag: "Current draft",
+    noSessions: "No saved sessions",
+    loadSession: "Load",
+    deleteSession: "Delete",
+    confirmDelete: "Confirm Delete",
+    deleteConfirmMessage: "Are you sure you want to delete the session '{sessionName}'?",
+    cancel: "Cancel",
+    createdAt: "Created",
+    updatedAt: "Updated",
+    sessionSaved: "Session saved",
+    sessionLoaded: "Session loaded",
+    sessionDeleted: "Session deleted",
+    saveSession: "Save session",
+    savingSession: "Saving session...",
+    sessionSaveFailed: "Failed to save session",
+    exportSuccess: "Sessions exported",
+    importSuccess: "Imported",
+    sessions: "sessions",
+    exportSummary: "Summary (CSV)",
+    exportDetailed: "Detailed (CSV)",
+    exportSummaryTooltip: "Download summary as CSV",
+    exportDetailedTooltip: "Download detailed data as CSV",
+    exportPdf: "Export PDF",
+    exportingPdf: "Generating PDF...",
+    pdfExportSuccess: "PDF exported successfully",
+    pdfExportError: "PDF export failed",
+    downloadPdf: "Download PDF",
+    duplicateSession: "Duplicate",
+    duplicateSessionTitle: "Duplicate Session",
+    duplicateSessionDescription: "Create a copy of this session",
+    copyExpenses: "Copy expenses",
+    duplicateSuccess: "Session duplicated",
+    crewPresets: "Crew Presets",
+    saveCrewPreset: "Save Crew",
+    loadCrewPreset: "Load Crew",
+    managePresets: "Manage Presets",
+    presetName: "Preset Name",
+    presetNamePlaceholder: "Enter preset name",
+    noPresets: "No saved presets",
+    presetSaved: "Preset saved",
+    presetLoaded: "Preset loaded",
+    presetDeleted: "Preset deleted",
+    presetUpdated: "Preset updated",
+    confirmDeletePreset: "Delete this preset?",
+    saveCurrentCrew: "Save Current Crew",
+    presetMembers: "Members",
+    validationErrors: "Validation Errors",
+    noValidationErrors: "No validation errors"
+  }
+};

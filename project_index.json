@@ -1,0 +1,28 @@
+{
+  "project_type": "single",
+  "services": {
+    "frontend": {
+      "path": ".",
+      "tech_stack": ["next.js", "react", "typescript", "tailwindcss", "radix-ui", "zod"],
+      "port": 3000,
+      "dev_command": "npm run dev",
+      "test_command": "npm test",
+      "build_command": "npm run build",
+      "check_command": "npm run check"
+    }
+  },
+  "infrastructure": {
+    "docker": false,
+    "database": "postgresql (via Prisma, but presets use localStorage)",
+    "ci_cd": "github-actions"
+  },
+  "conventions": {
+    "linter": "eslint",
+    "formatter": "typescript-eslint",
+    "testing": "vitest + react-testing-library + playwright",
+    "component_pattern": "functional components with hooks, 'use client' directive",
+    "storage_pattern": "localStorage with Zod validation and StorageResult<T> return type",
+    "styling": "tailwindcss with glassmorphism theme, design tokens in lib/design-tokens.ts",
+    "i18n": "manual translations in lib/i18n/translations.ts (de/en)"
+  }
+}

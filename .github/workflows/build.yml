@@ -1,0 +1,47 @@
+# Build & Unit Test Workflow
+# Verifies the production build and unit test suite on every PR/push.
+# This is the reproducible build gate that backs the public deployment:
+# if this is green, the same `npm run build` artifact is what gets deployed.
+
+name: Build & Unit Tests
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+jobs:
+  build:
+    name: Production build + unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate
+
+      - name: Lint (non-blocking)
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+        env:
+          # SQLite is fine for the build step; the deploy target supplies the real DATABASE_URL.
+          DATABASE_URL: "file:./dev.db"
