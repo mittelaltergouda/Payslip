@@ -141,10 +141,9 @@ describe('calculatePayslip - Edge Cases', () => {
     expect(alice?.profitShare).toBe(-250);
     expect(bob?.profitShare).toBe(-250);
 
-    // finalNet = investment + profitShare - memberTotalExpenses
-    // finalNet = 0 + (-250) - 750 = -1000
-    expect(alice?.finalNet).toBe(-1000);
-    expect(bob?.finalNet).toBe(-1000);
+    // Expenses are deducted once before the loss is distributed.
+    expect(alice?.finalNet).toBe(-250);
+    expect(bob?.finalNet).toBe(-250);
   });
 
   it('should handle individual expense for a member in PERCENT mode', () => {
@@ -178,9 +177,9 @@ describe('calculatePayslip - Edge Cases', () => {
     expect(alice?.profitShare).toBe(480); // 800 * 0.6
     expect(bob?.profitShare).toBe(320); // 800 * 0.4
 
-    // finalNet includes deduction for individual expense
-    expect(alice?.finalNet).toBe(280); // 480 - 200
-    expect(bob?.finalNet).toBe(320); // 320 - 0
+    // The expense is already reflected in the 800 distributable profit.
+    expect(alice?.finalNet).toBe(480);
+    expect(bob?.finalNet).toBe(320);
   });
 
   it('should handle zero-amount transfers in settlement', () => {
@@ -397,16 +396,16 @@ describe('calculatePayslip - Edge Cases', () => {
     expect(bob?.profitShare).toBe(0);
     expect(bob?.individualExpenses).toBe(50);
 
-    // Bob only gets investment back minus individual expense
-    expect(bob?.finalNet).toBe(250); // 300 - 50
+    // Bob is inactive and receives only the investment reimbursement.
+    expect(bob?.finalNet).toBe(300);
 
     // Alice is the only active member
     // Total expenses: 100 (shared) + 50 (individual) = 150
     // netProfit = 1000 - 300 - 150 = 550
-    // Alice shares all 100 of shared expense and gets all 550 profit
+    // Alice receives the full already cost-adjusted profit.
     expect(alice?.sharedExpenses).toBe(100);
     expect(alice?.profitShare).toBe(550);
-    expect(alice?.finalNet).toBe(450); // 0 + 550 - 100
+    expect(alice?.finalNet).toBe(550);
   });
 });
 
@@ -416,10 +415,10 @@ describe('calculateGrossAmount - Edge Cases', () => {
     expect(gross).toBe(0);
   });
 
-  it('should handle gross-up with fixed 0.5% tax rate on large amounts', () => {
+  it('should add the fixed 0.5% fee on top of large amounts', () => {
     const gross = calculateGrossAmount(10000, 0.005);
-    // gross = ceil(10000 / 0.995) = ceil(10050.25) = 10051
-    expect(gross).toBe(10051);
+    // gross = 10000 + ceil(10000 * 0.005) = 10050
+    expect(gross).toBe(10050);
   });
 
   it('should return net amount when tax rate is 1 or greater (edge case)', () => {
@@ -498,11 +497,9 @@ describe('applyTransferTaxes - Edge Cases', () => {
 
     const result = applyTransferTaxes(transfers, 0.005); // Fixed tax rate: always 0.5%
 
-    // gross = ceil(0.01 / 0.995) = ceil(0.01005025...) = 1
-    // But then it's rounded to 2 decimals: Math.round(1 * 100) / 100 = 1
-    expect(result[0].grossAmount).toBe(1);
-    // fee = 1 - 0.01 = 0.99
-    expect(result[0].feeAmount).toBe(0.99);
+    // The minimum whole-aUEC fee is 1 and is charged on top.
+    expect(result[0].grossAmount).toBe(1.01);
+    expect(result[0].feeAmount).toBe(1);
   });
 
   it('should handle multiple transfers with rounding', () => {
@@ -532,16 +529,15 @@ describe('applyTransferTaxes - Edge Cases', () => {
 
     const result = applyTransferTaxes(transfers, 0.005); // Fixed tax rate: always 0.5%
 
-    // Each transfer should have proper gross and fee calculated with 0.5% tax
-    // gross = ceil(net / 0.995)
-    expect(result[0].grossAmount).toBe(34); // ceil(33.33 / 0.995) = ceil(33.5) = 34
-    expect(result[0].feeAmount).toBeCloseTo(0.67, 2);
+    // Each fee is rounded up to a whole aUEC and added on top.
+    expect(result[0].grossAmount).toBe(34.33);
+    expect(result[0].feeAmount).toBe(1);
 
-    expect(result[1].grossAmount).toBe(34);
-    expect(result[1].feeAmount).toBeCloseTo(0.67, 2);
+    expect(result[1].grossAmount).toBe(34.33);
+    expect(result[1].feeAmount).toBe(1);
 
-    expect(result[2].grossAmount).toBe(34); // ceil(33.34 / 0.995) = ceil(33.51) = 34
-    expect(result[2].feeAmount).toBeCloseTo(0.66, 2);
+    expect(result[2].grossAmount).toBe(34.34);
+    expect(result[2].feeAmount).toBe(1);
   });
 
   it('should handle edge case of tax rate >= 1 by returning unchanged transfers', () => {

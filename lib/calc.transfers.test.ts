@@ -142,7 +142,7 @@ describe('Settlement/Transfer Generation', () => {
     expect(result.suggestedTransfers.length).toBe(0);
   });
 
-  it('should generate transfers with tax gross-up for multiple transfers', () => {
+  it('should add sender-paid fees to multiple transfers', () => {
     const input: SessionInput = {
       name: 'Multi-Transfer Tax Settlement',
       type: 'TRADING',
@@ -167,23 +167,24 @@ describe('Settlement/Transfer Generation', () => {
     const bob = result.members.find(m => m.memberId === 'member-2');
     const charlie = result.members.find(m => m.memberId === 'member-3');
 
-    // finalNet: Alice 2300, Bob 500, Charlie -1300
+    // Fixed payouts stay fixed; Charlie's remainder also absorbs the shared fee.
     expect(alice?.finalNet).toBe(2300);
     expect(bob?.finalNet).toBe(500);
-    expect(charlie?.finalNet).toBe(-1300);
+    expect(charlie?.finalNet).toBe(-1307);
 
     // Balance: Alice 800 (creditor), Bob 500 (creditor), Charlie -1300 (debtor)
     // Charlie owes: 800 to Alice, 500 to Bob
     expect(result.suggestedTransfers.length).toBe(2);
 
-    // Each transfer should have tax gross-up applied
+    // Each transfer should include the fee paid on top by the sender.
     result.suggestedTransfers.forEach(transfer => {
       expect(transfer.grossAmount).toBeGreaterThan(transfer.netAmount);
       expect(transfer.feeAmount).toBe(transfer.grossAmount - transfer.netAmount);
 
-      // Verify gross-up calculation: gross = ceil(net / (1 - 0.005)) = ceil(net / 0.995)
-      const expectedGross = Math.ceil(transfer.netAmount / 0.995);
-      expect(transfer.grossAmount).toBe(expectedGross);
+      // Star Citizen charges the fee on top of the amount received.
+      const expectedFee = Math.ceil(transfer.netAmount * 0.005);
+      expect(transfer.feeAmount).toBe(expectedFee);
+      expect(transfer.grossAmount).toBe(transfer.netAmount + expectedFee);
     });
   });
 
@@ -221,11 +222,9 @@ describe('Settlement/Transfer Generation', () => {
     expect(alice?.profitShare).toBe(-300);
     expect(bob?.profitShare).toBe(-300);
 
-    // finalNet = investment + profitShare - expenses
-    // Alice: 800 + (-300) - 300 = 200
-    // Bob: 200 + (-300) - 300 = -400
-    expect(alice?.finalNet).toBe(200);
-    expect(bob?.finalNet).toBe(-400);
+    // Expenses are already deducted before the loss is distributed.
+    expect(alice?.finalNet).toBe(500);
+    expect(bob?.finalNet).toBe(-100);
 
     // Balance: finalNet - investment
     // Alice: 200 - 800 = -600 (debtor, she lost 600)
@@ -405,9 +404,8 @@ describe('Settlement/Transfer Generation', () => {
     expect(pilot?.profitShare).toBe(450000);
     expect(escort?.profitShare).toBe(450000);
 
-    // Pilot finalNet = investment(0) + profitShare(450000) - expenses(100000) = 350,000
-    // Escort finalNet = investment(0) + profitShare(450000) - expenses(0) = 450,000
-    expect(pilot?.finalNet).toBe(350000);
+    // The expense has already been deducted before equal distribution.
+    expect(pilot?.finalNet).toBe(450000);
     expect(escort?.finalNet).toBe(450000);
 
     // Balance calculation with revenue:

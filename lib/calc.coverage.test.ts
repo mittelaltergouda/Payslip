@@ -189,8 +189,8 @@ describe('settleBalances - direct', () => {
     });
   });
 
-  it('grosses up transfers with tax so the recipient nets the owed amount', () => {
-    // 5% transfer tax: to deliver 100 net the sender pays ceil(100/0.95)=106.
+  it('adds the sender-paid fee on top of the amount received', () => {
+    // 5% transfer fee: the recipient gets 100 and the sender pays 105 total.
     const transfers = settleBalances(
       [
         breakdown({ memberId: 'a', revenue: 0, finalNet: 100 }),
@@ -200,8 +200,8 @@ describe('settleBalances - direct', () => {
     );
     expect(transfers).toHaveLength(1);
     expect(transfers[0].netAmount).toBe(100);
-    expect(transfers[0].grossAmount).toBe(106);
-    expect(transfers[0].feeAmount).toBe(6);
+    expect(transfers[0].grossAmount).toBe(105);
+    expect(transfers[0].feeAmount).toBe(5);
   });
 
   it('minimizes transfer count by greedily matching the largest debtor/creditor', () => {

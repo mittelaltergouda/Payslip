@@ -2,9 +2,9 @@ import type { SessionInput} from './calc';
 import { calculatePayslip, applyTransferTaxes, calculateGrossAmount, calculateFeeAmount } from './calc';
 import type { Transfer } from './types';
 
-// Test cases for Tax Gross-Up Calculations
+// Test cases for Star Citizen's sender-paid transfer fee
 
-describe('Tax Gross-Up Calculations', () => {
+describe('Star Citizen transfer fee calculations', () => {
   describe('calculateGrossAmount', () => {
     it('should return net amount when tax rate is 0', () => {
       const netAmount = 100;
@@ -15,24 +15,24 @@ describe('Tax Gross-Up Calculations', () => {
       expect(grossAmount).toBe(100);
     });
 
-    it('should correctly gross-up with 0.5% tax rate', () => {
+    it('should add a 0.5% fee to a small amount', () => {
       const netAmount = 100;
       const taxRate = 0.005; // Fixed tax rate: always 0.5%
 
-      // Formula: grossAmount = ceil(net / (1 - taxRate)) = ceil(100 / 0.995) = ceil(100.50) = 101
+      // The recipient gets 100; ceil(100 * 0.005) = 1 is charged on top.
       const grossAmount = calculateGrossAmount(netAmount, taxRate);
 
       expect(grossAmount).toBe(101);
     });
 
-    it('should correctly gross-up with larger amount at 0.5% tax rate', () => {
+    it('should add a 0.5% fee to a larger amount', () => {
       const netAmount = 1000;
       const taxRate = 0.005; // Fixed tax rate: always 0.5%
 
-      // Formula: ceil(1000 / 0.995) = ceil(1005.03) = 1006
+      // The recipient gets 1000; the sender pays 1000 + 5 fee.
       const grossAmount = calculateGrossAmount(netAmount, taxRate);
 
-      expect(grossAmount).toBe(1006);
+      expect(grossAmount).toBe(1005);
     });
 
     it('should return net amount when tax rate is 1 or greater (edge case)', () => {
@@ -74,7 +74,7 @@ describe('Tax Gross-Up Calculations', () => {
   });
 
   describe('applyTransferTaxes', () => {
-    it('should apply 0 tax rate correctly (no gross-up)', () => {
+    it('should apply 0 tax rate correctly', () => {
       const transfers: Transfer[] = [
         { fromMemberId: 'member-1', toMemberId: 'member-2', netAmount: 100, grossAmount: 0, feeAmount: 0 }
       ];
@@ -88,7 +88,7 @@ describe('Tax Gross-Up Calculations', () => {
       expect(result[0].feeAmount).toBe(0);
     });
 
-    it('should apply 0.5% tax rate with correct gross-up', () => {
+    it('should add the 0.5% fee on top', () => {
       const transfers: Transfer[] = [
         { fromMemberId: 'member-1', toMemberId: 'member-2', netAmount: 100, grossAmount: 0, feeAmount: 0 }
       ];
@@ -98,7 +98,7 @@ describe('Tax Gross-Up Calculations', () => {
 
       expect(result.length).toBe(1);
       expect(result[0].netAmount).toBe(100);
-      // grossAmount = ceil(100 / 0.995) = 101
+      // grossAmount = 100 + ceil(100 * 0.005) = 101
       expect(result[0].grossAmount).toBe(101);
       expect(result[0].feeAmount).toBe(1);
     });
@@ -114,15 +114,15 @@ describe('Tax Gross-Up Calculations', () => {
 
       expect(result.length).toBe(2);
 
-      // First transfer: ceil(100 / 0.995) = 101
+      // First transfer: 100 + ceil(100 * 0.005) = 101
       expect(result[0].netAmount).toBe(100);
       expect(result[0].grossAmount).toBe(101);
       expect(result[0].feeAmount).toBe(1);
 
-      // Second transfer: ceil(200 / 0.995) = ceil(201.01) = 202
+      // Second transfer: 200 + ceil(200 * 0.005) = 201
       expect(result[1].netAmount).toBe(200);
-      expect(result[1].grossAmount).toBe(202);
-      expect(result[1].feeAmount).toBe(2);
+      expect(result[1].grossAmount).toBe(201);
+      expect(result[1].feeAmount).toBe(1);
     });
 
     it('should handle edge case of tax rate >= 1 by returning unchanged transfers', () => {
@@ -154,7 +154,7 @@ describe('Tax Gross-Up Calculations', () => {
   });
 
   describe('calculatePayslip with tax enabled', () => {
-    it('should apply tax gross-up to settlement transfers when tax is enabled', () => {
+    it('should add the fee to settlement transfers when tax is enabled', () => {
       const input: SessionInput = {
         name: 'Tax Enabled Session',
         type: 'TRADING',
@@ -178,25 +178,25 @@ describe('Tax Gross-Up Calculations', () => {
       const alice = result.members.find(m => m.memberId === 'member-1');
       const bob = result.members.find(m => m.memberId === 'member-2');
 
-      // Alice gets fixed payout of 200, Bob gets remainder: 0 - 200 = -200
+      // Alice keeps the fixed payout; Bob's remainder absorbs the 1 aUEC fee.
       expect(alice?.profitShare).toBe(200);
-      expect(bob?.profitShare).toBe(-200);
+      expect(bob?.profitShare).toBe(-201);
 
       // finalNet = investment + profitShare
       // Alice: 1000 + 200 = 1200
-      // Bob: 0 + (-200) = -200
+      // Bob: 0 + (-201) = -201
       expect(alice?.finalNet).toBe(1200);
-      expect(bob?.finalNet).toBe(-200);
+      expect(bob?.finalNet).toBe(-201);
 
       // Balance: Alice = 1200 - 1000 = 200 (creditor), Bob = -200 - 0 = -200 (debtor)
       // Bob owes Alice 200
-      // With 0.5% tax, gross = ceil(200 / 0.995) = ceil(201.01) = 202
+      // With 0.5% tax, total charge = 200 + ceil(200 * 0.005) = 201
       expect(result.suggestedTransfers.length).toBe(1);
       expect(result.suggestedTransfers[0].fromMemberId).toBe('member-2');
       expect(result.suggestedTransfers[0].toMemberId).toBe('member-1');
       expect(result.suggestedTransfers[0].netAmount).toBe(200);
-      expect(result.suggestedTransfers[0].grossAmount).toBe(202);
-      expect(result.suggestedTransfers[0].feeAmount).toBe(2);
+      expect(result.suggestedTransfers[0].grossAmount).toBe(201);
+      expect(result.suggestedTransfers[0].feeAmount).toBe(1);
     });
 
     it('should not apply tax when taxEnabled is false', () => {
@@ -223,7 +223,7 @@ describe('Tax Gross-Up Calculations', () => {
       // Bob: finalNet = 0 + (-200) = -200, balance = -200 - 0 = -200 (debtor)
       expect(result.suggestedTransfers.length).toBe(1);
       expect(result.suggestedTransfers[0].netAmount).toBe(200);
-      expect(result.suggestedTransfers[0].grossAmount).toBe(200); // No gross-up
+      expect(result.suggestedTransfers[0].grossAmount).toBe(200); // No fee
       expect(result.suggestedTransfers[0].feeAmount).toBe(0);
     });
 
@@ -248,9 +248,9 @@ describe('Tax Gross-Up Calculations', () => {
       const alice = result.members.find(m => m.memberId === 'member-1');
       const bob = result.members.find(m => m.memberId === 'member-2');
 
-      // Alice gets 70% = 700, Bob gets 30% = 300
-      expect(alice?.profitShare).toBe(700);
-      expect(bob?.profitShare).toBe(300);
+      // The 2 aUEC fee is deducted before the 70/30 split.
+      expect(alice?.profitShare).toBe(698.6);
+      expect(bob?.profitShare).toBe(299.4);
 
       // Alice contributed 1000, gets 700 finalNet
       // Bob contributed 0, gets 300 finalNet
@@ -514,7 +514,7 @@ describe('Tax Gross-Up Calculations', () => {
       // Transfers are only needed when someone's finalNet - investment is negative,
       // meaning they should receive less than they put in (a loss scenario for them).
 
-      // For my tax gross-up tests, I need a scenario with actual transfers.
+      // This scenario produces actual transfers for fee assertions.
       // Let me use the ADJUSTABLE mode with fixed payouts:
 
       // Alice: investment 1000, fixedPayout 500

@@ -11,9 +11,8 @@
  * 3. Greedily matches largest debtor with largest creditor
  * 4. Continues until all balances are settled
  *
- * This approach minimizes the number of transfers required. Tax gross-up is
- * applied to each transfer if tax is enabled, ensuring recipients receive the
- * exact amount owed after fees.
+ * This approach minimizes the number of transfers required. If tax is enabled,
+ * Star Citizen's sender-paid transfer fee is added on top of the amount owed.
  *
  * @module lib/calc/settlement
  */
@@ -45,7 +44,7 @@ type MemberBalance = {
  * This approach minimizes the number of transfers needed.
  *
  * @param memberBreakdowns - Array of member breakdowns with finalNet calculated
- * @param taxRate - Tax rate for gross-up calculation (0-1), 0 if tax disabled
+ * @param taxRate - Sender-paid transfer-fee rate (0-1), 0 if disabled
  * @returns Array of transfers needed to settle all balances
  */
 export function settleBalances(
@@ -90,15 +89,15 @@ export function settleBalances(
     const netAmount = Math.min(debtor.balance, creditor.balance);
 
     if (netAmount > EPSILON) {
-      // Calculate gross amount with tax gross-up if applicable
+      // Calculate the sender's total charge if a transfer fee applies.
       let grossAmount: number;
       let feeAmount: number;
 
       if (taxRate > 0 && taxRate < 1) {
-        // Gross-up formula: gross = ceil(net / (1 - taxRate))
-        // This ensures the recipient gets the full netAmount after tax
-        grossAmount = Math.ceil(netAmount / (1 - taxRate));
-        feeAmount = grossAmount - netAmount;
+        // Star Citizen charges the fee on top of the amount entered: the
+        // recipient receives netAmount, while the sender pays netAmount + fee.
+        feeAmount = Math.ceil(netAmount * taxRate);
+        grossAmount = netAmount + feeAmount;
       } else {
         // No tax - gross equals net
         grossAmount = netAmount;

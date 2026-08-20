@@ -442,8 +442,8 @@ describe('generateCSV', () => {
     // Should contain transfer table headers
     expect(csv).toContain('From');
     expect(csv).toContain('To');
-    expect(csv).toContain('Net Amount');
-    expect(csv).toContain('Gross Amount');
+    expect(csv).toContain('Amount to Send');
+    expect(csv).toContain('Total Charged');
     expect(csv).toContain('Fee');
 
     // Should contain member handles in transfer
@@ -475,8 +475,8 @@ describe('generateCSV', () => {
 
     expect(csv).toContain('Von');
     expect(csv).toContain('An');
-    expect(csv).toContain('Netto Betrag');
-    expect(csv).toContain('Brutto Betrag');
+    expect(csv).toContain('Überweisungsbetrag');
+    expect(csv).toContain('Gesamtbelastung');
     expect(csv).toContain('Gebühr');
   });
 

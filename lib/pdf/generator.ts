@@ -245,7 +245,13 @@ export function generatePDF(
     // Generate transfers table
     autoTable(doc, {
       startY: yPosition,
-      head: [["From", "To", "Net Amount", "Gross Amount", "Fee"]],
+      head: [[
+        lang === "de" ? "Von" : "From",
+        lang === "de" ? "An" : "To",
+        lang === "de" ? "Überweisungsbetrag" : "Amount to Send",
+        lang === "de" ? "Gesamtbelastung" : "Total Charged",
+        lang === "de" ? "Gebühr" : "Fee",
+      ]],
       body: transferRows,
       theme: "striped",
       headStyles: {
