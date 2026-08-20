@@ -24,23 +24,23 @@ describe("settlement regression", () => {
       {
         fromMemberId: "iri",
         toMemberId: "avi",
-        netAmount: 2_105_259,
-        grossAmount: 2_115_786,
-        feeAmount: 10_527,
+        netAmount: 2_098_347,
+        grossAmount: 2_108_839,
+        feeAmount: 10_492,
       },
       {
         fromMemberId: "iri",
         toMemberId: "whitedragon",
-        netAmount: 517_723,
-        grossAmount: 520_312,
-        feeAmount: 2_589,
+        netAmount: 521_073,
+        grossAmount: 523_679,
+        feeAmount: 2_606,
       },
       {
         fromMemberId: "gouda",
         toMemberId: "whitedragon",
-        netAmount: 240_536,
-        grossAmount: 241_739,
-        feeAmount: 1_203,
+        netAmount: 236_975,
+        grossAmount: 238_160,
+        feeAmount: 1_185,
       },
     ]);
   });

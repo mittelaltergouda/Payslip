@@ -34,9 +34,9 @@ describe("costs deducted before distribution", () => {
 });
 
 describe("transfer fees deducted before distribution", () => {
-  it("rounds the transfer down so the sender keeps the indivisible remainder", () => {
+  it("fits the largest possible recipient amount into the sender's transfer budget", () => {
     const input: SessionInput = {
-      name: "Integer rounding favors sender",
+      name: "Fee included in transfer budget",
       type: "OTHER",
       distributionMode: "EQUAL",
       taxEnabled: true,
@@ -55,16 +55,16 @@ describe("transfer fees deducted before distribution", () => {
       {
         fromMemberId: "player-1",
         toMemberId: "player-2",
-        netAmount: 249_376,
-        feeAmount: 1_247,
-        grossAmount: 250_623,
+        netAmount: 248_756,
+        feeAmount: 1_244,
+        grossAmount: 250_000,
       },
     ]);
   });
 
-  it("shares the sender-paid fee like a common cost", () => {
+  it("deducts the sender-paid fee inside the gross transfer budget", () => {
     const input: SessionInput = {
-      name: "Loss with shared transfer fee",
+      name: "Loss with fee inside transfer budget",
       type: "OTHER",
       distributionMode: "EQUAL",
       taxEnabled: true,
@@ -79,15 +79,15 @@ describe("transfer fees deducted before distribution", () => {
 
     const result = calculatePayslip(input);
 
-    expect(result.members.map((member) => member.profitShare)).toEqual([-501_247, -501_247]);
-    expect(result.members.map((member) => member.finalNet)).toEqual([1_498_753, -501_247]);
+    expect(result.members.map((member) => member.profitShare)).toEqual([-500_000, -500_000]);
+    expect(result.members.map((member) => member.finalNet)).toEqual([1_500_000, -500_000]);
     expect(result.suggestedTransfers).toEqual([
       {
         fromMemberId: "player-2",
         toMemberId: "player-1",
-        netAmount: 498_753,
-        feeAmount: 2_494,
-        grossAmount: 501_247,
+        netAmount: 497_512,
+        feeAmount: 2_488,
+        grossAmount: 500_000,
       },
     ]);
   });

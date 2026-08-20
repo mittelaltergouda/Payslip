@@ -18,6 +18,7 @@
  */
 
 import type { MemberBreakdown, Transfer } from '../types';
+import { fitTransferToBudget } from './tax';
 
 // ============================================================================
 // BALANCE SETTLEMENT (Greedy Matching Algorithm)
@@ -85,12 +86,12 @@ export function settleBalances(
     const debtor = debtors[debtorIdx];
     const creditor = creditors[creditorIdx];
 
-    // aUEC transfers are whole numbers. Always round down so the sender never
-    // pays an extra unit merely because an equal split produced a fraction.
-    const exactNetAmount = Math.min(debtor.balance, creditor.balance);
-    const netAmount = Math.floor(exactNetAmount + Number.EPSILON);
+    // The unsettled amount is the sender's complete transfer budget. Fit the
+    // largest recipient amount plus its fee inside that budget.
+    const exactBudget = Math.min(debtor.balance, creditor.balance);
+    const transferBudget = Math.floor(exactBudget + Number.EPSILON);
 
-    if (netAmount < 1) {
+    if (transferBudget < 1) {
       // The remaining fractional imbalance cannot be transferred. Advance the
       // side(s) represented by the smaller remainder to avoid an endless loop.
       if (debtor.balance <= creditor.balance + EPSILON) {
@@ -102,20 +103,16 @@ export function settleBalances(
       continue;
     }
 
-    if (netAmount > EPSILON) {
-      // Calculate the sender's total charge if a transfer fee applies.
-      let grossAmount: number;
-      let feeAmount: number;
+    if (transferBudget > EPSILON) {
+      const { netAmount, grossAmount, feeAmount } = fitTransferToBudget(
+        transferBudget,
+        taxRate
+      );
 
-      if (taxRate > 0 && taxRate < 1) {
-        // Star Citizen charges the fee on top of the amount entered: the
-        // recipient receives netAmount, while the sender pays netAmount + fee.
-        feeAmount = Math.ceil(netAmount * taxRate);
-        grossAmount = netAmount + feeAmount;
-      } else {
-        // No tax - gross equals net
-        grossAmount = netAmount;
-        feeAmount = 0;
+      if (netAmount < 1) {
+        debtorIdx++;
+        creditorIdx++;
+        continue;
       }
 
       transfers.push({
@@ -126,9 +123,10 @@ export function settleBalances(
         feeAmount,
       });
 
-      // Update remaining balances
-      debtor.balance -= netAmount;
-      creditor.balance -= netAmount;
+      // The fee consumes part of the creditor's gross entitlement. Both sides
+      // are settled by the sender's actual total balance reduction.
+      debtor.balance -= grossAmount;
+      creditor.balance -= grossAmount;
     }
 
     // Move to next debtor or creditor if their balance is settled

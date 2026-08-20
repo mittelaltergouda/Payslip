@@ -167,16 +167,16 @@ describe('Settlement/Transfer Generation', () => {
     const bob = result.members.find(m => m.memberId === 'member-2');
     const charlie = result.members.find(m => m.memberId === 'member-3');
 
-    // Fixed payouts stay fixed; Charlie's remainder also absorbs the shared fee.
+    // Fixed payouts stay fixed; fees fit inside Charlie's transfer budgets.
     expect(alice?.finalNet).toBe(2300);
     expect(bob?.finalNet).toBe(500);
-    expect(charlie?.finalNet).toBe(-1307);
+    expect(charlie?.finalNet).toBe(-1300);
 
     // Balance: Alice 800 (creditor), Bob 500 (creditor), Charlie -1300 (debtor)
     // Charlie owes: 800 to Alice, 500 to Bob
     expect(result.suggestedTransfers.length).toBe(2);
 
-    // Each transfer should include the fee paid on top by the sender.
+    // Each transfer budget includes the fee paid by the sender.
     result.suggestedTransfers.forEach(transfer => {
       expect(transfer.grossAmount).toBeGreaterThan(transfer.netAmount);
       expect(transfer.feeAmount).toBe(transfer.grossAmount - transfer.netAmount);

@@ -178,24 +178,24 @@ describe('Star Citizen transfer fee calculations', () => {
       const alice = result.members.find(m => m.memberId === 'member-1');
       const bob = result.members.find(m => m.memberId === 'member-2');
 
-      // Alice keeps the fixed payout; Bob's remainder absorbs the 1 aUEC fee.
+      // The fee is fitted inside Bob's 200 aUEC transfer budget.
       expect(alice?.profitShare).toBe(200);
-      expect(bob?.profitShare).toBe(-201);
+      expect(bob?.profitShare).toBe(-200);
 
       // finalNet = investment + profitShare
       // Alice: 1000 + 200 = 1200
-      // Bob: 0 + (-201) = -201
+      // Bob: 0 + (-200) = -200
       expect(alice?.finalNet).toBe(1200);
-      expect(bob?.finalNet).toBe(-201);
+      expect(bob?.finalNet).toBe(-200);
 
       // Balance: Alice = 1200 - 1000 = 200 (creditor), Bob = -200 - 0 = -200 (debtor)
       // Bob owes Alice 200
-      // With 0.5% tax, total charge = 200 + ceil(200 * 0.005) = 201
+      // With 0.5% tax, 199 reaches Alice and 1 is charged as the fee.
       expect(result.suggestedTransfers.length).toBe(1);
       expect(result.suggestedTransfers[0].fromMemberId).toBe('member-2');
       expect(result.suggestedTransfers[0].toMemberId).toBe('member-1');
-      expect(result.suggestedTransfers[0].netAmount).toBe(200);
-      expect(result.suggestedTransfers[0].grossAmount).toBe(201);
+      expect(result.suggestedTransfers[0].netAmount).toBe(199);
+      expect(result.suggestedTransfers[0].grossAmount).toBe(200);
       expect(result.suggestedTransfers[0].feeAmount).toBe(1);
     });
 
@@ -248,9 +248,9 @@ describe('Star Citizen transfer fee calculations', () => {
       const alice = result.members.find(m => m.memberId === 'member-1');
       const bob = result.members.find(m => m.memberId === 'member-2');
 
-      // The 2 aUEC fee is deducted before the 70/30 split.
-      expect(alice?.profitShare).toBe(698.6);
-      expect(bob?.profitShare).toBe(299.4);
+      // The 70/30 split defines a 300 aUEC total transfer budget.
+      expect(alice?.profitShare).toBe(700);
+      expect(bob?.profitShare).toBe(300);
 
       // Alice contributed 1000, gets 700 finalNet
       // Bob contributed 0, gets 300 finalNet

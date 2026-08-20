@@ -100,6 +100,44 @@ export function calculateGrossAmount(
 }
 
 /**
+ * Finds the largest whole-aUEC recipient amount whose sender-paid fee still
+ * fits inside a fixed total transfer budget.
+ */
+export function fitTransferToBudget(
+  budget: number,
+  taxRate: number
+): { netAmount: number; feeAmount: number; grossAmount: number } {
+  const wholeBudget = Math.max(0, Math.floor(budget));
+
+  if (taxRate <= 0 || taxRate >= 1) {
+    return { netAmount: wholeBudget, feeAmount: 0, grossAmount: wholeBudget };
+  }
+
+  let low = 0;
+  let high = wholeBudget;
+  let netAmount = 0;
+
+  while (low <= high) {
+    const candidate = Math.floor((low + high) / 2);
+    const candidateGross = calculateGrossAmount(candidate, taxRate);
+
+    if (candidateGross <= wholeBudget) {
+      netAmount = candidate;
+      low = candidate + 1;
+    } else {
+      high = candidate - 1;
+    }
+  }
+
+  const feeAmount = Math.ceil(netAmount * taxRate);
+  return {
+    netAmount,
+    feeAmount,
+    grossAmount: netAmount + feeAmount,
+  };
+}
+
+/**
  * Calculates the fee amount for a given gross and net amount.
  *
  * @param grossAmount - The total amount paid by sender

@@ -3,7 +3,7 @@ import { calculatePayslip } from "./calc";
 import type { SessionInput } from "./types";
 
 describe("Star Citizen transfer fee model", () => {
-  it("deducts the sender-paid fee from the shared pool", () => {
+  it("fits the sender-paid fee inside the gross transfer budget", () => {
     const input: SessionInput = {
       name: "Loss split with transfer fee",
       type: "TRADING",
@@ -36,13 +36,13 @@ describe("Star Citizen transfer fee model", () => {
       {
         fromMemberId: "player-2",
         toMemberId: "player-1",
-        netAmount: 498_753,
-        feeAmount: 2_494,
-        grossAmount: 501_247,
+        netAmount: 497_512,
+        feeAmount: 2_488,
+        grossAmount: 500_000,
       },
     ]);
     expect(
       result.suggestedTransfers.reduce((sum, transfer) => sum + transfer.feeAmount, 0)
-    ).toBe(2_494);
+    ).toBe(2_488);
   });
 });

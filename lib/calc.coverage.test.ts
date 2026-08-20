@@ -189,8 +189,8 @@ describe('settleBalances - direct', () => {
     });
   });
 
-  it('adds the sender-paid fee on top of the amount received', () => {
-    // 5% transfer fee: the recipient gets 100 and the sender pays 105 total.
+  it('fits the recipient amount and sender-paid fee inside the transfer budget', () => {
+    // 5% transfer fee inside a total budget of 100.
     const transfers = settleBalances(
       [
         breakdown({ memberId: 'a', revenue: 0, finalNet: 100 }),
@@ -199,8 +199,8 @@ describe('settleBalances - direct', () => {
       0.05
     );
     expect(transfers).toHaveLength(1);
-    expect(transfers[0].netAmount).toBe(100);
-    expect(transfers[0].grossAmount).toBe(105);
+    expect(transfers[0].netAmount).toBe(95);
+    expect(transfers[0].grossAmount).toBe(100);
     expect(transfers[0].feeAmount).toBe(5);
   });
 
