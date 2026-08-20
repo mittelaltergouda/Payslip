@@ -22,6 +22,13 @@ vi.mock('jspdf', () => {
       };
       setFontSize = vi.fn();
       setFont = vi.fn();
+      setFillColor = vi.fn();
+      setDrawColor = vi.fn();
+      setLineWidth = vi.fn();
+      rect = vi.fn();
+      roundedRect = vi.fn();
+      line = vi.fn();
+      addPage = vi.fn();
       text = vi.fn((content: string) => {
         textCalls.push(content);
       });
@@ -662,6 +669,13 @@ describe('generatePDF', () => {
         { id: 'player-1', handle: 'Player 1', revenue: 1_000_000, investment: 500_000 },
         { id: 'player-2', handle: 'Player 2', revenue: 0, investment: 0 },
       ],
+      sharedExpenses: [{
+        id: 'shared-1', label: 'Fuel', amount: 20_000,
+        participantIds: ['player-1', 'player-2'],
+      }],
+      individualExpenses: [{
+        id: 'individual-1', memberId: 'player-1', label: 'Repair', amount: 10_000,
+      }],
     };
     const result: PayslipResult = {
       saleRevenue: 500_000, netProfit: 500_000, taxRateApplied: 0.005,
@@ -687,10 +701,16 @@ describe('generatePDF', () => {
 
     const calls = vi.mocked(autoTable).mock.calls;
     expect(calls[0][1].body).toContainEqual([
-      'Player 2', '0', '0', '0', '1.244', '250.000', '248.756',
+      'Player 2', '0', '0', '0', '250.000', '248.756',
     ]);
     expect(calls[1][1].body).toContainEqual([
-      'Player 1', 'Player 2', '248.756', '250.000', '1.244',
+      'Gemeinsam', 'Fuel', 'Player 1, Player 2', '20.000',
+    ]);
+    expect(calls[1][1].body).toContainEqual([
+      'Individuell', 'Repair', 'Player 1', '10.000',
+    ]);
+    expect(calls[2][1].body).toContainEqual([
+      'Player 1', 'Player 2', '248.756', '1.244', '250.000',
     ]);
   });
 });
