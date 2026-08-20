@@ -34,6 +34,34 @@ describe("costs deducted before distribution", () => {
 });
 
 describe("transfer fees deducted before distribution", () => {
+  it("rounds the transfer down so the sender keeps the indivisible remainder", () => {
+    const input: SessionInput = {
+      name: "Integer rounding favors sender",
+      type: "OTHER",
+      distributionMode: "EQUAL",
+      taxEnabled: true,
+      taxRate: 0.005,
+      members: [
+        { id: "player-1", handle: "Player 1", revenue: 1_000_000, investment: 500_000, active: true },
+        { id: "player-2", handle: "Player 2", revenue: 0, investment: 0, active: true },
+      ],
+      sharedExpenses: [],
+      individualExpenses: [],
+    };
+
+    const result = calculatePayslip(input);
+
+    expect(result.suggestedTransfers).toEqual([
+      {
+        fromMemberId: "player-1",
+        toMemberId: "player-2",
+        netAmount: 249_376,
+        feeAmount: 1_247,
+        grossAmount: 250_623,
+      },
+    ]);
+  });
+
   it("shares the sender-paid fee like a common cost", () => {
     const input: SessionInput = {
       name: "Loss with shared transfer fee",

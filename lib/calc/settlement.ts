@@ -85,8 +85,22 @@ export function settleBalances(
     const debtor = debtors[debtorIdx];
     const creditor = creditors[creditorIdx];
 
-    // Transfer amount is the minimum of what debtor owes and what creditor is owed
-    const netAmount = Math.min(debtor.balance, creditor.balance);
+    // aUEC transfers are whole numbers. Always round down so the sender never
+    // pays an extra unit merely because an equal split produced a fraction.
+    const exactNetAmount = Math.min(debtor.balance, creditor.balance);
+    const netAmount = Math.floor(exactNetAmount + Number.EPSILON);
+
+    if (netAmount < 1) {
+      // The remaining fractional imbalance cannot be transferred. Advance the
+      // side(s) represented by the smaller remainder to avoid an endless loop.
+      if (debtor.balance <= creditor.balance + EPSILON) {
+        debtorIdx++;
+      }
+      if (creditor.balance <= debtor.balance + EPSILON) {
+        creditorIdx++;
+      }
+      continue;
+    }
 
     if (netAmount > EPSILON) {
       // Calculate the sender's total charge if a transfer fee applies.
@@ -107,9 +121,9 @@ export function settleBalances(
       transfers.push({
         fromMemberId: debtor.memberId,
         toMemberId: creditor.memberId,
-        netAmount: Math.round(netAmount * 100) / 100, // Round to 2 decimal places
-        grossAmount: Math.round(grossAmount * 100) / 100,
-        feeAmount: Math.round(feeAmount * 100) / 100,
+        netAmount,
+        grossAmount,
+        feeAmount,
       });
 
       // Update remaining balances
