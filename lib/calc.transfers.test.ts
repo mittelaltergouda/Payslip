@@ -12,7 +12,7 @@ describe('Settlement/Transfer Generation', () => {
       totalRevenue: 1500,
       taxEnabled: false,
       members: [
-        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0, investment: 1500, fixedPayout: 700 },
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1500, investment: 1500, fixedPayout: 700 },
         { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 0, fixedPayout: 600 },
         { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 0, investment: 0 }
       ]
@@ -71,8 +71,8 @@ describe('Settlement/Transfer Generation', () => {
       totalRevenue: 2000,
       taxEnabled: false,
       members: [
-        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0, investment: 1000, fixedPayout: 800 },
-        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 1000, fixedPayout: 800 },
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000, investment: 1000, fixedPayout: 800 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 1000, investment: 1000, fixedPayout: 800 },
         { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 0, investment: 0 },
         { id: 'member-4', handle: 'Dave', role: 'Member', active: true, revenue: 0, investment: 0 }
       ]
@@ -119,8 +119,8 @@ describe('Settlement/Transfer Generation', () => {
       totalRevenue: 2000,
       taxEnabled: false,
       members: [
-        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 500, investment: 1000 },
-        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 500, investment: 1000 }
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000, investment: 1000 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 1000, investment: 1000 }
       ]
     };
 
@@ -151,7 +151,7 @@ describe('Settlement/Transfer Generation', () => {
       taxEnabled: true,
       taxRate: 0.005, // Fixed tax rate: always 0.5%
       members: [
-        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0, investment: 1500, fixedPayout: 800 },
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1500, investment: 1500, fixedPayout: 800 },
         { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 0, fixedPayout: 500 },
         { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 0, investment: 0 }
       ]
@@ -273,9 +273,9 @@ describe('Settlement/Transfer Generation', () => {
       totalRevenue: 1800,
       taxEnabled: false,
       members: [
-        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0, investment: 1000, fixedPayout: 500 },
-        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 500, fixedPayout: 300 },
-        { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 0, investment: 300, fixedPayout: 200 },
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000, investment: 1000, fixedPayout: 500 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 500, investment: 500, fixedPayout: 300 },
+        { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 300, investment: 300, fixedPayout: 200 },
         { id: 'member-4', handle: 'Dave', role: 'Member', active: true, revenue: 0, investment: 0 }
       ]
     };
@@ -337,7 +337,7 @@ describe('Settlement/Transfer Generation', () => {
       totalRevenue: 1000,
       taxEnabled: false,
       members: [
-        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0, investment: 1000, fixedPayout: 1600 },
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000, investment: 1000, fixedPayout: 1600 },
         { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 0 },
         { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 0, investment: 0 }
       ]
