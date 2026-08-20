@@ -1349,29 +1349,17 @@ let fetchMock: ReturnType<typeof vi.fn>;
       expect(saveButton).toBeInTheDocument();
     });
 
-    it('calls the API and manual save when clicked', async () => {
+    it('saves only in the browser and never calls the server API', async () => {
       renderWithToast(<SessionWizard />);
 
       const saveButton = screen.getByRole('button', { name: /Session speichern|Save session/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(fetchMock).toHaveBeenCalled();
         expect(mockManualSave).toHaveBeenCalled();
       });
 
-      const url = fetchMock.mock.calls[0][0];
-      const options = fetchMock.mock.calls[0][1] as RequestInit;
-      expect(url).toBe('/api/sessions');
-      expect(options.method).toBe('POST');
-      expect(options.headers).toBeDefined();
-      expect(options.body).toBeDefined();
-      const payload = JSON.parse(options.body as string);
-      expect(payload).toMatchObject({
-        name: 'SC Session',
-        distribution: 'EQUAL',
-        members: expect.any(Array),
-      });
+      expect(fetchMock).not.toHaveBeenCalled();
     });
   });
 
