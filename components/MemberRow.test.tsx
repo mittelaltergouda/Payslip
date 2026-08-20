@@ -76,6 +76,7 @@ describe('MemberRow - Initial Rendering', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -101,6 +102,7 @@ describe('MemberRow - Initial Rendering', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole
             distributionMode="EQUAL"
@@ -125,6 +127,7 @@ describe('MemberRow - Initial Rendering', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -148,6 +151,7 @@ describe('MemberRow - Initial Rendering', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -173,6 +177,7 @@ describe('MemberRow - Initial Rendering', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -198,6 +203,7 @@ describe('MemberRow - Initial Rendering', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -224,6 +230,7 @@ describe('MemberRow - Initial Rendering', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -247,6 +254,7 @@ describe('MemberRow - Initial Rendering', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -272,6 +280,7 @@ describe('MemberRow - Initial Rendering', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -310,6 +319,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -336,6 +346,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole
             distributionMode="EQUAL"
@@ -362,6 +373,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -388,6 +400,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -414,6 +427,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="PERCENT"
@@ -440,6 +454,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="ADJUSTABLE"
@@ -466,6 +481,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="ADJUSTABLE"
@@ -492,6 +508,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -518,6 +535,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -544,6 +562,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -570,6 +589,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -597,6 +617,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -637,6 +658,7 @@ describe('MemberRow - Distribution Modes', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -661,6 +683,7 @@ describe('MemberRow - Distribution Modes', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="PERCENT"
@@ -685,6 +708,7 @@ describe('MemberRow - Distribution Modes', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -709,6 +733,7 @@ describe('MemberRow - Distribution Modes', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="ADJUSTABLE"
@@ -733,6 +758,7 @@ describe('MemberRow - Distribution Modes', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="PERCENT"
@@ -757,6 +783,7 @@ describe('MemberRow - Distribution Modes', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="ADJUSTABLE"
@@ -800,6 +827,7 @@ describe('MemberRow - Edge Cases', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={memberWithoutRole}
             showRole
             distributionMode="EQUAL"
@@ -824,6 +852,7 @@ describe('MemberRow - Edge Cases', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -848,6 +877,7 @@ describe('MemberRow - Edge Cases', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -875,6 +905,7 @@ describe('MemberRow - Edge Cases', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -903,6 +934,7 @@ describe('MemberRow - Edge Cases', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"

@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef } from "react";
-import Link from "next/link";
 import { exportAll, importAll } from "@/lib/storage/sessionStorage";
 import type { Lang } from "@/lib/i18n/translations";
 
@@ -43,26 +42,21 @@ const translations = {
   de: {
     exportAll: "Exportieren",
     importSessions: "Importieren",
-    viewSessions: "Sessions",
     exportTooltip: "Alle Sessions als JSON herunterladen",
     importTooltip: "Sessions aus JSON-Datei importieren",
-    viewSessionsTooltip: "Alle Sessions anzeigen",
   },
   en: {
     exportAll: "Export All",
     importSessions: "Import",
-    viewSessions: "Sessions",
     exportTooltip: "Download all sessions as JSON",
     importTooltip: "Import sessions from JSON file",
-    viewSessionsTooltip: "View all sessions",
   },
 };
 
 /**
  * SessionActions Component
  *
- * Provides navigation and data management functionality for sessions.
- * - View Sessions: Navigates to the sessions list page
+ * Provides local data management functionality for sessions.
  * - Export: Downloads all sessions as a JSON file with timestamp
  * - Import: Uploads a JSON file and merges sessions without duplicates
  *
@@ -187,32 +181,6 @@ export function SessionActions({
 
   return (
     <div className="flex items-center gap-3 flex-wrap">
-      {/* View Sessions Link */}
-      <Link
-        href="/sessions"
-        className="bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md px-4 py-2 text-white/90 hover:bg-white/10 transition-colors text-sm font-medium"
-        title={t.viewSessionsTooltip}
-        aria-label={t.viewSessionsTooltip}
-      >
-        <span className="flex items-center gap-2">
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-            />
-          </svg>
-          {t.viewSessions}
-        </span>
-      </Link>
-
       {/* Export Button */}
       <button
         type="button"
