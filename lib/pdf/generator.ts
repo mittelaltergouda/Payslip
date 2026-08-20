@@ -10,6 +10,7 @@ import autoTable from "jspdf-autotable";
 import type { SessionInput, PayslipResult } from "@/lib/types";
 import type { Lang } from "@/lib/i18n/translations";
 import { format } from "@/lib/format";
+import { getMemberPayoutSummaries } from "@/lib/export/payoutSummary";
 
 /**
  * Extended jsPDF type that includes AutoTable properties.
@@ -142,17 +143,15 @@ export function generatePDF(
   doc.text("Member Breakdown", margin, yPosition);
   yPosition += 7;
 
-  // Calculate fees per member for display
-  const feeByPayer: Record<string, number> = {};
-  result.suggestedTransfers.forEach((transfer) => {
-    feeByPayer[transfer.fromMemberId] =
-      (feeByPayer[transfer.fromMemberId] || 0) + transfer.feeAmount;
-  });
+  const payoutByMember = new Map(
+    getMemberPayoutSummaries(result).map((payout) => [payout.memberId, payout])
+  );
 
   // Build table data
   const memberRows = result.members.map((member) => {
-    const taxes = feeByPayer[member.memberId] ?? 0;
-    const netAfterFees = member.finalNet - taxes;
+    const payout = payoutByMember.get(member.memberId);
+    const taxes = payout?.transferFeesDeducted ?? 0;
+    const netAfterFees = payout?.netPayout ?? member.finalNet;
 
     return [
       member.handle,

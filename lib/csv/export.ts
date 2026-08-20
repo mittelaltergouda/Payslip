@@ -8,6 +8,7 @@
 import type { SessionInput, PayslipResult } from "@/lib/types";
 import type { Lang } from "@/lib/i18n/translations";
 import { format } from "@/lib/format";
+import { getMemberPayoutSummaries } from "@/lib/export/payoutSummary";
 
 /**
  * CSV generation options for customizing output format and styling.
@@ -194,12 +195,9 @@ export function generateCSV(
     }
   );
 
-  // Calculate fees per member for display
-  const feeByPayer: Record<string, number> = {};
-  result.suggestedTransfers.forEach((transfer) => {
-    feeByPayer[transfer.fromMemberId] =
-      (feeByPayer[transfer.fromMemberId] || 0) + transfer.feeAmount;
-  });
+  const payoutByMember = new Map(
+    getMemberPayoutSummaries(result).map((payout) => [payout.memberId, payout])
+  );
 
   // Build CSV rows
   const rows: (string | number | undefined | null)[][] = [];
@@ -229,8 +227,9 @@ export function generateCSV(
 
   // Add member rows
   for (const member of result.members) {
-    const taxes = feeByPayer[member.memberId] ?? 0;
-    const netAfterFees = member.finalNet - taxes;
+    const payout = payoutByMember.get(member.memberId);
+    const taxes = payout?.transferFeesDeducted ?? 0;
+    const netAfterFees = payout?.netPayout ?? member.finalNet;
 
     rows.push([
       member.handle,

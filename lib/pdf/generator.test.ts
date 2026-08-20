@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { generatePDF, generatePDFFilename } from './generator';
+import autoTable from 'jspdf-autotable';
 import type { SessionInput, PayslipResult } from '@/lib/types';
 
 // ============================================================================
@@ -652,6 +653,45 @@ describe('generatePDF', () => {
     const blob = generatePDF(session, result);
 
     expect(blob).toBeInstanceOf(Blob);
+  });
+  it('uses the current transfer-budget values in member and transfer tables', () => {
+    const session: SessionInput = {
+      name: 'Budget Test', type: 'OTHER', distributionMode: 'EQUAL', taxEnabled: true,
+      taxRate: 0.005,
+      members: [
+        { id: 'player-1', handle: 'Player 1', revenue: 1_000_000, investment: 500_000 },
+        { id: 'player-2', handle: 'Player 2', revenue: 0, investment: 0 },
+      ],
+    };
+    const result: PayslipResult = {
+      saleRevenue: 500_000, netProfit: 500_000, taxRateApplied: 0.005,
+      members: [
+        {
+          memberId: 'player-1', handle: 'Player 1', revenue: 1_000_000,
+          investment: 500_000, expenses: 0, sharedExpenses: 0,
+          individualExpenses: 0, profitShare: 250_000, finalNet: 750_000,
+        },
+        {
+          memberId: 'player-2', handle: 'Player 2', revenue: 0,
+          investment: 0, expenses: 0, sharedExpenses: 0,
+          individualExpenses: 0, profitShare: 250_000, finalNet: 250_000,
+        },
+      ],
+      suggestedTransfers: [{
+        fromMemberId: 'player-1', toMemberId: 'player-2',
+        netAmount: 248_756, feeAmount: 1_244, grossAmount: 250_000,
+      }],
+    };
+
+    generatePDF(session, result, { lang: 'de' });
+
+    const calls = vi.mocked(autoTable).mock.calls;
+    expect(calls[0][1].body).toContainEqual([
+      'Player 2', '0', '0', '0', '1.244', '250.000', '248.756',
+    ]);
+    expect(calls[1][1].body).toContainEqual([
+      'Player 1', 'Player 2', '248.756', '250.000', '1.244',
+    ]);
   });
 });
 

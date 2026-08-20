@@ -882,6 +882,42 @@ describe('generateCSV', () => {
   });
 });
 
+describe('current transfer-budget export', () => {
+  it('exports recipient amount, fee, total budget, and recipient net payout consistently', () => {
+    const session = createTestSession({
+      members: [
+        { id: 'player-1', handle: 'Player 1', revenue: 1_000_000, investment: 500_000 },
+        { id: 'player-2', handle: 'Player 2', revenue: 0, investment: 0 },
+      ],
+    });
+    const result = createTestResult({
+      members: [
+        {
+          memberId: 'player-1', handle: 'Player 1', revenue: 1_000_000,
+          investment: 500_000, expenses: 0, sharedExpenses: 0,
+          individualExpenses: 0, profitShare: 250_000, finalNet: 750_000,
+        },
+        {
+          memberId: 'player-2', handle: 'Player 2', revenue: 0,
+          investment: 0, expenses: 0, sharedExpenses: 0,
+          individualExpenses: 0, profitShare: 250_000, finalNet: 250_000,
+        },
+      ],
+      suggestedTransfers: [{
+        fromMemberId: 'player-1', toMemberId: 'player-2',
+        netAmount: 248_756, feeAmount: 1_244, grossAmount: 250_000,
+      }],
+    });
+
+    const csv = generateCSV(session, result, { lang: 'de' });
+
+    expect(csv).toContain('Player 2;0;0;0;1.244;250.000;248.756');
+    expect(csv).toContain(
+      'Player 1;Player 2;248.756;250.000;1.244'
+    );
+  });
+});
+
 // ============================================================================
 // TESTS: generateCSVFilename
 // ============================================================================
