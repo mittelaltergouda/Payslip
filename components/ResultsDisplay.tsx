@@ -7,6 +7,7 @@ import { TransfersList } from "./TransfersList";
 import { ExportPDFButton } from "./ExportPDFButton";
 import { ExportClipboardButton } from "./ExportClipboardButton";
 import { ExportCSVButton } from "./ExportCSVButton";
+import { format } from "@/lib/format";
 
 
 /**
@@ -103,6 +104,26 @@ export function ResultsDisplay({
           </div>
         )}
       </div>
+
+      {result && (result.unsettledBalances?.length ?? 0) > 0 && (
+        <div
+          role="alert"
+          className="rounded-xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-100"
+        >
+          <p className="font-semibold">{t.unsettledBalances}</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            {result.unsettledBalances?.map((balance) => {
+              const member = result.members.find((candidate) => candidate.memberId === balance.memberId);
+              const label = balance.amount > 0 ? t.stillToReceive : t.excessRetained;
+              return (
+                <li key={balance.memberId}>
+                  {member?.handle ?? balance.memberId}: {label} {format(Math.abs(balance.amount), lang)} {currency}.
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       {result && (
         <div className="grid gap-6 lg:grid-cols-2">

@@ -17,7 +17,7 @@
  * @module lib/calc/settlement
  */
 
-import type { MemberBreakdown, Transfer } from '../types';
+import type { MemberBreakdown, Transfer, UnsettledBalance } from '../types';
 import { fitTransferToBudget } from './tax';
 
 // ============================================================================
@@ -48,10 +48,15 @@ type MemberBalance = {
  * @param taxRate - Sender-paid transfer-fee rate (0-1), 0 if disabled
  * @returns Array of transfers needed to settle all balances
  */
-export function settleBalances(
+export type SettlementResult = {
+  transfers: Transfer[];
+  unsettledBalances: UnsettledBalance[];
+};
+
+export function settleBalancesDetailed(
   memberBreakdowns: MemberBreakdown[],
   taxRate: number = 0
-): Transfer[] {
+): SettlementResult {
   // Small epsilon for floating point comparisons
   const EPSILON = 0.01;
 
@@ -138,5 +143,21 @@ export function settleBalances(
     }
   }
 
-  return transfers;
+  const unsettledBalances: UnsettledBalance[] = [
+    ...debtors
+      .filter((debtor) => debtor.balance > EPSILON)
+      .map((debtor) => ({ memberId: debtor.memberId, amount: -debtor.balance })),
+    ...creditors
+      .filter((creditor) => creditor.balance > EPSILON)
+      .map((creditor) => ({ memberId: creditor.memberId, amount: creditor.balance })),
+  ];
+
+  return { transfers, unsettledBalances };
+}
+
+export function settleBalances(
+  memberBreakdowns: MemberBreakdown[],
+  taxRate: number = 0
+): Transfer[] {
+  return settleBalancesDetailed(memberBreakdowns, taxRate).transfers;
 }

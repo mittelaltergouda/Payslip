@@ -70,6 +70,10 @@ const translations = {
     amountToSend: "Überweisungsbetrag",
     fee: "Gebühr",
     totalCharged: "Gesamtbelastung",
+    unsettledBalances: "Offene Restbeträge",
+    status: "Status",
+    stillToReceive: "Noch zu erhalten",
+    excessRetained: "Überschuss verblieben",
     page: "Seite",
     of: "von",
   },
@@ -112,6 +116,10 @@ const translations = {
     amountToSend: "Amount to send",
     fee: "Fee",
     totalCharged: "Total charged",
+    unsettledBalances: "Unsettled balances",
+    status: "Status",
+    stillToReceive: "Still to receive",
+    excessRetained: "Excess retained",
     page: "Page",
     of: "of",
   },
@@ -354,6 +362,7 @@ export function generatePDF(
     doc.setFontSize(9);
     setText(COLORS.muted);
     doc.text(t.noTransfers, margin, y + 2);
+    y += 8;
   } else {
     const transferRows = result.suggestedTransfers.map((transfer) => {
       const from = session.members.find((member) => member.id === transfer.fromMemberId)?.handle || transfer.fromMemberId;
@@ -379,6 +388,34 @@ export function generatePDF(
         2: { halign: "right", fontStyle: "bold" },
         3: { halign: "right" },
         4: { halign: "right", fontStyle: "bold", textColor: COLORS.ink },
+      },
+      margin: { left: margin, right: margin, bottom: 20 },
+    });
+    y = (pdf.lastAutoTable?.finalY ?? y) + 8;
+  }
+
+  if ((result.unsettledBalances?.length ?? 0) > 0) {
+    y = ensureSpace(y, 30);
+    y = drawSectionTitle(t.unsettledBalances, y);
+    const residualRows = (result.unsettledBalances ?? []).map((balance) => {
+      const member = result.members.find((candidate) => candidate.memberId === balance.memberId);
+      return [
+        member?.handle ?? balance.memberId,
+        balance.amount > 0 ? t.stillToReceive : t.excessRetained,
+        format(Math.abs(balance.amount), lang),
+      ];
+    });
+    autoTable(doc, {
+      startY: y,
+      head: [[t.handle, t.status, t.amount]],
+      body: residualRows,
+      theme: "plain",
+      styles: { font: "helvetica", fontSize: 7.8, cellPadding: 2.4, textColor: COLORS.slate },
+      headStyles: { fillColor: COLORS.red, textColor: COLORS.white, fontStyle: "bold" },
+      alternateRowStyles: { fillColor: COLORS.soft },
+      columnStyles: {
+        0: { fontStyle: "bold", textColor: COLORS.ink },
+        2: { halign: "right", fontStyle: "bold" },
       },
       margin: { left: margin, right: margin, bottom: 20 },
     });

@@ -168,7 +168,7 @@ describe('generateCSV', () => {
 
     // English CSV should use comma delimiter
     // Check that the member header row uses commas
-    expect(csv).toContain('Handle,Revenue,Investment,Expenses,Taxes,Profit Share,Net Payout');
+    expect(csv).toContain('Handle,Revenue,Investment,Expenses,Transfer Fees,Profit Share,Net Payout');
   });
 
   it('should use semicolon as delimiter for German', () => {
@@ -179,7 +179,7 @@ describe('generateCSV', () => {
 
     // German CSV should use semicolon delimiter
     // Check that the member header row uses semicolons
-    expect(csv).toContain('Handle;Umsatz;Investment;Ausgaben;Steuern;Gewinnanteil;Netto Auszahlung');
+    expect(csv).toContain('Handle;Umsatz;Investment;Ausgaben;Transfergebühren;Gewinnanteil;Netto Auszahlung');
   });
 
   it('should use English translations by default', () => {
@@ -750,8 +750,8 @@ describe('generateCSV', () => {
 
     const csv = generateCSV(session, result);
 
-    // CSV should contain the Taxes column header
-    expect(csv).toContain('Taxes');
+    // CSV should identify the deducted amounts as transfer fees.
+    expect(csv).toContain('Transfer Fees');
   });
 
   it('should handle zero values correctly', () => {

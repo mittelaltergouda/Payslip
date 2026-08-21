@@ -18,7 +18,7 @@ import {
   allocateIndividualExpenses,
 } from './expenses';
 import {
-  settleBalances,
+  settleBalancesDetailed,
 } from './settlement';
 
 // Re-export types for external use
@@ -153,7 +153,7 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
     };
   });
 
-  const suggestedTransfers = settleBalances(
+  const { transfers: suggestedTransfers, unsettledBalances } = settleBalancesDetailed(
     memberBreakdowns,
     taxRateForTransfers
   );
@@ -167,5 +167,6 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
     taxRateApplied: taxRateForTransfers,
     members: memberBreakdowns,
     suggestedTransfers,
+    unsettledBalances,
   };
 }

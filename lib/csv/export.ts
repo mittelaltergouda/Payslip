@@ -43,7 +43,7 @@ const csvTranslations = {
     revenue: "Umsatz",
     investment: "Investment",
     expenses: "Ausgaben",
-    taxes: "Steuern",
+    transferFees: "Transfergebühren",
     profitShare: "Gewinnanteil",
     netPayout: "Netto Auszahlung",
     settlementTransfers: "Überweisungen",
@@ -53,6 +53,11 @@ const csvTranslations = {
     grossAmount: "Gesamtbelastung",
     fee: "Gebühr",
     noTransfers: "Keine Überweisungen erforderlich",
+    unsettledBalances: "Offene Restbeträge",
+    status: "Status",
+    amount: "Betrag",
+    stillToReceive: "Noch zu erhalten",
+    excessRetained: "Überschuss verblieben",
   },
   en: {
     exportTitle: "SC Payslip Export",
@@ -64,7 +69,7 @@ const csvTranslations = {
     revenue: "Revenue",
     investment: "Investment",
     expenses: "Expenses",
-    taxes: "Taxes",
+    transferFees: "Transfer Fees",
     profitShare: "Profit Share",
     netPayout: "Net Payout",
     settlementTransfers: "Settlement Transfers",
@@ -74,6 +79,11 @@ const csvTranslations = {
     grossAmount: "Total Charged",
     fee: "Fee",
     noTransfers: "No transfers required",
+    unsettledBalances: "Unsettled balances",
+    status: "Status",
+    amount: "Amount",
+    stillToReceive: "Still to receive",
+    excessRetained: "Excess retained",
   },
 };
 
@@ -220,7 +230,7 @@ export function generateCSV(
     t.revenue,
     t.investment,
     t.expenses,
-    t.taxes,
+    t.transferFees,
     t.profitShare,
     t.netPayout,
   ]);
@@ -228,7 +238,7 @@ export function generateCSV(
   // Add member rows
   for (const member of result.members) {
     const payout = payoutByMember.get(member.memberId);
-    const taxes = payout?.transferFeesDeducted ?? 0;
+    const transferFees = payout?.transferFeesDeducted ?? 0;
     const netAfterFees = payout?.netPayout ?? member.finalNet;
 
     rows.push([
@@ -236,7 +246,7 @@ export function generateCSV(
       format(member.revenue, lang),
       format(member.investment, lang),
       format(member.expenses, lang),
-      format(taxes, lang),
+      format(transferFees, lang),
       format(member.profitShare, lang),
       format(netAfterFees, lang),
     ]);
@@ -272,6 +282,20 @@ export function generateCSV(
         format(transfer.netAmount, lang),
         format(transfer.grossAmount, lang),
         format(transfer.feeAmount, lang),
+      ]);
+    }
+  }
+
+  if ((result.unsettledBalances?.length ?? 0) > 0) {
+    rows.push([]);
+    rows.push([t.unsettledBalances]);
+    rows.push([t.handle, t.status, t.amount]);
+    for (const balance of result.unsettledBalances ?? []) {
+      const member = result.members.find((candidate) => candidate.memberId === balance.memberId);
+      rows.push([
+        member?.handle ?? balance.memberId,
+        balance.amount > 0 ? t.stillToReceive : t.excessRetained,
+        format(Math.abs(balance.amount), lang),
       ]);
     }
   }

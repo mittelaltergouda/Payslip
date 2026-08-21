@@ -72,12 +72,19 @@ export type Transfer = {
   feeAmount: number;
 };
 
+export type UnsettledBalance = {
+  memberId: string;
+  /** Positive = still to receive, negative = excess cash still retained. */
+  amount: number;
+};
+
 export type PayslipResult = {
   saleRevenue: number;
   netProfit: number;
   taxRateApplied: number;
   members: MemberBreakdown[];
   suggestedTransfers: Transfer[];
+  unsettledBalances?: UnsettledBalance[];
 };
 
 // Zod schemas for localStorage session management
