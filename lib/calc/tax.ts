@@ -19,6 +19,18 @@
 
 import type { Transfer } from '../types';
 
+function assertValidTaxRate(taxRate: number): void {
+  if (!Number.isFinite(taxRate)) {
+    throw new RangeError(`Tax rate must be finite, but got ${taxRate}`);
+  }
+  if (taxRate < 0) {
+    throw new RangeError(`Tax rate must be non-negative, but got ${taxRate}`);
+  }
+  if (taxRate >= 1) {
+    throw new RangeError(`Tax rate must be less than 1, but got ${taxRate}`);
+  }
+}
+
 // ============================================================================
 // TRANSFER-FEE CALCULATION
 // ============================================================================
@@ -41,7 +53,7 @@ import type { Transfer } from '../types';
  *
  * Edge Cases:
  * - taxRate = 0: grossAmount = netAmount, feeAmount = 0
- * - invalid tax rates (>= 1): returns unchanged transfers defensively
+ * - invalid tax rates: throws rather than silently producing fee-free output
  *
  * @param transfers - Array of transfers with netAmount set
  * @param taxRate - Tax rate as decimal (0-1), e.g., 0.05 for 5%
@@ -51,8 +63,9 @@ export function applyTransferTaxes(
   transfers: Transfer[],
   taxRate: number
 ): Transfer[] {
-  // No tax applied if rate is 0 or negative
-  if (taxRate <= 0) {
+  assertValidTaxRate(taxRate);
+
+  if (taxRate === 0) {
     return transfers.map((t) => ({
       ...t,
       grossAmount: t.netAmount,
@@ -60,15 +73,6 @@ export function applyTransferTaxes(
     }));
   }
 
-  // Edge case: taxRate >= 1 would require infinite payment (invalid)
-  // Return transfers unchanged - validation should prevent this
-  if (taxRate >= 1) {
-    return transfers.map((t) => ({
-      ...t,
-      grossAmount: t.netAmount,
-      feeAmount: 0,
-    }));
-  }
 
   return transfers.map((transfer) => {
     const feeAmount = Math.ceil(transfer.netAmount * taxRate);
@@ -93,7 +97,8 @@ export function calculateGrossAmount(
   netAmount: number,
   taxRate: number
 ): number {
-  if (taxRate <= 0 || taxRate >= 1) {
+  assertValidTaxRate(taxRate);
+  if (taxRate === 0) {
     return netAmount;
   }
   return netAmount + Math.ceil(netAmount * taxRate);
@@ -107,9 +112,10 @@ export function fitTransferToBudget(
   budget: number,
   taxRate: number
 ): { netAmount: number; feeAmount: number; grossAmount: number } {
+  assertValidTaxRate(taxRate);
   const wholeBudget = Math.max(0, Math.floor(budget));
 
-  if (taxRate <= 0 || taxRate >= 1) {
+  if (taxRate === 0) {
     return { netAmount: wholeBudget, feeAmount: 0, grossAmount: wholeBudget };
   }
 

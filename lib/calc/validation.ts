@@ -131,17 +131,21 @@ export function validateNonNegativeValues(session: SessionInput): void {
 }
 
 /**
- * Validates tax rate is within valid bounds (0 to 1 inclusive).
+ * Validates tax rate is finite and within valid bounds (0 inclusive to 1 exclusive).
  *
- * @param taxRate - The tax rate to validate (0-1 representing 0-100%)
+ * @param taxRate - The tax rate to validate (0 <= rate < 1)
  * @throws Error if tax rate is outside valid bounds
  */
 export function validateTaxRate(taxRate: number | undefined): void {
   if (taxRate === undefined) {return;}
-  if (taxRate < 0 || taxRate > 1) {
-    throw new Error(
-      `Tax rate must be between 0 and 1, but got ${taxRate}`
-    );
+  if (!Number.isFinite(taxRate)) {
+    throw new Error(`Tax rate must be finite, but got ${taxRate}`);
+  }
+  if (taxRate < 0) {
+    throw new Error(`Tax rate must be non-negative, but got ${taxRate}`);
+  }
+  if (taxRate >= 1) {
+    throw new Error(`Tax rate must be less than 1, but got ${taxRate}`);
   }
 }
 

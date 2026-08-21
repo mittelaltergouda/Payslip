@@ -123,7 +123,7 @@ const sessionInputSchema = z.object({
   totalRevenue: z.number().optional(),
   distributionMode: z.enum(["EQUAL", "PERCENT", "ADJUSTABLE"]),
   taxEnabled: z.boolean().optional(),
-  taxRate: z.number().optional(),
+  taxRate: z.number().min(0).lt(1).optional(),
   members: z.array(memberInputSchema),
   sharedExpenses: z.array(sharedExpenseInputSchema).optional(),
   individualExpenses: z.array(individualExpenseInputSchema).optional(),
