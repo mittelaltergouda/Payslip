@@ -38,10 +38,10 @@ export function CookieNotice() {
     >
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1 text-sm text-white/80">
-          <p className="font-semibold text-white">Technisch notwendige Speicherung</p>
+          <p className="font-semibold text-white">Lokale Speicherung</p>
           <p>
-            SC Payslip verwendet einen technisch notwendigen CSRF-Session-Cookie. Deine Payslip-Daten werden
-            ausschließlich lokal in deinem Browser gespeichert. Tracking findet nicht statt. Mehr unter{" "}
+            SC Payslip setzt keine Cookies. Deine Payslip-Daten werden ausschließlich lokal in deinem Browser
+            gespeichert. Tracking findet nicht statt. Mehr unter{" "}
             <Link className="font-semibold text-neon underline-offset-4 hover:underline" href="/datenschutz">
               Datenschutz
             </Link>

@@ -80,15 +80,12 @@ export default function DatenschutzPage() {
       </section>
 
       <section className="space-y-2 text-sm text-white/70">
-        <h2 className="text-xl font-semibold text-white">Technisch notwendige Speicherung und Tracking</h2>
+        <h2 className="text-xl font-semibold text-white">Lokale Speicherung und Tracking</h2>
         <p>
-          SC Payslip setzt den technisch notwendigen Session-Cookie <code className="mx-1 text-neon">csrf-token</code>,
-          um websiteübergreifende Fälschungen von Anfragen abzuwehren. Er enthält keine Crew-, Finanz- oder
-          Kontodaten, ist mit HttpOnly, Secure und SameSite=Strict geschützt und wird beim Schließen der
-          Browsersitzung gelöscht. Die Speicherung erfolgt gemäß § 25 Abs. 2 Nr. 2 TDDDG; die damit verbundene
-          Sicherheitsverarbeitung beruht auf Art. 6 Abs. 1 lit. f DSGVO. Wenn Du den eingeblendeten Speicherhinweis
-          mit „Verstanden“ schließt, merkt sich <code className="mx-1 text-neon">sessionStorage</code> diese Auswahl
-          bis zum Schließen des Browser-Tabs. SC Payslip setzt keine Analyse-, Werbe- oder Profiling-Dienste ein.
+          SC Payslip setzt keine Cookies. Wenn Du den eingeblendeten Speicherhinweis mit „Verstanden“ schließt, merkt
+          sich <code className="mx-1 text-neon">sessionStorage</code> diese Auswahl bis zum Schließen des Browser-Tabs.
+          Die eigentlichen Sitzungsdaten bleiben wie oben beschrieben im <code className="mx-1 text-neon">localStorage</code>
+          Deines Browsers. SC Payslip setzt keine Analyse-, Werbe- oder Profiling-Dienste ein.
         </p>
       </section>
 

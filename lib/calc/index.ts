@@ -71,11 +71,9 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
   // -------------------------------------------------------------------------
   const activeMembers = normalized.members.filter((m) => m.active);
 
-  // Total revenue: use provided totalRevenue or sum of member revenues
-  // If totalRevenue is explicitly set, it overrides individual member revenues
-  const totalRevenue =
-    normalized.totalRevenue ??
-    normalized.members.reduce((sum, m) => sum + m.revenue, 0);
+  // Revenue is the cash currently held by members. A stale legacy
+  // totalRevenue value must not create money that cannot be settled.
+  const totalRevenue = normalized.members.reduce((sum, m) => sum + m.revenue, 0);
 
   // Total investments from all members (both active and inactive)
   const totalInvestments = normalized.members.reduce(
