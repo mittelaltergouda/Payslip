@@ -12,7 +12,7 @@ export default function DatenschutzPage() {
       <header className="space-y-2">
         <p className="text-sm uppercase tracking-[0.4em] text-neon">SC Payslip</p>
         <h1 className="text-3xl font-semibold text-white">Datenschutz</h1>
-        <p className="text-sm text-white/70">Stand: 20. August 2026</p>
+        <p className="text-sm text-white/70">Stand: 21. August 2026</p>
       </header>
 
       <section className="space-y-2 text-sm text-white/70">
@@ -34,7 +34,9 @@ export default function DatenschutzPage() {
           <code className="mx-1 text-neon">localStorage</code>
           Deines Browsers gespeichert. Diese Inhalte werden nicht auf dem SC-Payslip-Server gespeichert. Du kannst
           lokale Sitzungen im Tool löschen sowie als JSON-Datei exportieren und wieder importieren. Das Löschen der
-          Website-Daten im Browser entfernt ebenfalls die lokal gespeicherten Sitzungen.
+          Website-Daten im Browser entfernt ebenfalls die lokal gespeicherten Sitzungen. Die lokale Speicherung ist
+          für die ausdrücklich gewünschte Local-only-Sitzungsverwaltung erforderlich und erfolgt gemäß § 25 Abs. 2
+          Nr. 2 TDDDG ohne Einwilligung.
         </p>
       </section>
 
@@ -53,23 +55,52 @@ export default function DatenschutzPage() {
         <h2 className="text-xl font-semibold text-white">Cloudflare</h2>
         <p>
           Für verschlüsselte Übertragung, DNS und Schutz vor Angriffen wird Cloudflare (Cloudflare, Inc., USA)
-          eingesetzt. Dabei verarbeitet Cloudflare Verbindungs- und HTTP-Metadaten. Eine Verarbeitung außerhalb der
-          EU kann nicht ausgeschlossen werden. Weitere Informationen stehen in der
+          eingesetzt. Dabei verarbeitet Cloudflare insbesondere IP-Adressen sowie Verbindungs- und HTTP-Metadaten.
+          Die Verarbeitung dient der sicheren, belastbaren Bereitstellung des Tools auf Grundlage von Art. 6 Abs. 1
+          lit. f DSGVO; unser berechtigtes Interesse liegt im Schutz vor Angriffen und technischen Ausfällen. Eine
+          Verarbeitung außerhalb der EU kann nicht ausgeschlossen werden. Cloudflare stützt Übermittlungen in die
+          USA nach eigenen Angaben auf das EU-US Data Privacy Framework und ergänzend auf
+          Standardvertragsklauseln. Weitere Informationen stehen in der
           <a
             className="ml-1 text-neon hover:underline"
             href="https://www.cloudflare.com/privacypolicy/"
             rel="noreferrer"
           >
             Datenschutzerklärung von Cloudflare
+          </a>{" "}
+          sowie in den
+          <a
+            className="ml-1 text-neon hover:underline"
+            href="https://www.cloudflare.com/cloudflare-customer-dpa/"
+            rel="noreferrer"
+          >
+            Datenschutzinformationen für Cloudflare-Kunden
           </a>.
         </p>
       </section>
 
       <section className="space-y-2 text-sm text-white/70">
-        <h2 className="text-xl font-semibold text-white">Cookies und Tracking</h2>
+        <h2 className="text-xl font-semibold text-white">Technisch notwendige Speicherung und Tracking</h2>
         <p>
-          SC Payslip setzt keine Analyse-, Werbe- oder Profiling-Dienste ein. Im öffentlichen Local-only-Betrieb sind
-          keine Benutzerkonten und keine serverseitigen Sitzungs-Cookies erforderlich.
+          SC Payslip setzt den technisch notwendigen Session-Cookie <code className="mx-1 text-neon">csrf-token</code>,
+          um websiteübergreifende Fälschungen von Anfragen abzuwehren. Er enthält keine Crew-, Finanz- oder
+          Kontodaten, ist mit HttpOnly, Secure und SameSite=Strict geschützt und wird beim Schließen der
+          Browsersitzung gelöscht. Die Speicherung erfolgt gemäß § 25 Abs. 2 Nr. 2 TDDDG; die damit verbundene
+          Sicherheitsverarbeitung beruht auf Art. 6 Abs. 1 lit. f DSGVO. Wenn Du den eingeblendeten Speicherhinweis
+          mit „Verstanden“ schließt, merkt sich <code className="mx-1 text-neon">sessionStorage</code> diese Auswahl
+          bis zum Schließen des Browser-Tabs. SC Payslip setzt keine Analyse-, Werbe- oder Profiling-Dienste ein.
+        </p>
+      </section>
+
+      <section className="space-y-2 text-sm text-white/70">
+        <h2 className="text-xl font-semibold text-white">Kontaktanfragen</h2>
+        <p>
+          Wenn Du uns per E-Mail kontaktierst, verarbeiten wir Deine E-Mail-Adresse, technische Metadaten sowie den
+          Inhalt Deiner Nachricht, um Dein Anliegen zu beantworten. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO,
+          wenn die Kommunikation der Anbahnung oder Durchführung eines Vertrags dient, andernfalls Art. 6 Abs. 1
+          lit. f DSGVO aufgrund unseres berechtigten Interesses an einer sachgerechten Kommunikation. Das
+          E-Mail-Postfach wird bei der Alfahosting GmbH als Auftragsverarbeiter betrieben. Wir löschen Anfragen, sobald
+          sie abschließend bearbeitet sind und keine gesetzlichen Aufbewahrungs- oder Nachweispflichten mehr bestehen.
         </p>
       </section>
 

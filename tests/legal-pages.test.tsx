@@ -37,6 +37,6 @@ describe("production legal pages", () => {
     expect(text).toContain("Alfahosting GmbH");
     expect(text).toContain("Server-Logdaten");
     expect(text).toContain("Stand: 21. August 2026");
-    expect(text).not.toMatch(/Platzhalter|eintragen|ergänze|ergänzt werden/i);
+    expect(text).not.toMatch(/\bPlatzhalter\b|\beintragen\b|\bergänze\b|\bergänzt werden\b/i);
   });
 });
