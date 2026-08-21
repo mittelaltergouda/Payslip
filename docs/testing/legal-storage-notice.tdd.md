@@ -39,7 +39,16 @@ Verified guarantees:
 
 ## Quality gates
 
-The final clean-worktree test count and coverage are recorded in the pull request after the complete candidate run. Production dependency audit, production build, `git diff --check`, and the fail-closed independent review are mandatory before merge.
+Final clean-worktree evidence:
+
+- `npm test`: 2,036 tests passed
+- `npm test -- --coverage`: 95.95% lines, 87.94% branches, 100% functions
+- `npm run build`: passed with Next.js 16.3.1
+- `npm audit --omit=dev`: 0 vulnerabilities
+- `git diff --check origin/master..HEAD`: clean
+- repository-wide lint: 8 existing errors and 238 warnings, improved from the `master` baseline of 10 errors and 301 warnings
+
+A fail-closed independent review remains mandatory before merge.
 
 ## Known repository-wide lint debt
 
