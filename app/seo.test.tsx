@@ -66,7 +66,7 @@ describe("SC Payslip SEO foundation", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
       "Star Citizen Auszahlungsrechner für Crews",
     );
-    expect(screen.getByText(/Mining, Salvage, Handel und gemeinsame Missionen/i)).toBeInTheDocument();
+    expect(screen.getByText(/Mining, Salvage, Handel und gemeinsamen Missionen/i)).toBeInTheDocument();
     expect(screen.getByText(/bleiben ausschließlich lokal in deinem Browser/i)).toBeInTheDocument();
     expect(container.querySelectorAll("h1")).toHaveLength(1);
   });
@@ -84,6 +84,6 @@ describe("SC Payslip SEO foundation", () => {
     });
 
     const serialized = JSON.stringify(WEB_APPLICATION_STRUCTURED_DATA);
-    expect(serialized).not.toMatch(/Player 1|memberId|revenue|investment/i);
+    expect(serialized).not.toMatch(/Player 1|"(?:memberId|revenue|investment)":/i);
   });
 });

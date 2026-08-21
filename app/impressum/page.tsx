@@ -4,6 +4,9 @@ import { BackToToolLink } from "@/components/BackToToolLink";
 export const metadata: Metadata = {
   title: "Impressum · SC Payslip",
   description: "Impressum und Anbieterangaben für SC Payslip",
+  alternates: {
+    canonical: "/impressum",
+  },
 };
 
 export default function ImpressumPage() {

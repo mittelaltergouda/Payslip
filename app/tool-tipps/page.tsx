@@ -46,7 +46,10 @@ const tipSections = [
 
 export const metadata: Metadata = {
   title: "Tool-Tipps · SC Payslip",
-  description: "Komprimierte Operationstipps für SC Payslip: schneller Crew-Aufbau, präzise Navigation und verlässliches Teilen."
+  description: "Komprimierte Operationstipps für SC Payslip: schneller Crew-Aufbau, präzise Navigation und verlässliches Teilen.",
+  alternates: {
+    canonical: "/tool-tipps",
+  },
 };
 
 export default function ToolTippsPage() {

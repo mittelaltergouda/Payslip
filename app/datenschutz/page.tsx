@@ -4,6 +4,9 @@ import { BackToToolLink } from "@/components/BackToToolLink";
 export const metadata: Metadata = {
   title: "Datenschutz · SC Payslip",
   description: "Datenschutzerklärung für SC Payslip",
+  alternates: {
+    canonical: "/datenschutz",
+  },
 };
 
 export default function DatenschutzPage() {
