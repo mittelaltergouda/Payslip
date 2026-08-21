@@ -41,8 +41,8 @@ Verified guarantees:
 
 Final clean-worktree evidence:
 
-- `npm test`: 2,036 tests passed
-- `npm test -- --coverage`: 95.95% lines, 87.94% branches, 100% functions
+- `npm test`: 2,037 tests passed
+- `npm test -- --coverage`: 95.76% lines, 87.61% branches, 100% functions
 - `npm run build`: passed with Next.js 16.3.1
 - `npm audit --omit=dev`: 0 vulnerabilities
 - `git diff --check origin/master..HEAD`: clean
