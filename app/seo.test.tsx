@@ -14,7 +14,7 @@ import {
 
 describe("SC Payslip SEO foundation", () => {
   it("describes the Star Citizen crew payout search intent", () => {
-    expect(siteMetadata.title).toBe("Crew-Abrechnung für Star Citizen | SC Payslip");
+    expect(siteMetadata.title).toBe("Star Citizen: aUEC fair aufteilen | SC Payslip");
     expect(siteMetadata.description).toBe(SITE_DESCRIPTION);
     expect(siteMetadata.metadataBase).toEqual(new URL(SITE_URL));
     expect(siteMetadata.alternates?.canonical).toBe("/");
@@ -26,12 +26,12 @@ describe("SC Payslip SEO foundation", () => {
       locale: "de_DE",
       siteName: SITE_NAME,
       url: "/",
-      title: "Crew-Abrechnung für Star Citizen | SC Payslip",
+      title: "Star Citizen: aUEC fair aufteilen | SC Payslip",
       description: SITE_DESCRIPTION,
     });
     expect(siteMetadata.twitter).toMatchObject({
       card: "summary",
-      title: "Crew-Abrechnung für Star Citizen | SC Payslip",
+      title: "Star Citizen: aUEC fair aufteilen | SC Payslip",
       description: SITE_DESCRIPTION,
     });
   });
@@ -64,7 +64,7 @@ describe("SC Payslip SEO foundation", () => {
     const { container } = render(<SeoIntro />);
 
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-      "Crew-Abrechnung für Star Citizen",
+      "aUEC fair aufteilen",
     );
     expect(screen.getByText(/Mining, Salvage, Handel und gemeinsamen Missionen/i)).toBeInTheDocument();
     expect(screen.getByText(/bleiben ausschließlich lokal in deinem Browser/i)).toBeInTheDocument();
