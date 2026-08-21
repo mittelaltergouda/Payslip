@@ -272,16 +272,19 @@ describe('calculatePayslip - input validation guards', () => {
     ).toThrow(/negative amount/);
   });
 
-  it('rejects a tax rate above 1 (100%)', () => {
+  it('rejects a tax rate at or above 1 (100%)', () => {
+    expect(() =>
+      calculatePayslip({ ...base, taxEnabled: true, taxRate: 1 })
+    ).toThrow(/less than 1/);
     expect(() =>
       calculatePayslip({ ...base, taxEnabled: true, taxRate: 1.5 })
-    ).toThrow(/Tax rate must be between 0 and 1/);
+    ).toThrow(/less than 1/);
   });
 
   it('rejects a negative tax rate', () => {
     expect(() =>
       calculatePayslip({ ...base, taxEnabled: true, taxRate: -0.1 })
-    ).toThrow(/Tax rate must be between 0 and 1/);
+    ).toThrow(/non-negative/);
   });
 
   it('rejects an empty member handle', () => {

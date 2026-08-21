@@ -35,21 +35,13 @@ describe('Star Citizen transfer fee calculations', () => {
       expect(grossAmount).toBe(1005);
     });
 
-    it('should return net amount when tax rate is 1 or greater (edge case)', () => {
-      const netAmount = 100;
-
-      // taxRate = 1 would require infinite gross amount - return net as fallback
-      expect(calculateGrossAmount(netAmount, 1)).toBe(100);
-      expect(calculateGrossAmount(netAmount, 1.5)).toBe(100);
+    it('should reject tax rates of 1 or greater', () => {
+      expect(() => calculateGrossAmount(100, 1)).toThrow(/less than 1/);
+      expect(() => calculateGrossAmount(100, 1.5)).toThrow(/less than 1/);
     });
 
-    it('should return net amount when tax rate is negative (edge case)', () => {
-      const netAmount = 100;
-      const taxRate = -0.05;
-
-      const grossAmount = calculateGrossAmount(netAmount, taxRate);
-
-      expect(grossAmount).toBe(100);
+    it('should reject negative tax rates', () => {
+      expect(() => calculateGrossAmount(100, -0.05)).toThrow(/non-negative/);
     });
   });
 
@@ -125,31 +117,20 @@ describe('Star Citizen transfer fee calculations', () => {
       expect(result[1].feeAmount).toBe(1);
     });
 
-    it('should handle edge case of tax rate >= 1 by returning unchanged transfers', () => {
+    it('should reject tax rates of 1 or greater', () => {
       const transfers: Transfer[] = [
         { fromMemberId: 'member-1', toMemberId: 'member-2', netAmount: 100, grossAmount: 0, feeAmount: 0 }
       ];
-      const taxRate = 1;
 
-      const result = applyTransferTaxes(transfers, taxRate);
-
-      expect(result.length).toBe(1);
-      expect(result[0].netAmount).toBe(100);
-      expect(result[0].grossAmount).toBe(100);
-      expect(result[0].feeAmount).toBe(0);
+      expect(() => applyTransferTaxes(transfers, 1)).toThrow(/less than 1/);
     });
 
-    it('should handle negative tax rate as no tax', () => {
+    it('should reject negative tax rates', () => {
       const transfers: Transfer[] = [
         { fromMemberId: 'member-1', toMemberId: 'member-2', netAmount: 100, grossAmount: 0, feeAmount: 0 }
       ];
-      const taxRate = -0.05;
 
-      const result = applyTransferTaxes(transfers, taxRate);
-
-      expect(result.length).toBe(1);
-      expect(result[0].grossAmount).toBe(100);
-      expect(result[0].feeAmount).toBe(0);
+      expect(() => applyTransferTaxes(transfers, -0.05)).toThrow(/non-negative/);
     });
   });
 
