@@ -27,9 +27,16 @@ describe("production legal pages", () => {
 
     expect(text).toContain("localStorage");
     expect(text).toContain("nicht auf dem SC-Payslip-Server gespeichert");
+    expect(text).toContain("csrf-token");
+    expect(text).toContain("§ 25 Abs. 2 Nr. 2 TDDDG");
     expect(text).toContain("Cloudflare");
+    expect(text).toContain("Art. 6 Abs. 1 lit. f DSGVO");
+    expect(text).toContain("EU-US Data Privacy Framework");
+    expect(text).toContain("Standardvertragsklauseln");
+    expect(text).toContain("Kontaktanfragen");
+    expect(text).toContain("Alfahosting GmbH");
     expect(text).toContain("Server-Logdaten");
-    expect(text).toContain("Stand: 20. August 2026");
+    expect(text).toContain("Stand: 21. August 2026");
     expect(text).not.toMatch(/Platzhalter|eintragen|ergänze|ergänzt werden/i);
   });
 });
