@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const SITE_URL = "https://payslip.cheesy.cloud";
 export const SITE_NAME = "SC Payslip";
-export const SITE_TITLE = "Star Citizen Auszahlungsrechner für Crews | SC Payslip";
+export const SITE_TITLE = "Crew-Abrechnung für Star Citizen | SC Payslip";
 export const SITE_DESCRIPTION =
   "Verteile aUEC aus Mining, Salvage, Handel und Missionen fair auf deine Star-Citizen-Crew – inklusive Kosten, Investments und Transfergebühren.";
 
