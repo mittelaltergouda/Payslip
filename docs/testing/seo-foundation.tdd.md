@@ -36,6 +36,29 @@ Result: RED. `/tool-tipps` lieferte `undefined` statt eines eigenen Canonicals; 
 
 Checkpoint: `d39dbbe test: require canonical URLs for public pages`
 
+### Doppeltes Branding durch Next.js-Title-Template
+
+Das unabhängige Review fand im gebauten HTML Titel wie `Tool-Tipps · SC Payslip | SC Payslip`. Der neue Regressionstest prüft deshalb, dass Child-Metadaten nur den Seitennamen liefern und der Parent-Template den Brand genau einmal ergänzt.
+
+Command:
+
+```text
+npm test -- app/canonical.test.ts
+```
+
+Result: RED. Erwartet wurde `Tool-Tipps`, tatsächlich geliefert wurde `Tool-Tipps · SC Payslip`.
+
+Checkpoint: `3386baa test: prevent duplicate branding in page titles`
+
+Fix checkpoint: `ebbe2fe fix: avoid duplicate brand in page titles`
+
+Der erneute Produktions-Build und HTTP-Smoke bestätigten:
+
+- `/`: `Star Citizen Auszahlungsrechner für Crews | SC Payslip`
+- `/tool-tipps`: `Tool-Tipps | SC Payslip`
+- `/impressum`: `Impressum | SC Payslip`
+- `/datenschutz`: `Datenschutz | SC Payslip`
+
 ## GREEN evidence
 
 Implementation checkpoint: `13cad5a feat: add search-ready SEO foundation`
