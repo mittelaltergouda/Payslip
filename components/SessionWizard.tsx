@@ -28,7 +28,7 @@ import { DuplicateSessionDialog } from "./DuplicateSessionDialog";
 import { Button } from "./ui/button";
 import { FormField } from "./ui/form-field";
 import type { PresetMember } from "@/lib/types";
-import { clearCsrfToken, getCsrfHeaders } from "@/lib/csrf-client";
+
 
 const rndId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -242,31 +242,6 @@ export function SessionWizard({ initialLang = "de" }: Props) {
     try {
       await manualSave();
       refreshSessionList();
-
-      const headers = await getCsrfHeaders({
-        "Content-Type": "application/json",
-      });
-
-      const response = await fetch("/api/sessions", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          name: session.name,
-          type: session.type,
-          taxEnabled: session.taxEnabled,
-          distribution: session.distributionMode,
-          members: session.members,
-        }),
-      });
-
-      if (!response.ok) {
-        if (response.status === 403) {
-          clearCsrfToken();
-        }
-        throw new Error(t.sessionSaveFailed || "Failed to save session");
-      }
-
-      refreshSessionList();
       showToast(t.sessionSaved || "Session saved", "success");
     } catch (err) {
       const message = err instanceof Error ? err.message : t.sessionSaveFailed || "Failed to save session";
@@ -274,7 +249,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
     } finally {
       setIsSavingSession(false);
     }
-  }, [manualSave, refreshSessionList, session, showToast, t.sessionSaveFailed, t.sessionSaved]);
+  }, [manualSave, refreshSessionList, showToast, t.sessionSaveFailed, t.sessionSaved]);
 
   // Handle session name update
   const handleSessionNameChange = (name: string) => {

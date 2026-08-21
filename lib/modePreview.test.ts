@@ -192,7 +192,7 @@ describe('calculateModePreviews', () => {
     expect(previews.PERCENT.result?.netProfit).toBe(1000);
     expect(previews.ADJUSTABLE.result?.netProfit).toBe(1000);
 
-    // Transfers should be calculated with tax gross-up
+    // Transfers should include the sender-paid transfer fee.
     expect(previews.EQUAL.result?.suggestedTransfers).toBeDefined();
     expect(previews.PERCENT.result?.suggestedTransfers).toBeDefined();
     expect(previews.ADJUSTABLE.result?.suggestedTransfers).toBeDefined();

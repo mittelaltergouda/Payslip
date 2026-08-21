@@ -1056,16 +1056,19 @@ describe('sessionSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should accept tax rate of 1 (100%)', () => {
-      const validSession = {
+    it('should reject tax rate of 1 (100%)', () => {
+      const invalidSession = {
         name: 'Test',
         type: 'TRADING',
         distributionMode: 'EQUAL',
         taxRate: 1,
         members: [{ handle: 'Player', revenue: 0, investment: 0 }]
       };
-      const result = sessionSchema.safeParse(validSession);
-      expect(result.success).toBe(true);
+      const result = sessionSchema.safeParse(invalidSession);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toContain('less than 100%');
+      }
     });
 
     it('should reject negative tax rate', () => {
@@ -1094,7 +1097,7 @@ describe('sessionSchema', () => {
       const result = sessionSchema.safeParse(invalidSession);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues[0].message).toContain('cannot exceed 100%');
+        expect(result.error.issues[0].message).toContain('less than 100%');
       }
     });
   });

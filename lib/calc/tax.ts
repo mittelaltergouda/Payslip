@@ -1,50 +1,59 @@
 /**
- * Tax gross-up calculation module.
+ * Star Citizen transfer-fee calculation module.
  *
- * This module handles tax gross-up calculations for transfers to ensure recipients
- * receive the exact intended net amount after platform/game fees are deducted.
+ * The amount entered in Star Citizen is what the recipient receives. The sender
+ * pays that amount plus the 0.5% transfer fee.
  *
- * When tax is enabled, transfers use the gross-up formula:
- *   grossAmount = ceil(netAmount / (1 - taxRate))
- *   feeAmount = grossAmount - netAmount
+ * When tax is enabled:
+ *   feeAmount = ceil(netAmount * taxRate)
+ *   grossAmount = netAmount + feeAmount
  *
- * This ensures the receiver gets the full netAmount after the tax fee is deducted.
- * The sender pays slightly more to cover the tax burden.
+ * netAmount remains the value entered in the Wallet app and received by the other
+ * player. grossAmount is the sender's total balance reduction.
  *
- * Example with 5% tax: To send 100 net, sender pays 106 gross, 6 fee deducted,
- * receiver gets exactly 100.
+ * Example with 5% tax: enter 100, the recipient gets 100, and the sender pays
+ * 105 in total.
  *
  * @module lib/calc/tax
  */
 
 import type { Transfer } from '../types';
 
+function assertValidTaxRate(taxRate: number): void {
+  if (!Number.isFinite(taxRate)) {
+    throw new RangeError(`Tax rate must be finite, but got ${taxRate}`);
+  }
+  if (taxRate < 0) {
+    throw new RangeError(`Tax rate must be non-negative, but got ${taxRate}`);
+  }
+  if (taxRate >= 1) {
+    throw new RangeError(`Tax rate must be less than 1, but got ${taxRate}`);
+  }
+}
+
 // ============================================================================
-// TAX GROSS-UP CALCULATION
+// TRANSFER-FEE CALCULATION
 // ============================================================================
 
 /**
- * Applies tax gross-up to an array of transfers.
+ * Adds the transfer fee paid by the sender to an array of transfers.
  *
- * Tax Gross-Up Formula:
- * When the sender pays a transfer with tax, the receiver must receive the exact
- * netAmount. To achieve this, we "gross up" the payment:
+ * Star Citizen Fee Formula:
+ * The recipient receives the amount entered, and the fee is charged on top:
  *
- *   grossAmount = ceil(netAmount / (1 - taxRate))
- *   feeAmount = grossAmount - netAmount
+ *   feeAmount = ceil(netAmount * taxRate)
+ *   grossAmount = netAmount + feeAmount
  *
- * This ensures the receiver gets the full netAmount after the platform/game
- * deducts the tax fee from the gross payment.
+ * Whole aUEC are used, so the fee is rounded up to avoid understating the
+ * sender's required balance.
  *
  * Example with 5% tax (taxRate = 0.05):
- *   netAmount = 100, grossAmount = ceil(100 / 0.95) = ceil(105.26) = 106
- *   feeAmount = 106 - 100 = 6
- *   Receiver gets: 106 - 6 = 100 (exact netAmount)
+ *   netAmount = 100, feeAmount = 5, grossAmount = 105
+ *   Receiver gets 100; sender's balance decreases by 105.
  *
  * Edge Cases:
- * - taxRate = 0: No gross-up, grossAmount = netAmount, feeAmount = 0
- * - taxRate >= 1: Would require infinite gross-up, returns unchanged transfers
- *   (this should be caught by validation, but we handle it defensively)
+ * - taxRate = 0: grossAmount = netAmount, feeAmount = 0
+ * - invalid tax rates: throws rather than silently producing fee-free output
  *
  * @param transfers - Array of transfers with netAmount set
  * @param taxRate - Tax rate as decimal (0-1), e.g., 0.05 for 5%
@@ -54,8 +63,9 @@ export function applyTransferTaxes(
   transfers: Transfer[],
   taxRate: number
 ): Transfer[] {
-  // No tax applied if rate is 0 or negative
-  if (taxRate <= 0) {
+  assertValidTaxRate(taxRate);
+
+  if (taxRate === 0) {
     return transfers.map((t) => ({
       ...t,
       grossAmount: t.netAmount,
@@ -63,23 +73,10 @@ export function applyTransferTaxes(
     }));
   }
 
-  // Edge case: taxRate >= 1 would require infinite payment (invalid)
-  // Return transfers unchanged - validation should prevent this
-  if (taxRate >= 1) {
-    return transfers.map((t) => ({
-      ...t,
-      grossAmount: t.netAmount,
-      feeAmount: 0,
-    }));
-  }
 
   return transfers.map((transfer) => {
-    // Gross-up formula: gross = ceil(net / (1 - taxRate))
-    // Using Math.ceil ensures the sender covers the full tax amount.
-    // This may result in slight overpayment (rounding up), which is preferable
-    // to underpayment (receiver would get less than expected).
-    const grossAmount = Math.ceil(transfer.netAmount / (1 - taxRate));
-    const feeAmount = grossAmount - transfer.netAmount;
+    const feeAmount = Math.ceil(transfer.netAmount * taxRate);
+    const grossAmount = transfer.netAmount + feeAmount;
 
     return {
       ...transfer,
@@ -90,8 +87,7 @@ export function applyTransferTaxes(
 }
 
 /**
- * Calculates the gross amount needed to deliver a specific net amount after tax.
- * This is a helper function for individual gross-up calculations.
+ * Calculates the sender's total balance reduction for a transfer.
  *
  * @param netAmount - The amount the receiver should receive
  * @param taxRate - Tax rate as decimal (0-1)
@@ -101,10 +97,50 @@ export function calculateGrossAmount(
   netAmount: number,
   taxRate: number
 ): number {
-  if (taxRate <= 0 || taxRate >= 1) {
+  assertValidTaxRate(taxRate);
+  if (taxRate === 0) {
     return netAmount;
   }
-  return Math.ceil(netAmount / (1 - taxRate));
+  return netAmount + Math.ceil(netAmount * taxRate);
+}
+
+/**
+ * Finds the largest whole-aUEC recipient amount whose sender-paid fee still
+ * fits inside a fixed total transfer budget.
+ */
+export function fitTransferToBudget(
+  budget: number,
+  taxRate: number
+): { netAmount: number; feeAmount: number; grossAmount: number } {
+  assertValidTaxRate(taxRate);
+  const wholeBudget = Math.max(0, Math.floor(budget));
+
+  if (taxRate === 0) {
+    return { netAmount: wholeBudget, feeAmount: 0, grossAmount: wholeBudget };
+  }
+
+  let low = 0;
+  let high = wholeBudget;
+  let netAmount = 0;
+
+  while (low <= high) {
+    const candidate = Math.floor((low + high) / 2);
+    const candidateGross = calculateGrossAmount(candidate, taxRate);
+
+    if (candidateGross <= wholeBudget) {
+      netAmount = candidate;
+      low = candidate + 1;
+    } else {
+      high = candidate - 1;
+    }
+  }
+
+  const feeAmount = Math.ceil(netAmount * taxRate);
+  return {
+    netAmount,
+    feeAmount,
+    grossAmount: netAmount + feeAmount,
+  };
 }
 
 /**

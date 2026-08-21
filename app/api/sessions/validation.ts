@@ -82,7 +82,7 @@ export const sessionSchema = z
     taxRate: z
       .number()
       .min(0, "Tax rate cannot be negative")
-      .max(1, "Tax rate cannot exceed 100% (1.0)")
+      .lt(1, "Tax rate must be less than 100% (1.0)")
       .optional()
       .default(0.005),
     members: z.array(memberSchema).min(1, "Session must have at least one member"),

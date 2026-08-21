@@ -380,11 +380,15 @@ describe("validateCsrfToken", () => {
     it("should use constant-time comparison (basic check)", () => {
       // Generate tokens with differences at different positions
       const baseToken = generateCsrfToken();
+      const replaceWithDifferentCharacter = (token: string, index: number) =>
+        token.substring(0, index) +
+        (token[index] === "X" ? "Y" : "X") +
+        token.substring(index + 1);
       const tokens = [
         baseToken,
-        baseToken.substring(0, baseToken.length - 1) + "X", // Diff at end
-        "X" + baseToken.substring(1), // Diff at start
-        baseToken.substring(0, 20) + "X" + baseToken.substring(21) // Diff in middle
+        replaceWithDifferentCharacter(baseToken, baseToken.length - 1), // Diff at end
+        replaceWithDifferentCharacter(baseToken, 0), // Diff at start
+        replaceWithDifferentCharacter(baseToken, 20), // Diff in middle
       ];
 
       // All should return false (except comparing to itself)

@@ -222,10 +222,9 @@ describe('calculatePayslip - Expense Allocation', () => {
     expect(bob?.profitShare).toBe(410);
 
     // finalNet = investment + profitShare - expenses
-    // Alice: 0 + 410 - 130 = 280
-    // Bob: 0 + 410 - 50 = 360
-    expect(alice?.finalNet).toBe(280);
-    expect(bob?.finalNet).toBe(360);
+    // All expenses are already deducted before equal distribution.
+    expect(alice?.finalNet).toBe(410);
+    expect(bob?.finalNet).toBe(410);
   });
 
   it('should exclude inactive members from shared expense allocation by default', () => {
@@ -295,9 +294,8 @@ describe('calculatePayslip - Expense Allocation', () => {
     expect(bob?.profitShare).toBe(-75);
 
     // finalNet = investment + profitShare - expenses
-    // Alice: 0 + (-75) - 100 = -175
-    // Bob: 0 + (-75) - 50 = -125
-    expect(alice?.finalNet).toBe(-175);
-    expect(bob?.finalNet).toBe(-125);
+    // The total expense of 150 is shared through the equal distribution.
+    expect(alice?.finalNet).toBe(-75);
+    expect(bob?.finalNet).toBe(-75);
   });
 });

@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { ToastProvider } from "@/components/Toast";
 import { SiteFooter } from "@/components/SiteFooter";
+import { CookieNotice } from "@/components/CookieNotice";
 import { Space_Grotesk, Inter } from "next/font/google";
 
 const spaceGrotesk = Space_Grotesk({
@@ -38,6 +39,7 @@ export default function RootLayout({
             </div>
             <SiteFooter />
           </div>
+          <CookieNotice />
         </ToastProvider>
       </body>
     </html>

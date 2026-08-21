@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { generatePDF, generatePDFFilename } from './generator';
+import autoTable from 'jspdf-autotable';
 import type { SessionInput, PayslipResult } from '@/lib/types';
+import { calculatePayslip } from '@/lib/calc';
 
 // ============================================================================
 // MOCKS
@@ -21,6 +23,13 @@ vi.mock('jspdf', () => {
       };
       setFontSize = vi.fn();
       setFont = vi.fn();
+      setFillColor = vi.fn();
+      setDrawColor = vi.fn();
+      setLineWidth = vi.fn();
+      rect = vi.fn();
+      roundedRect = vi.fn();
+      line = vi.fn();
+      addPage = vi.fn();
       text = vi.fn((content: string) => {
         textCalls.push(content);
       });
@@ -652,6 +661,81 @@ describe('generatePDF', () => {
     const blob = generatePDF(session, result);
 
     expect(blob).toBeInstanceOf(Blob);
+  });
+  it('uses the current transfer-budget values in member and transfer tables', () => {
+    const session: SessionInput = {
+      name: 'Budget Test', type: 'OTHER', distributionMode: 'EQUAL', taxEnabled: true,
+      taxRate: 0.005,
+      members: [
+        { id: 'player-1', handle: 'Player 1', revenue: 1_000_000, investment: 500_000 },
+        { id: 'player-2', handle: 'Player 2', revenue: 0, investment: 0 },
+      ],
+      sharedExpenses: [{
+        id: 'shared-1', label: 'Fuel', amount: 20_000,
+        participantIds: ['player-1', 'player-2'],
+      }],
+      individualExpenses: [{
+        id: 'individual-1', memberId: 'player-1', label: 'Repair', amount: 10_000,
+      }],
+    };
+    const result: PayslipResult = {
+      saleRevenue: 500_000, netProfit: 500_000, taxRateApplied: 0.005,
+      members: [
+        {
+          memberId: 'player-1', handle: 'Player 1', revenue: 1_000_000,
+          investment: 500_000, expenses: 0, sharedExpenses: 0,
+          individualExpenses: 0, profitShare: 250_000, finalNet: 750_000,
+        },
+        {
+          memberId: 'player-2', handle: 'Player 2', revenue: 0,
+          investment: 0, expenses: 0, sharedExpenses: 0,
+          individualExpenses: 0, profitShare: 250_000, finalNet: 250_000,
+        },
+      ],
+      suggestedTransfers: [{
+        fromMemberId: 'player-1', toMemberId: 'player-2',
+        netAmount: 248_756, feeAmount: 1_244, grossAmount: 250_000,
+      }],
+    };
+
+    generatePDF(session, result, { lang: 'de' });
+
+    const calls = vi.mocked(autoTable).mock.calls;
+    expect(calls[0][1].body).toContainEqual([
+      'Player 2', '0', '0', '0', '250.000', '248.756',
+    ]);
+    expect(calls[1][1].body).toContainEqual([
+      'Gemeinsam', 'Fuel', 'Player 1, Player 2', '20.000',
+    ]);
+    expect(calls[1][1].body).toContainEqual([
+      'Individuell', 'Repair', 'Player 1', '10.000',
+    ]);
+    expect(calls[2][1].body).toContainEqual([
+      'Player 1', 'Player 2', '248.756', '1.244', '250.000',
+    ]);
+  });
+
+  it('should disclose balances that cannot be transferred after fees', () => {
+    const session: SessionInput = {
+      name: 'Minimum fee residual',
+      type: 'TRADING',
+      distributionMode: 'ADJUSTABLE',
+      taxEnabled: true,
+      taxRate: 0.005,
+      members: [
+        { id: 'd1', handle: 'D1', active: true, revenue: 201, fixedPayout: 0 },
+        { id: 'd2', handle: 'D2', active: true, revenue: 800, fixedPayout: 0 },
+        { id: 'c1', handle: 'C1', active: true, revenue: 0, fixedPayout: 1000 },
+        { id: 'c2', handle: 'C2', active: true, revenue: 0, fixedPayout: 1 },
+      ],
+    };
+
+    generatePDF(session, calculatePayslip(session), { lang: 'en' });
+
+    expect(textCalls).toContain('Unsettled balances');
+    const residualTable = vi.mocked(autoTable).mock.calls.at(-1)?.[1];
+    expect(residualTable?.body).toContainEqual(['D1', 'Excess retained', '1']);
+    expect(residualTable?.body).toContainEqual(['C2', 'Still to receive', '1']);
   });
 });
 

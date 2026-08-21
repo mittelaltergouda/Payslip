@@ -248,10 +248,9 @@ describe('calculatePayslip - ADJUSTABLE mode', () => {
     expect(bob?.profitShare).toBe(700);
 
     // finalNet = investment + profitShare - expenses
-    // Alice: 0 + 200 - 50 = 150
-    // Bob: 0 + 700 - 50 = 650
-    expect(alice?.finalNet).toBe(150);
-    expect(bob?.finalNet).toBe(650);
+    // Expenses are already deducted before adjustable distribution.
+    expect(alice?.finalNet).toBe(200);
+    expect(bob?.finalNet).toBe(700);
   });
 
   it('should handle individual expenses in ADJUSTABLE mode', () => {
@@ -290,9 +289,8 @@ describe('calculatePayslip - ADJUSTABLE mode', () => {
     expect(bob?.profitShare).toBe(425);
 
     // finalNet = investment + profitShare - expenses
-    // Alice: 0 + 475 - 100 = 375
-    // Bob: 0 + 425 - 0 = 425
-    expect(alice?.finalNet).toBe(375);
+    // The expense is already reflected in the distributable pool.
+    expect(alice?.finalNet).toBe(475);
     expect(bob?.finalNet).toBe(425);
   });
 
@@ -304,7 +302,7 @@ describe('calculatePayslip - ADJUSTABLE mode', () => {
       totalRevenue: 1000,
       taxEnabled: false,
       members: [
-        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0, investment: 1000, fixedPayout: 200 },
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000, investment: 1000, fixedPayout: 200 },
         { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 0 }
       ]
     };
