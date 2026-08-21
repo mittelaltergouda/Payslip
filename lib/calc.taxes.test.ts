@@ -163,7 +163,7 @@ describe('Star Citizen transfer fee calculations', () => {
         taxEnabled: true,
         taxRate: 0.005, // Fixed tax rate: always 0.5%
         members: [
-          { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0, investment: 1000, fixedPayout: 200 },
+          { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000, investment: 1000, fixedPayout: 200 },
           { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 0 }
         ]
       };
@@ -208,7 +208,7 @@ describe('Star Citizen transfer fee calculations', () => {
         taxEnabled: false,
         taxRate: 0.05, // Rate specified but should be ignored
         members: [
-          { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0, investment: 1000, fixedPayout: 200 },
+          { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000, investment: 1000, fixedPayout: 200 },
           { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 0 }
         ]
       };

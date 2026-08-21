@@ -71,7 +71,7 @@ describe('calculatePayslip - Edge Cases', () => {
       totalRevenue: 100,
       taxEnabled: false,
       members: [
-        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0 },
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 100 },
         { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0 },
         { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 0 },
         { id: 'member-4', handle: 'Dave', role: 'Member', active: true, revenue: 0 },
@@ -190,8 +190,8 @@ describe('calculatePayslip - Edge Cases', () => {
       totalRevenue: 1000,
       taxEnabled: false,
       members: [
-        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0, investment: 500 },
-        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 500 }
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 500, investment: 500 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 500, investment: 500 }
       ]
     };
 
@@ -317,7 +317,7 @@ describe('calculatePayslip - Edge Cases', () => {
       totalRevenue: 100,
       taxEnabled: false,
       members: [
-        { id: 'member-1', handle: 'Leader', role: 'Leader', active: true, revenue: 0, investment: 100 },
+        { id: 'member-1', handle: 'Leader', role: 'Leader', active: true, revenue: 100, investment: 100 },
         { id: 'member-2', handle: 'Alice', role: 'Member', active: true, revenue: 0 }
       ]
     };

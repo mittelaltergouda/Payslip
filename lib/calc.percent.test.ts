@@ -12,8 +12,8 @@ describe('calculatePayslip - PERCENT mode', () => {
       totalRevenue: 1000,
       taxEnabled: false,
       members: [
-        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 500, percentShare: 60 },
-        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 300, percentShare: 40 }
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 600, percentShare: 60 },
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 400, percentShare: 40 }
       ]
     };
 
@@ -257,7 +257,7 @@ describe('calculatePayslip - PERCENT mode', () => {
       totalRevenue: 1000,
       taxEnabled: false,
       members: [
-        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0, investment: 1000, percentShare: 50 },
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000, investment: 1000, percentShare: 50 },
         { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 0, percentShare: 50 }
       ]
     };

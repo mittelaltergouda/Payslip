@@ -302,7 +302,7 @@ describe('calculatePayslip - ADJUSTABLE mode', () => {
       totalRevenue: 1000,
       taxEnabled: false,
       members: [
-        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0, investment: 1000, fixedPayout: 200 },
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000, investment: 1000, fixedPayout: 200 },
         { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 0 }
       ]
     };

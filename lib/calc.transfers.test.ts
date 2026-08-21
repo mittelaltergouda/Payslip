@@ -241,7 +241,7 @@ describe('Settlement/Transfer Generation', () => {
       totalRevenue: 100.33,
       taxEnabled: false,
       members: [
-        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0, investment: 100.33 },
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 100.33, investment: 100.33 },
         { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 0 },
         { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 0, investment: 0 }
       ]
