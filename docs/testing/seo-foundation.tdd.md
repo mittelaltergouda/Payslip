@@ -73,7 +73,7 @@ Result: 7/7 tests passed.
 
 Full verification:
 
-- `npm test`: 2,044/2,044 tests passed.
+- `npm test`: 2,045/2,045 tests passed.
 - `npm test -- --coverage`: 95.79% lines, 87.61% branches, 100% functions.
 - `DATABASE_URL='file:./dev.db' npm run build`: passed with Next.js 16.3.1.
 - Build output includes static `/robots.txt` and `/sitemap.xml` routes.
