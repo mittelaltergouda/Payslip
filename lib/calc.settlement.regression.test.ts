@@ -3,6 +3,35 @@ import { calculatePayslip } from "./calc";
 import type { SessionInput } from "./types";
 
 describe("settlement regression", () => {
+  it("settles only the revenue actually held by members when a stale total override differs", () => {
+    const session: SessionInput = {
+      name: "Imported legacy session",
+      type: "TRADING",
+      distributionMode: "EQUAL",
+      taxEnabled: false,
+      taxRate: 0.005,
+      totalRevenue: 1_500,
+      members: [
+        { id: "holder", handle: "Holder", active: true, revenue: 1_000, investment: 0 },
+        { id: "receiver", handle: "Receiver", active: true, revenue: 0, investment: 0 },
+      ],
+    };
+
+    const result = calculatePayslip(session);
+
+    expect(result.saleRevenue).toBe(1_000);
+    expect(result.netProfit).toBe(1_000);
+    expect(result.suggestedTransfers).toEqual([
+      {
+        fromMemberId: "holder",
+        toMemberId: "receiver",
+        netAmount: 500,
+        grossAmount: 500,
+        feeAmount: 0,
+      },
+    ]);
+  });
+
   it("makes every revenue holder pay their surplus after investment reimbursements", () => {
     const session: SessionInput = {
       name: "Gouda crew payout",

@@ -18,6 +18,7 @@ describe("production legal pages", () => {
     expect(text).toContain("Marco Niedheidt");
     expect(text).toContain("53173 Bonn");
     expect(text).toContain("impressum@pixelfrontier.de");
+    expect(screen.getByRole("link", { name: "0228 2803 1258" })).toHaveAttribute("href", "tel:+4922828031258");
     expect(text).not.toMatch(/Platzhalter|\[Straße\]|Datum ergänzen|§ 5 TMG|§ 55 RStV|consumers\/odr/i);
   });
 
@@ -27,7 +28,8 @@ describe("production legal pages", () => {
 
     expect(text).toContain("localStorage");
     expect(text).toContain("nicht auf dem SC-Payslip-Server gespeichert");
-    expect(text).toContain("csrf-token");
+    expect(text).toContain("setzt keine Cookies");
+    expect(text).not.toContain("csrf-token");
     expect(text).toContain("§ 25 Abs. 2 Nr. 2 TDDDG");
     expect(text).toContain("Cloudflare");
     expect(text).toContain("Art. 6 Abs. 1 lit. f DSGVO");

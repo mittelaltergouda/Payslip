@@ -226,6 +226,18 @@ describe('middleware - CSP nonce generation', () => {
   });
 });
 
+describe('middleware - local-only public mode', () => {
+  it('does not set obsolete CSRF headers or cookies', () => {
+    const request = new NextRequest(new Request('http://localhost:3000/'));
+
+    const response = middleware(request);
+
+    expect(response.headers.get('x-csrf-token')).toBeNull();
+    expect(response.headers.get('set-cookie')).toBeNull();
+    expect(response.cookies.get('csrf-token')).toBeUndefined();
+  });
+});
+
 describe('middleware - CSRF token generation', () => {
   let mockGenerateCsrfToken: ReturnType<typeof vi.fn>;
   let originalGenerateCsrfToken: typeof import('./lib/csrf').generateCsrfToken;

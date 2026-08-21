@@ -11,13 +11,14 @@ describe("CookieNotice", () => {
     vi.restoreAllMocks();
   });
 
-  it("explains necessary storage and links to the privacy notice", async () => {
+  it("explains local storage without claiming that cookies are used", async () => {
     render(<CookieNotice />);
 
     const notice = await screen.findByRole("region", { name: "Cookie-Hinweis" });
-    expect(notice).toHaveTextContent("technisch notwendigen CSRF-Session-Cookie");
+    expect(notice).toHaveTextContent("setzt keine Cookies");
     expect(notice).toHaveTextContent("ausschließlich lokal in deinem Browser");
     expect(notice).toHaveTextContent("Tracking findet nicht statt");
+    expect(notice).not.toHaveTextContent("CSRF");
     expect(screen.getByRole("link", { name: "Datenschutz" })).toHaveAttribute("href", "/datenschutz");
     expect(screen.getByRole("button", { name: "Verstanden" })).toBeInTheDocument();
   });
