@@ -87,6 +87,28 @@ const mockResult: PayslipResult = {
 };
 
 describe('ResultsDisplay - Basic Rendering', () => {
+  it('should warn about balances that cannot be transferred after fees', () => {
+    render(
+      <ResultsDisplay
+        result={{
+          ...mockResult,
+          unsettledBalances: [
+            { memberId: 'm1', amount: -1 },
+            { memberId: 'm2', amount: 1 },
+          ],
+        }}
+        session={mockSession}
+        error={null}
+        translations={translations.en}
+        lang="en"
+      />
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Unsettled balances');
+    expect(screen.getByText('Pilot: excess retained 1 aUEC.')).toBeInTheDocument();
+    expect(screen.getByText('Escort: still to receive 1 aUEC.')).toBeInTheDocument();
+  });
+
   it('should render the results heading with German translations', () => {
     render(
       <ResultsDisplay
