@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { generateCSV, generateCSVFilename } from './export';
+import { calculatePayslip } from '@/lib/calc';
 import type { SessionInput, PayslipResult } from '@/lib/types';
 
 // ============================================================================
@@ -915,6 +916,28 @@ describe('current transfer-budget export', () => {
     expect(csv).toContain(
       'Player 1;Player 2;248.756;250.000;1.244'
     );
+  });
+
+  it('should disclose balances that cannot be transferred after fees', () => {
+    const session: SessionInput = {
+      name: 'Minimum fee residual',
+      type: 'TRADING',
+      distributionMode: 'ADJUSTABLE',
+      taxEnabled: true,
+      taxRate: 0.005,
+      members: [
+        { id: 'd1', handle: 'D1', active: true, revenue: 201, fixedPayout: 0 },
+        { id: 'd2', handle: 'D2', active: true, revenue: 800, fixedPayout: 0 },
+        { id: 'c1', handle: 'C1', active: true, revenue: 0, fixedPayout: 1000 },
+        { id: 'c2', handle: 'C2', active: true, revenue: 0, fixedPayout: 1 },
+      ],
+    };
+    const csv = generateCSV(session, calculatePayslip(session), { lang: 'en' });
+
+    expect(csv).toContain('Transfer Fees');
+    expect(csv).toContain('Unsettled balances');
+    expect(csv).toContain('D1,Excess retained,1');
+    expect(csv).toContain('C2,Still to receive,1');
   });
 });
 

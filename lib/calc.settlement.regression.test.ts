@@ -3,6 +3,33 @@ import { calculatePayslip } from "./calc";
 import type { SessionInput } from "./types";
 
 describe("settlement regression", () => {
+  it("reports balances that cannot be transferred with the minimum sender-paid fee", () => {
+    const session: SessionInput = {
+      name: "Minimum fee residual",
+      type: "TRADING",
+      distributionMode: "ADJUSTABLE",
+      taxEnabled: true,
+      taxRate: 0.005,
+      members: [
+        { id: "d1", handle: "D1", active: true, revenue: 201, fixedPayout: 0 },
+        { id: "d2", handle: "D2", active: true, revenue: 800, fixedPayout: 0 },
+        { id: "c1", handle: "C1", active: true, revenue: 0, fixedPayout: 1_000 },
+        { id: "c2", handle: "C2", active: true, revenue: 0, fixedPayout: 1 },
+      ],
+    };
+
+    const result = calculatePayslip(session);
+
+    expect(result.suggestedTransfers).toEqual([
+      { fromMemberId: "d2", toMemberId: "c1", netAmount: 796, grossAmount: 800, feeAmount: 4 },
+      { fromMemberId: "d1", toMemberId: "c1", netAmount: 199, grossAmount: 200, feeAmount: 1 },
+    ]);
+    expect(result.unsettledBalances).toEqual([
+      { memberId: "d1", amount: -1 },
+      { memberId: "c2", amount: 1 },
+    ]);
+  });
+
   it("settles only the revenue actually held by members when a stale total override differs", () => {
     const session: SessionInput = {
       name: "Imported legacy session",

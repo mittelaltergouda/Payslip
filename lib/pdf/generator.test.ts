@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { generatePDF, generatePDFFilename } from './generator';
 import autoTable from 'jspdf-autotable';
 import type { SessionInput, PayslipResult } from '@/lib/types';
+import { calculatePayslip } from '@/lib/calc';
 
 // ============================================================================
 // MOCKS
@@ -712,6 +713,29 @@ describe('generatePDF', () => {
     expect(calls[2][1].body).toContainEqual([
       'Player 1', 'Player 2', '248.756', '1.244', '250.000',
     ]);
+  });
+
+  it('should disclose balances that cannot be transferred after fees', () => {
+    const session: SessionInput = {
+      name: 'Minimum fee residual',
+      type: 'TRADING',
+      distributionMode: 'ADJUSTABLE',
+      taxEnabled: true,
+      taxRate: 0.005,
+      members: [
+        { id: 'd1', handle: 'D1', active: true, revenue: 201, fixedPayout: 0 },
+        { id: 'd2', handle: 'D2', active: true, revenue: 800, fixedPayout: 0 },
+        { id: 'c1', handle: 'C1', active: true, revenue: 0, fixedPayout: 1000 },
+        { id: 'c2', handle: 'C2', active: true, revenue: 0, fixedPayout: 1 },
+      ],
+    };
+
+    generatePDF(session, calculatePayslip(session), { lang: 'en' });
+
+    expect(textCalls).toContain('Unsettled balances');
+    const residualTable = vi.mocked(autoTable).mock.calls.at(-1)?.[1];
+    expect(residualTable?.body).toContainEqual(['D1', 'Excess retained', '1']);
+    expect(residualTable?.body).toContainEqual(['C2', 'Still to receive', '1']);
   });
 });
 
