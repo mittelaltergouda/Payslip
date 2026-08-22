@@ -6,7 +6,7 @@ SC Payslip erhält eine getestete technische SEO-Basis mit klarer Star-Citizen-S
 
 Kein separater Plan wurde verwendet. Die Anforderungen stammen aus dem Live-Audit vom 21.08.2026 und der Nutzerentscheidung, SC Payslip suchmaschinenfähig zu machen.
 
-- Als Star-Citizen-Spieler möchte ich über eine passende Suche einen Crew-Auszahlungsrechner finden.
+- Als Star-Citizen-Spieler möchte ich über eine passende Suche ein Tool finden, mit dem ich aUEC aus gemeinsamen Runs fair aufteilen kann.
 - Als Suchmaschine möchte ich eindeutige öffentliche Metadaten, Canonicals und eine Sitemap erhalten.
 - Als Nutzer möchte ich sicher sein, dass lokale Crew- und Finanzdaten nicht in indexierbaren Artefakten landen.
 
@@ -69,7 +69,7 @@ Targeted command:
 npm test -- app/seo.test.tsx app/canonical.test.ts
 ```
 
-Result: 7/7 tests passed.
+Result: 8/8 tests passed.
 
 Full verification:
 
@@ -96,7 +96,7 @@ The production build was started locally on port 3101 and requested over HTTP. V
 
 | Guarantee | Test | Type | Result |
 |---|---|---|---|
-| Homepage metadata targets Star Citizen crew payouts | `app/seo.test.tsx` | unit/contract | PASS |
+| Homepage metadata targets fair aUEC distribution in Star Citizen | `app/seo.test.tsx` | unit/contract | PASS |
 | Open Graph and Twitter metadata are consistent | `app/seo.test.tsx` | unit/contract | PASS |
 | Search crawlers are allowed and selected AI-training crawlers blocked | `app/seo.test.tsx` | unit/contract | PASS |
 | Sitemap contains only intended public routes | `app/seo.test.tsx` | unit/contract | PASS |
