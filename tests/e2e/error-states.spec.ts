@@ -80,13 +80,8 @@ test.describe('Error States - Invalid Input Handling', () => {
         await input.fill('-5000');
         await page.waitForTimeout(300);
 
-        // The app should handle this gracefully - either reject the input,
-        // convert to positive, or show an error state
-        const value = await input.inputValue();
-
-        // App should either reject negative or convert to valid value
-        // Page should not crash
-        await expect(page.locator('text=SC Payslip')).toBeVisible();
+        // The app should handle this gracefully without crashing
+        await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
         return;
       }
     }
@@ -107,7 +102,7 @@ test.describe('Error States - Invalid Input Handling', () => {
         await page.waitForTimeout(300);
 
         // Page should handle this without crashing
-        await expect(page.locator('text=SC Payslip')).toBeVisible();
+        await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
         const value = await input.inputValue();
         // Value should be present (may be formatted)
@@ -132,7 +127,7 @@ test.describe('Error States - Invalid Input Handling', () => {
         await page.waitForTimeout(300);
 
         // Page should handle this gracefully
-        await expect(page.locator('text=SC Payslip')).toBeVisible();
+        await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
         return;
       }
     }
@@ -153,7 +148,7 @@ test.describe('Error States - Invalid Input Handling', () => {
         await page.waitForTimeout(300);
 
         // Page should handle this gracefully
-        await expect(page.locator('text=SC Payslip')).toBeVisible();
+        await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
         // Value should be empty or only contain valid characters
         const value = await input.inputValue();
@@ -179,7 +174,7 @@ test.describe('Error States - Invalid Input Handling', () => {
         await page.waitForTimeout(300);
 
         // Page should handle this gracefully
-        await expect(page.locator('text=SC Payslip')).toBeVisible();
+        await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
         return;
       }
     }
@@ -207,7 +202,7 @@ test.describe('Error States - Invalid Input Handling', () => {
     await page.waitForTimeout(500);
 
     // Page should still render correctly with zero revenue
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 });
 
@@ -266,14 +261,14 @@ test.describe('Error States - Boundary Conditions', () => {
     await page.waitForTimeout(300);
 
     // Page should still render
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // Try to save with empty name
     await page.keyboard.press('Control+KeyS');
     await page.waitForTimeout(1000);
 
     // Page should handle this gracefully (may show error or use default name)
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 
   test('Very long session name is handled (128+ characters)', async ({ page }) => {
@@ -288,7 +283,7 @@ test.describe('Error States - Boundary Conditions', () => {
     await page.waitForTimeout(300);
 
     // Page should handle this - either truncate or accept
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // Verify something was entered
     const value = await sessionNameInput.inputValue();
@@ -305,15 +300,12 @@ test.describe('Error States - Boundary Conditions', () => {
     for (let i = 1; i < allInputs.length; i++) {
       const input = allInputs[i];
       if (await input.isVisible({ timeout: 500 }).catch(() => false)) {
-        // Store original value
-        const originalValue = await input.inputValue();
-
         // Clear the handle
         await input.fill('');
         await page.waitForTimeout(300);
 
         // Page should still render
-        await expect(page.locator('text=SC Payslip')).toBeVisible();
+        await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
         return;
       }
     }
@@ -334,7 +326,7 @@ test.describe('Error States - Boundary Conditions', () => {
         await page.waitForTimeout(300);
 
         // Page should handle this
-        await expect(page.locator('text=SC Payslip')).toBeVisible();
+        await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
         return;
       }
     }
@@ -354,7 +346,7 @@ test.describe('Error States - Boundary Conditions', () => {
         await page.waitForTimeout(300);
 
         // Page should handle this gracefully
-        await expect(page.locator('text=SC Payslip')).toBeVisible();
+        await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
         return;
       }
     }
@@ -371,7 +363,7 @@ test.describe('Error States - Boundary Conditions', () => {
     await page.waitForTimeout(300);
 
     // Page should still render
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 
   test('Single member session is handled', async ({ page }) => {
@@ -391,7 +383,7 @@ test.describe('Error States - Boundary Conditions', () => {
     }
 
     // Page should still work with one member
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // Enter revenue and verify calculation works
     const numericInputs = page.locator('input[inputmode="numeric"]');
@@ -407,7 +399,7 @@ test.describe('Error States - Boundary Conditions', () => {
     }
 
     // Page should render correctly
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 });
 
@@ -467,7 +459,7 @@ test.describe('Error States - PERCENT Mode Validation', () => {
 
       // The app should handle invalid percent totals gracefully
       // Page should still render
-      await expect(page.locator('text=SC Payslip')).toBeVisible();
+      await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
     }
   });
 
@@ -482,7 +474,7 @@ test.describe('Error States - PERCENT Mode Validation', () => {
       await page.waitForTimeout(500);
 
       // Page should render in PERCENT mode
-      await expect(page.locator('text=SC Payslip')).toBeVisible();
+      await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
     }
   });
 
@@ -498,7 +490,7 @@ test.describe('Error States - PERCENT Mode Validation', () => {
 
       // Try to find percent input and enter invalid value
       // Percent inputs typically appear after switching modes
-      await expect(page.locator('text=SC Payslip')).toBeVisible();
+      await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
     }
   });
 
@@ -513,7 +505,7 @@ test.describe('Error States - PERCENT Mode Validation', () => {
       await page.waitForTimeout(300);
 
       // Page should render without crashes even with invalid states
-      await expect(page.locator('text=SC Payslip')).toBeVisible();
+      await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
     }
   });
 });
@@ -575,7 +567,7 @@ test.describe('Error States - Error Recovery', () => {
     await page.waitForLoadState('networkidle');
 
     // Page should still load without crashing
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // App should handle the corrupt data gracefully
     // The page should be functional
@@ -607,7 +599,7 @@ test.describe('Error States - Error Recovery', () => {
     await page.waitForLoadState('networkidle');
 
     // Page should still load without crashing
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 
   test('App recovers from empty localStorage', async ({ page }) => {
@@ -621,7 +613,7 @@ test.describe('Error States - Error Recovery', () => {
     await page.waitForLoadState('networkidle');
 
     // Page should still load with default state
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // Session name input should be present with default value
     const sessionNameInput = page.locator('input[type="text"]').first();
@@ -649,7 +641,7 @@ test.describe('Error States - Error Recovery', () => {
         await page.waitForTimeout(300);
 
         // Page should work normally
-        await expect(page.locator('text=SC Payslip')).toBeVisible();
+        await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
         const value = await input.inputValue();
         expect(parseInt(value.replace(/[,.\s]/g, ''))).toBe(5000);
@@ -675,198 +667,23 @@ test.describe('Error States - Error Recovery', () => {
         }
 
         // Page should still work
-        await expect(page.locator('text=SC Payslip')).toBeVisible();
+        await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
         return;
       }
     }
   });
 });
 
-test.describe('Error States - API Validation', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-  });
-
-  test('API rejects session with no members', async ({ page }) => {
-    // Create a session with no members via API
+test.describe('Error States - Local-only API boundary', () => {
+  test('session write API remains unavailable for every payload', async ({ page }) => {
     const response = await page.request.post('/api/sessions', {
       data: {
-        name: 'Invalid Session',
-        type: 'OTHER',
-        taxEnabled: true,
-        distribution: 'EQUAL',
-        distributionMode: 'EQUAL',
-        members: [] // Empty members array
-      }
+        name: 'Must stay local',
+        members: [],
+      },
     });
 
-    // API should reject with 400 error
-    expect(response.status()).toBeGreaterThanOrEqual(400);
-  });
-
-  test('API rejects session with invalid member handle', async ({ page }) => {
-    // Create a session with invalid handle via API
-    const response = await page.request.post('/api/sessions', {
-      data: {
-        name: 'Invalid Handle Session',
-        type: 'OTHER',
-        taxEnabled: true,
-        distributionMode: 'EQUAL',
-        members: [
-          { handle: '', role: 'Pilot', revenue: 0, investment: 0 } // Empty handle
-        ]
-      }
-    });
-
-    // API should reject with 400 error
-    expect(response.status()).toBeGreaterThanOrEqual(400);
-  });
-
-  test('API rejects session with negative revenue', async ({ page }) => {
-    // Create a session with negative revenue via API
-    const response = await page.request.post('/api/sessions', {
-      data: {
-        name: 'Negative Revenue Session',
-        type: 'OTHER',
-        taxEnabled: true,
-        distributionMode: 'EQUAL',
-        members: [
-          { handle: 'TestPlayer', role: 'Pilot', revenue: -5000, investment: 0 }
-        ]
-      }
-    });
-
-    // API should reject with 400 error
-    expect(response.status()).toBeGreaterThanOrEqual(400);
-  });
-
-  test('API rejects session with revenue exceeding int32 max', async ({ page }) => {
-    // Create a session with revenue exceeding int32 max via API
-    const response = await page.request.post('/api/sessions', {
-      data: {
-        name: 'Overflow Revenue Session',
-        type: 'OTHER',
-        taxEnabled: true,
-        distributionMode: 'EQUAL',
-        members: [
-          { handle: 'TestPlayer', role: 'Pilot', revenue: 9999999999999, investment: 0 }
-        ]
-      }
-    });
-
-    // API should reject with 400 error
-    expect(response.status()).toBeGreaterThanOrEqual(400);
-  });
-
-  test('API rejects session with invalid distribution mode', async ({ page }) => {
-    // Create a session with invalid distribution mode via API
-    const response = await page.request.post('/api/sessions', {
-      data: {
-        name: 'Invalid Mode Session',
-        type: 'OTHER',
-        taxEnabled: true,
-        distributionMode: 'INVALID_MODE',
-        members: [
-          { handle: 'TestPlayer', role: 'Pilot', revenue: 1000, investment: 0 }
-        ]
-      }
-    });
-
-    // API should reject with 400 error
-    expect(response.status()).toBeGreaterThanOrEqual(400);
-  });
-
-  test('API rejects session with invalid session type', async ({ page }) => {
-    // Create a session with invalid session type via API
-    const response = await page.request.post('/api/sessions', {
-      data: {
-        name: 'Invalid Type Session',
-        type: 'INVALID_TYPE',
-        taxEnabled: true,
-        distributionMode: 'EQUAL',
-        members: [
-          { handle: 'TestPlayer', role: 'Pilot', revenue: 1000, investment: 0 }
-        ]
-      }
-    });
-
-    // API should reject with 400 error
-    expect(response.status()).toBeGreaterThanOrEqual(400);
-  });
-
-  test('API rejects session with tax rate exceeding 100%', async ({ page }) => {
-    // Create a session with invalid tax rate via API
-    const response = await page.request.post('/api/sessions', {
-      data: {
-        name: 'Invalid Tax Rate Session',
-        type: 'OTHER',
-        taxEnabled: true,
-        taxRate: 1.5, // 150% tax rate (invalid)
-        distributionMode: 'EQUAL',
-        members: [
-          { handle: 'TestPlayer', role: 'Pilot', revenue: 1000, investment: 0 }
-        ]
-      }
-    });
-
-    // API should reject with 400 error
-    expect(response.status()).toBeGreaterThanOrEqual(400);
-  });
-
-  test('API rejects session with negative tax rate', async ({ page }) => {
-    // Create a session with negative tax rate via API
-    const response = await page.request.post('/api/sessions', {
-      data: {
-        name: 'Negative Tax Rate Session',
-        type: 'OTHER',
-        taxEnabled: true,
-        taxRate: -0.1, // Negative tax rate (invalid)
-        distributionMode: 'EQUAL',
-        members: [
-          { handle: 'TestPlayer', role: 'Pilot', revenue: 1000, investment: 0 }
-        ]
-      }
-    });
-
-    // API should reject with 400 error
-    expect(response.status()).toBeGreaterThanOrEqual(400);
-  });
-
-  test('API rejects session name exceeding 128 characters', async ({ page }) => {
-    // Create a session with very long name via API
-    const response = await page.request.post('/api/sessions', {
-      data: {
-        name: 'A'.repeat(200), // 200 characters (exceeds 128 limit)
-        type: 'OTHER',
-        taxEnabled: true,
-        distributionMode: 'EQUAL',
-        members: [
-          { handle: 'TestPlayer', role: 'Pilot', revenue: 1000, investment: 0 }
-        ]
-      }
-    });
-
-    // API should reject with 400 error
-    expect(response.status()).toBeGreaterThanOrEqual(400);
-  });
-
-  test('API rejects member handle exceeding 64 characters', async ({ page }) => {
-    // Create a session with very long member handle via API
-    const response = await page.request.post('/api/sessions', {
-      data: {
-        name: 'Long Handle Session',
-        type: 'OTHER',
-        taxEnabled: true,
-        distributionMode: 'EQUAL',
-        members: [
-          { handle: 'A'.repeat(100), role: 'Pilot', revenue: 1000, investment: 0 }
-        ]
-      }
-    });
-
-    // API should reject with 400 error
-    expect(response.status()).toBeGreaterThanOrEqual(400);
+    expect(response.status()).toBe(404);
   });
 });
 
@@ -935,7 +752,7 @@ test.describe('Error States - Edge Cases', () => {
     await page.waitForTimeout(500);
 
     // Page should handle zero revenue scenario
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 
   test('Unicode characters in session name are handled', async ({ page }) => {
@@ -950,7 +767,7 @@ test.describe('Error States - Edge Cases', () => {
     await page.waitForTimeout(300);
 
     // Page should handle unicode
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     const value = await sessionNameInput.inputValue();
     expect(value).toBeTruthy();
@@ -968,7 +785,7 @@ test.describe('Error States - Edge Cases', () => {
     await page.waitForTimeout(300);
 
     // Page should handle tab characters
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 
   test('Newline characters in session name are handled', async ({ page }) => {
@@ -983,7 +800,7 @@ test.describe('Error States - Edge Cases', () => {
     await page.waitForTimeout(300);
 
     // Page should handle newline characters
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 
   test('Leading zeros in revenue are handled', async ({ page }) => {
@@ -1001,7 +818,7 @@ test.describe('Error States - Edge Cases', () => {
         await page.waitForTimeout(300);
 
         // Page should handle leading zeros
-        await expect(page.locator('text=SC Payslip')).toBeVisible();
+        await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
         const value = await input.inputValue();
         // Value should be parsed correctly
@@ -1026,7 +843,7 @@ test.describe('Error States - Edge Cases', () => {
         await page.waitForTimeout(300);
 
         // Page should handle this gracefully
-        await expect(page.locator('text=SC Payslip')).toBeVisible();
+        await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
         return;
       }
     }
@@ -1056,7 +873,7 @@ test.describe('Error States - Edge Cases', () => {
     }
 
     // Page should handle extreme differences
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 });
 
@@ -1116,7 +933,7 @@ test.describe('Error States - Mobile Error Handling', () => {
     }
 
     // Page should handle errors gracefully on mobile
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 
   test('Corrupt localStorage recovery works on mobile', async ({ page }) => {
@@ -1133,6 +950,6 @@ test.describe('Error States - Mobile Error Handling', () => {
     await page.waitForLoadState('networkidle');
 
     // Page should recover on mobile
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 });

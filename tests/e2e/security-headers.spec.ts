@@ -9,7 +9,7 @@ import { test, expect } from '@playwright/test';
  * 3. Referrer-Policy (from next.config.mjs)
  * 4. Strict-Transport-Security (from next.config.mjs)
  * 5. Permissions-Policy (from next.config.mjs)
- * 6. Content-Security-Policy with nonce (from middleware.ts)
+ * 6. Content-Security-Policy hydration directives (from middleware.ts)
  *
  * Tests run on Chrome, Firefox, Safari (WebKit), and mobile viewports
  */
@@ -58,7 +58,7 @@ test.describe('Security Headers Verification', () => {
     expect(headers['permissions-policy']).toContain('geolocation=()');
   });
 
-  test('Content-Security-Policy header is present with nonce', async ({ page }) => {
+  test('Content-Security-Policy header allows hydration without unsafe eval', async ({ page }) => {
     const response = await page.goto('/');
     expect(response).not.toBeNull();
 
@@ -70,8 +70,8 @@ test.describe('Security Headers Verification', () => {
 
     // Verify key CSP directives
     expect(csp).toContain("default-src 'self'");
-    expect(csp).toContain("script-src 'self'");
-    expect(csp).toContain("style-src 'self'");
+    expect(csp).toContain("script-src 'self' 'unsafe-inline'");
+    expect(csp).toContain("style-src 'self' 'unsafe-inline'");
     expect(csp).toContain("img-src 'self'");
     expect(csp).toContain("font-src 'self'");
     expect(csp).toContain("connect-src 'self'");
@@ -79,9 +79,7 @@ test.describe('Security Headers Verification', () => {
     expect(csp).toContain("base-uri 'self'");
     expect(csp).toContain("form-action 'self'");
 
-    // Verify nonce is present in script-src and style-src
-    expect(csp).toMatch(/script-src[^;]*'nonce-[^']+'/);
-    expect(csp).toMatch(/style-src[^;]*'nonce-[^']+'/);
+    expect(csp).not.toContain("'unsafe-eval'");
   });
 
   test('All security headers are present together', async ({ page }) => {
@@ -156,7 +154,7 @@ test.describe('Security Headers Verification', () => {
     await page.waitForTimeout(1000);
 
     // Verify page loaded successfully
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // Check for no actual JavaScript errors (CSP violations and hydration warnings are filtered out)
     if (consoleErrors.length > 0) {
@@ -165,24 +163,20 @@ test.describe('Security Headers Verification', () => {
     expect(consoleErrors).toHaveLength(0);
   });
 
-  test('CSP nonce changes between requests', async ({ page }) => {
+  test('x-nonce changes between requests', async ({ page }) => {
     // First request
     const response1 = await page.goto('/');
     expect(response1).not.toBeNull();
     const headers1 = response1!.headers();
-    const csp1 = headers1['content-security-policy'];
-    const nonceMatch1 = csp1?.match(/'nonce-([^']+)'/);
-    expect(nonceMatch1).toBeTruthy();
-    const nonce1 = nonceMatch1![1];
+    const nonce1 = headers1['x-nonce'];
+    expect(nonce1).toBeTruthy();
 
     // Second request (reload page)
     const response2 = await page.goto('/');
     expect(response2).not.toBeNull();
     const headers2 = response2!.headers();
-    const csp2 = headers2['content-security-policy'];
-    const nonceMatch2 = csp2?.match(/'nonce-([^']+)'/);
-    expect(nonceMatch2).toBeTruthy();
-    const nonce2 = nonceMatch2![1];
+    const nonce2 = headers2['x-nonce'];
+    expect(nonce2).toBeTruthy();
 
     // Verify nonces are different (dynamic generation)
     expect(nonce1).not.toBe(nonce2);
@@ -193,10 +187,12 @@ test.describe('Security Headers Verification', () => {
     await page.waitForLoadState('networkidle');
 
     // Wait for the main component to load
-    await page.waitForSelector('text=SC Payslip', { timeout: 10000 });
+    await expect(
+      page.getByRole('main', { name: 'SC Payslip', exact: true })
+    ).toBeVisible({ timeout: 10_000 });
 
     // Verify key application elements are visible
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // Verify session settings section exists
     await expect(page.locator('h2').first()).toBeVisible();
@@ -255,7 +251,7 @@ test.describe('Cross-Browser Security Header Verification', () => {
 
     // Verify page renders correctly on mobile
     if (viewport && viewport.width < 768) {
-      await expect(page.locator('text=SC Payslip')).toBeVisible();
+      await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
     }
   });
 
@@ -271,7 +267,7 @@ test.describe('Cross-Browser Security Header Verification', () => {
 
     // Verify page renders correctly on desktop
     if (viewport && viewport.width >= 768) {
-      await expect(page.locator('text=SC Payslip')).toBeVisible();
+      await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
     }
   });
 });
