@@ -54,7 +54,7 @@ Fix checkpoint: `ebbe2fe fix: avoid duplicate brand in page titles`
 
 Der erneute Produktions-Build und HTTP-Smoke bestätigten:
 
-- `/`: `Crew-Abrechnung für Star Citizen | SC Payslip`
+- `/`: `Star Citizen: aUEC fair aufteilen | SC Payslip`
 - `/tool-tipps`: `Tool-Tipps | SC Payslip`
 - `/impressum`: `Impressum | SC Payslip`
 - `/datenschutz`: `Datenschutz | SC Payslip`
@@ -85,7 +85,7 @@ Full verification:
 
 The production build was started locally on port 3101 and requested over HTTP. Verified:
 
-- Title: `Crew-Abrechnung für Star Citizen | SC Payslip`
+- Title: `Star Citizen: aUEC fair aufteilen | SC Payslip`
 - one H1 with the same primary search intent
 - description, canonical, Open Graph and Twitter metadata
 - `WebApplication` JSON-LD
