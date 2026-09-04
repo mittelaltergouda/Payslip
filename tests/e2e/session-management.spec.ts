@@ -339,12 +339,12 @@ test.describe('Session Management E2E Tests', () => {
     await sessionNameInput.fill(uniqueName);
 
     // Fill in some revenue data (inputs may use inputMode="numeric" instead of type="number")
-    const numericInputs = page.locator('input[inputmode="numeric"]');
+    const numericInputs = page.locator('input[inputmode="numeric"]:visible');
     if (await numericInputs.count() > 0) {
       await numericInputs.first().fill('7500');
       await page.waitForTimeout(300);
     } else {
-      const numberInputs = await page.locator('input[type="number"]').all();
+      const numberInputs = await page.locator('input[type="number"]:visible').all();
       if (numberInputs.length > 0) {
         await numberInputs[0].fill('7500');
         await page.waitForTimeout(300);

@@ -915,10 +915,12 @@ test.describe('Session Wizard - Results Calculation', () => {
     await page.waitForLoadState('networkidle');
 
     // Look for results/summary section
-    const resultsSection = page.locator('text=/result|ergebnis|summary|zusammenfassung|payout|auszahlung/i');
-    const hasResults = await resultsSection.first().isVisible({ timeout: 5000 }).catch(() => false);
+    const resultsSection = page
+      .getByText(/result|ergebnis|summary|zusammenfassung|payout|auszahlung/i)
+      .filter({ visible: true })
+      .first();
 
-    expect(hasResults).toBeTruthy();
+    await expect(resultsSection).toBeVisible();
   });
 
   test('Results update when revenue changes', async ({ page }) => {
