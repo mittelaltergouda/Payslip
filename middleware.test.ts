@@ -21,6 +21,7 @@ describe('middleware - CSP nonce generation', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
   });
 
   it('should generate a unique nonce for each request', () => {
@@ -79,6 +80,28 @@ describe('middleware - CSP nonce generation', () => {
     expect(cspHeader).toContain("base-uri 'self'");
     expect(cspHeader).toContain("form-action 'self'");
     expect(cspHeader).toContain("object-src 'none'");
+  });
+
+  it('should upgrade insecure requests in production', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    const request = new NextRequest(new Request('https://payslip.cheesy.cloud/'));
+
+    const response = middleware(request);
+
+    expect(response.headers.get('Content-Security-Policy')).toContain(
+      'upgrade-insecure-requests',
+    );
+  });
+
+  it('should not upgrade localhost assets on the development server', () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    const request = new NextRequest(new Request('http://localhost:3000/'));
+
+    const response = middleware(request);
+
+    expect(response.headers.get('Content-Security-Policy')).not.toContain(
+      'upgrade-insecure-requests',
+    );
   });
 
   it('should require a nonce for scripts while retaining required inline styles', () => {
