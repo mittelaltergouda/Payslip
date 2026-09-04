@@ -1,64 +1,36 @@
-import { describe, expect, it, vi } from "vitest";
-import { NextRequest } from "next/server";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
 
-vi.mock("@/lib/prisma", () => ({
-  prisma: {
-    session: {
-      findMany: vi.fn(),
-      create: vi.fn(),
-      findUnique: vi.fn(),
-      delete: vi.fn(),
-    },
-    exportToken: {
-      create: vi.fn(),
-    },
-  },
-}));
+const repositoryRoot = process.cwd();
 
-import { GET, POST } from "@/app/api/sessions/route";
-import { DELETE } from "@/app/api/sessions/[id]/route";
-import { POST as createExportToken } from "@/app/api/sessions/[id]/export-token/route";
-
-const sessionId = "8f5da5ea-88bf-4acd-b2e4-fcb98b291681";
+const removedServerPersistencePaths = [
+  "app/api",
+  "lib/csrf-client.ts",
+  "lib/csrf.ts",
+  "lib/errors.ts",
+  "lib/localOnlyApi.ts",
+  "lib/prisma.ts",
+  "prisma",
+];
 
 describe("public local-only deployment", () => {
-  it("does not expose a server-side session list", async () => {
-    const response = await GET();
-
-    expect(response.status).toBe(404);
+  it.each(removedServerPersistencePaths)("does not ship %s", (relativePath) => {
+    expect(existsSync(join(repositoryRoot, relativePath))).toBe(false);
   });
 
-  it("does not accept server-side session writes", async () => {
-    const request = new NextRequest("https://payslip.cheesy.cloud/api/sessions", {
-      method: "POST",
-      body: JSON.stringify({ name: "private crew data" }),
-    });
+  it("does not depend on Prisma or expose database scripts", () => {
+    const packageJson = JSON.parse(
+      readFileSync(join(repositoryRoot, "package.json"), "utf8"),
+    ) as {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+      scripts?: Record<string, string>;
+    };
 
-    const response = await POST(request);
-
-    expect(response.status).toBe(404);
-  });
-
-  it("does not expose server-side deletion", async () => {
-    const request = new NextRequest(`https://payslip.cheesy.cloud/api/sessions/${sessionId}`, {
-      method: "DELETE",
-    });
-
-    const response = await DELETE(request, { params: Promise.resolve({ id: sessionId }) });
-
-    expect(response.status).toBe(404);
-  });
-
-  it("does not create server-side share tokens", async () => {
-    const request = new NextRequest(
-      `https://payslip.cheesy.cloud/api/sessions/${sessionId}/export-token`,
-      { method: "POST" },
-    );
-
-    const response = await createExportToken(request, {
-      params: Promise.resolve({ id: sessionId }),
-    });
-
-    expect(response.status).toBe(404);
+    expect(packageJson.dependencies?.["@prisma/client"]).toBeUndefined();
+    expect(packageJson.devDependencies?.prisma).toBeUndefined();
+    expect(Object.keys(packageJson.scripts ?? {})).not.toContain("prisma:generate");
+    expect(Object.keys(packageJson.scripts ?? {})).not.toContain("prisma:push");
   });
 });
