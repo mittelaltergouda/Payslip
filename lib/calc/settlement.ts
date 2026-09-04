@@ -115,8 +115,14 @@ export function settleBalancesDetailed(
       );
 
       if (netAmount < 1) {
-        debtorIdx++;
-        creditorIdx++;
+        // A sub-minimum remainder on one side must not discard the still-funded
+        // opposite side; it may continue matching the next balance.
+        if (debtor.balance <= creditor.balance + EPSILON) {
+          debtorIdx++;
+        }
+        if (creditor.balance <= debtor.balance + EPSILON) {
+          creditorIdx++;
+        }
         continue;
       }
 
