@@ -2,21 +2,22 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 export function middleware(request: NextRequest) {
-  // Generate a unique nonce for this request
-  const nonce = crypto.randomUUID();
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  const isDevelopment = process.env.NODE_ENV === "development";
 
   // Create Content-Security-Policy header with nonce
   const cspHeader = [
     `default-src 'self'`,
-    // Next.js app-router emits inline hydration/runtime scripts in production.
-    `script-src 'self' 'unsafe-inline'`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDevelopment ? " 'unsafe-eval'" : ""}`,
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' data: blob:`,
     `font-src 'self' data:`,
     `connect-src 'self'`,
+    `object-src 'none'`,
     `frame-ancestors 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,
+    `upgrade-insecure-requests`,
   ].join("; ");
 
   // Clone the request headers and add the request nonce.

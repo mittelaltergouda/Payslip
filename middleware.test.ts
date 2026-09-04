@@ -53,7 +53,9 @@ describe('middleware - CSP nonce generation', () => {
 
     const response = middleware(request);
 
-    expect(response.headers.get('x-nonce')).toBe('test-nonce-value');
+    expect(response.headers.get('x-nonce')).toBe(
+      Buffer.from('test-nonce-value').toString('base64'),
+    );
   });
 
   it('should create valid CSP header with all required directives', () => {
@@ -111,7 +113,7 @@ describe('middleware - CSP nonce generation', () => {
     const responseNonce = response.headers.get('x-nonce');
     const cspHeader = response.headers.get('Content-Security-Policy');
 
-    expect(responseNonce).toBe('consistent-nonce');
+    expect(responseNonce).toBe(Buffer.from('consistent-nonce').toString('base64'));
     expect(cspHeader).toContain("script-src 'self' 'nonce-");
   });
 
@@ -141,9 +143,9 @@ describe('middleware - CSP nonce generation', () => {
     expect(nonce1).not.toBe(nonce3);
 
     // Verify they match the generated values
-    expect(nonce1).toBe('unique-0');
-    expect(nonce2).toBe('unique-1');
-    expect(nonce3).toBe('unique-2');
+    expect(nonce1).toBe(Buffer.from('unique-0').toString('base64'));
+    expect(nonce2).toBe(Buffer.from('unique-1').toString('base64'));
+    expect(nonce3).toBe(Buffer.from('unique-2').toString('base64'));
   });
 
   it('should properly format CSP header with semicolon separators', () => {
