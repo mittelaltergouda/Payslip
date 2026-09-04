@@ -60,7 +60,7 @@ test.describe('Session Editing - Loading from History', () => {
       !error.includes('A tree hydrated but') &&
       !error.includes('Hydration failed') &&
       !error.includes('__nextjs_original-stack-frames') &&
-      !error.includes('500') &&  // Filter database connection errors (DATABASE_URL may not be set)
+      !error.includes('500') &&
       !error.includes('Internal Server Error') &&
       !error.includes('Failed to load resource') &&
       !error.includes('status of 500')

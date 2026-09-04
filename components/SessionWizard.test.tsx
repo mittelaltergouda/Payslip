@@ -6,7 +6,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ToastProvider } from './Toast';
 import * as sessionStorage from '@/lib/storage/sessionStorage';
 import * as useAutoSaveModule from '@/hooks/useAutoSave';
-import * as csrfClient from '@/lib/csrf-client';
 import type { SavedSession } from '@/lib/types';
 
 // Helper function to interact with custom distribution mode dropdown
@@ -1254,9 +1253,6 @@ let fetchMock: ReturnType<typeof vi.fn>;
 
     fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: 'server-session' }) });
     vi.stubGlobal('fetch', fetchMock);
-
-    vi.spyOn(csrfClient, 'getCsrfHeaders').mockResolvedValue(new Headers({ 'Content-Type': 'application/json' }));
-    vi.spyOn(csrfClient, 'clearCsrfToken').mockImplementation(() => {});
   });
 
   afterEach(() => {
