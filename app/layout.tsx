@@ -24,6 +24,9 @@ export const metadata: Metadata = {
   description: "Teilt Profite, Kosten und Steuern fair auf  Star Citizen ready."
 };
 
+// Request-specific CSP nonces require server rendering for every page request.
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children
 }: {
