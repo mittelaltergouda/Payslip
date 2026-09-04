@@ -97,12 +97,12 @@ export function settleBalancesDetailed(
     const transferBudget = Math.floor(exactBudget + Number.EPSILON);
 
     if (transferBudget < 1) {
-      // The remaining fractional imbalance cannot be transferred. Advance the
-      // side(s) represented by the smaller remainder to avoid an endless loop.
-      if (debtor.balance <= creditor.balance + EPSILON) {
+      if (debtor.balance < creditor.balance) {
         debtorIdx++;
-      }
-      if (creditor.balance <= debtor.balance + EPSILON) {
+      } else if (creditor.balance < debtor.balance) {
+        creditorIdx++;
+      } else {
+        debtorIdx++;
         creditorIdx++;
       }
       continue;
