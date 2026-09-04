@@ -116,11 +116,14 @@ export function settleBalancesDetailed(
 
       if (netAmount < 1) {
         // A sub-minimum remainder on one side must not discard the still-funded
-        // opposite side; it may continue matching the next balance.
-        if (debtor.balance <= creditor.balance + EPSILON) {
+        // opposite side; it may continue matching the next balance. Use strict
+        // ordering here: EPSILON is for zero classification, not tie-breaking.
+        if (debtor.balance < creditor.balance) {
           debtorIdx++;
-        }
-        if (creditor.balance <= debtor.balance + EPSILON) {
+        } else if (creditor.balance < debtor.balance) {
+          creditorIdx++;
+        } else {
+          debtorIdx++;
           creditorIdx++;
         }
         continue;
