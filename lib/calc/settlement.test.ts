@@ -56,4 +56,34 @@ describe('settleBalancesDetailed', () => {
       { memberId: 'creditor-202', amount: 1 },
     ]);
   });
+
+  it('does not skip a creditor when sub-cent balances differ within epsilon', () => {
+    const result = settleBalancesDetailed(
+      [
+        member('debtor-1', 99.999, 0),
+        member('debtor-2', 2.001, 0),
+        member('creditor-1', 0, 98),
+        member('creditor-2', 0, 2.005),
+        member('creditor-3', 0, 1.995),
+      ],
+      0.005,
+    );
+
+    expect(result.transfers).toEqual([
+      {
+        fromMemberId: 'debtor-1',
+        toMemberId: 'creditor-1',
+        netAmount: 97,
+        grossAmount: 98,
+        feeAmount: 1,
+      },
+      {
+        fromMemberId: 'debtor-2',
+        toMemberId: 'creditor-2',
+        netAmount: 1,
+        grossAmount: 2,
+        feeAmount: 1,
+      },
+    ]);
+  });
 });
