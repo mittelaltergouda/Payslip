@@ -17,7 +17,7 @@ export function middleware(request: NextRequest) {
     `frame-ancestors 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,
-    `upgrade-insecure-requests`,
+    ...(isDevelopment ? [] : [`upgrade-insecure-requests`]),
   ].join("; ");
 
   // Clone the request headers and add the request nonce.
