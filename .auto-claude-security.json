@@ -187,12 +187,9 @@
       "react",
       "vitest",
       "playwright",
-      "eslint",
-      "prisma"
+      "eslint"
     ],
-    "databases": [
-      "postgresql"
-    ],
+    "databases": [],
     "infrastructure": [],
     "cloud_providers": [],
     "code_quality_tools": [],
@@ -207,9 +204,7 @@
       "lint",
       "test",
       "test:watch",
-      "test:e2e",
-      "prisma:generate",
-      "prisma:push"
+      "test:e2e"
     ],
     "make_targets": [],
     "poetry_scripts": [],

@@ -15,7 +15,6 @@ Before you begin, ensure you have the following installed:
 - **Node.js** (v18 or later) — [Download here](https://nodejs.org/)
 - **npm** (v9 or later) — comes with Node.js
 - **Git** — [Install Git](https://git-scm.com/)
-- **PostgreSQL** (optional, for local database testing) — see [Prisma setup](#database-setup)
 
 ### Fork & Clone the Repository
 
@@ -39,17 +38,7 @@ For external contributors, we use a **fork-based workflow**:
    npm install
    ```
 
-2. **Set up environment variables** (copy `.env.example` if present):
-   ```bash
-   cp .env.example .env.local
-   ```
-
-3. **Generate Prisma client** (if modifying database schema):
-   ```bash
-   npm run prisma:generate
-   ```
-
-4. **Start the development server:**
+2. **Start the development server:**
    ```bash
    npm run dev
    ```
@@ -270,21 +259,7 @@ This repository uses **Dependabot** to automatically:
 
 3. Document any breaking changes or migration steps
 
-### Prisma & Database
-
-If you modify the database schema in `prisma/schema.prisma`:
-
-1. **Generate the Prisma client:**
-   ```bash
-   npm run prisma:generate
-   ```
-
-2. **Test migrations** (locally with PostgreSQL):
-   ```bash
-   npm run prisma:push
-   ```
-
-3. **Include migration notes** in your PR description
+SC Payslip deliberately has no application API or database. Changes that add server-side persistence require a separate security and privacy review.
 
 ---
 
