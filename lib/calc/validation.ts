@@ -127,6 +127,21 @@ export function validateMemberHandles(members: MemberInput[]): void {
 }
 
 /**
+ * Validates percentage shares for every distribution mode.
+ */
+export function validatePercentShareValues(members: MemberInput[]): void {
+  for (const member of members) {
+    const share = member.percentShare;
+    if (share === undefined || share === null) {continue;}
+    if (!Number.isFinite(share) || share < 0 || share > 100) {
+      throw new Error(
+        `Member "${member.handle}" percentage share must be finite and between 0 and 100`
+      );
+    }
+  }
+}
+
+/**
  * Validates that numeric values are not negative where they shouldn't be.
  *
  * @param session - The session input to validate
@@ -203,6 +218,9 @@ export function validateTaxRate(taxRate: number | undefined): void {
 export function validateSessionInput(session: SessionInput): void {
   // Validate member handles first (before normalization)
   validateMemberHandles(session.members);
+
+  // Percentage weights must stay finite and within their UI/domain bounds.
+  validatePercentShareValues(session.members);
 
   // Reject values JavaScript cannot represent exactly before arithmetic.
   validateSafeAuecValues(session);
