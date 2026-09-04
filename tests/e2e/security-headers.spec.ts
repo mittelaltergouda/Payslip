@@ -58,7 +58,7 @@ test.describe('Security Headers Verification', () => {
     expect(headers['permissions-policy']).toContain('geolocation=()');
   });
 
-  test('Content-Security-Policy header allows hydration without unsafe eval', async ({ page }) => {
+  test('Content-Security-Policy uses nonce-authorized scripts', async ({ page }) => {
     const response = await page.goto('/');
     expect(response).not.toBeNull();
 
@@ -70,7 +70,8 @@ test.describe('Security Headers Verification', () => {
 
     // Verify key CSP directives
     expect(csp).toContain("default-src 'self'");
-    expect(csp).toContain("script-src 'self' 'unsafe-inline'");
+    expect(csp).toMatch(/script-src 'self' 'nonce-[^']+' 'strict-dynamic'/);
+    expect(csp).not.toContain("script-src 'self' 'unsafe-inline'");
     expect(csp).toContain("style-src 'self' 'unsafe-inline'");
     expect(csp).toContain("img-src 'self'");
     expect(csp).toContain("font-src 'self'");
@@ -79,7 +80,30 @@ test.describe('Security Headers Verification', () => {
     expect(csp).toContain("base-uri 'self'");
     expect(csp).toContain("form-action 'self'");
 
-    expect(csp).not.toContain("'unsafe-eval'");
+    // Playwright starts the Next development server, which needs eval for HMR.
+    // Middleware unit tests and the standalone smoke test verify it is absent in production.
+    expect(csp).toContain("'unsafe-eval'");
+
+    const nonce = csp.match(/'nonce-([^']+)'/)?.[1];
+    expect(nonce).toBeTruthy();
+
+    const scripts = await page.locator('script').evaluateAll((elements) =>
+      elements.map((script) => ({
+        nonce: script.nonce,
+        source: script.getAttribute('src'),
+        textLength: script.textContent?.length ?? 0,
+      })),
+    );
+    expect(scripts.length).toBeGreaterThan(0);
+
+    // Non-empty inline scripts must always carry the request nonce. In dev,
+    // strict-dynamic permits Next's trusted bootstrap to add the HMR client.
+    const executableInlineScripts = scripts.filter(
+      (script) => script.source === null && script.textLength > 0,
+    );
+    expect(executableInlineScripts.length).toBeGreaterThan(0);
+    expect(executableInlineScripts.every((script) => script.nonce === nonce)).toBe(true);
+    expect(scripts.filter((script) => script.nonce).every((script) => script.nonce === nonce)).toBe(true);
   });
 
   test('All security headers are present together', async ({ page }) => {
