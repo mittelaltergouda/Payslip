@@ -86,4 +86,34 @@ describe('settleBalancesDetailed', () => {
       },
     ]);
   });
+
+  it('does not skip a creditor when a sub-minimum budget differs within epsilon', () => {
+    const result = settleBalancesDetailed(
+      [
+        member('debtor-1', 2.999, 0),
+        member('debtor-2', 1.001, 0),
+        member('creditor-1', 0, 2),
+        member('creditor-2', 0, 1.005),
+        member('creditor-3', 0, 0.995),
+      ],
+      0,
+    );
+
+    expect(result.transfers).toEqual([
+      {
+        fromMemberId: 'debtor-1',
+        toMemberId: 'creditor-1',
+        netAmount: 2,
+        grossAmount: 2,
+        feeAmount: 0,
+      },
+      {
+        fromMemberId: 'debtor-2',
+        toMemberId: 'creditor-2',
+        netAmount: 1,
+        grossAmount: 1,
+        feeAmount: 0,
+      },
+    ]);
+  });
 });
