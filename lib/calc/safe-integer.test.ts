@@ -38,6 +38,14 @@ describe('safe aUEC bounds', () => {
     expect(() => validateSessionInput(session)).toThrow(/aggregate.*safe integer/i);
   });
 
+  it('rejects non-finite or out-of-range percentage shares', () => {
+    const session = sessionWithRevenue(1_000);
+    session.distributionMode = 'ADJUSTABLE';
+    session.members[0].percentShare = 1e308;
+
+    expect(() => validateSessionInput(session)).toThrow(/percentage.*0.*100/i);
+  });
+
   it('rejects unsafe transfer budgets without entering the binary search', () => {
     expect(() =>
       fitTransferToBudget(Number.MAX_SAFE_INTEGER + 1, 0.005),
