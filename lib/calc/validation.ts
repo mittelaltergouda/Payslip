@@ -37,21 +37,32 @@ function assertSafeAuecValue(label: string, value: number | null | undefined): v
  * Validates every aUEC-denominated input before calculations begin.
  */
 export function validateSafeAuecValues(session: SessionInput): void {
-  assertSafeAuecValue('Total revenue', session.totalRevenue);
+  const values: Array<readonly [label: string, value: number | null | undefined]> = [
+    ['Total revenue', session.totalRevenue],
+    ...session.members.flatMap((member) => [
+      [`Member "${member.handle}" revenue`, member.revenue] as const,
+      [`Member "${member.handle}" investment`, member.investment] as const,
+      [`Member "${member.handle}" fixed bonus`, member.fixedBonus] as const,
+      [`Member "${member.handle}" fixed payout`, member.fixedPayout] as const,
+    ]),
+    ...(session.sharedExpenses ?? []).map(
+      (expense) => [`Shared expense "${expense.label}" amount`, expense.amount] as const,
+    ),
+    ...(session.individualExpenses ?? []).map(
+      (expense) => [`Individual expense "${expense.label}" amount`, expense.amount] as const,
+    ),
+  ];
 
-  for (const member of session.members) {
-    assertSafeAuecValue(`Member "${member.handle}" revenue`, member.revenue);
-    assertSafeAuecValue(`Member "${member.handle}" investment`, member.investment);
-    assertSafeAuecValue(`Member "${member.handle}" fixed bonus`, member.fixedBonus);
-    assertSafeAuecValue(`Member "${member.handle}" fixed payout`, member.fixedPayout);
-  }
+  let aggregateMagnitude = 0;
+  for (const [label, value] of values) {
+    assertSafeAuecValue(label, value);
+    if (value === undefined || value === null) {continue;}
 
-  for (const expense of session.sharedExpenses ?? []) {
-    assertSafeAuecValue(`Shared expense "${expense.label}" amount`, expense.amount);
-  }
-
-  for (const expense of session.individualExpenses ?? []) {
-    assertSafeAuecValue(`Individual expense "${expense.label}" amount`, expense.amount);
+    const magnitude = Math.abs(value);
+    if (magnitude > Number.MAX_SAFE_INTEGER - aggregateMagnitude) {
+      throw new Error('Aggregate aUEC values must remain within the safe integer range');
+    }
+    aggregateMagnitude += magnitude;
   }
 }
 
