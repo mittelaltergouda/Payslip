@@ -113,6 +113,11 @@ export function fitTransferToBudget(
   taxRate: number
 ): { netAmount: number; feeAmount: number; grossAmount: number } {
   assertValidTaxRate(taxRate);
+  if (!Number.isFinite(budget) || budget < 0 || budget > Number.MAX_SAFE_INTEGER) {
+    throw new Error(
+      `Transfer budget must be within the non-negative safe integer range, but got ${budget}`
+    );
+  }
   const wholeBudget = Math.max(0, Math.floor(budget));
 
   if (taxRate === 0) {
@@ -124,7 +129,7 @@ export function fitTransferToBudget(
   let netAmount = 0;
 
   while (low <= high) {
-    const candidate = Math.floor((low + high) / 2);
+    const candidate = low + Math.floor((high - low) / 2);
     const candidateGross = calculateGrossAmount(candidate, taxRate);
 
     if (candidateGross <= wholeBudget) {

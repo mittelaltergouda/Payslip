@@ -26,6 +26,35 @@ import type {
 // VALIDATION HELPERS
 // ============================================================================
 
+function assertSafeAuecValue(label: string, value: number | null | undefined): void {
+  if (value === undefined || value === null) {return;}
+  if (!Number.isFinite(value) || Math.abs(value) > Number.MAX_SAFE_INTEGER) {
+    throw new Error(`${label} must be within the finite safe integer range, but got ${value}`);
+  }
+}
+
+/**
+ * Validates every aUEC-denominated input before calculations begin.
+ */
+export function validateSafeAuecValues(session: SessionInput): void {
+  assertSafeAuecValue('Total revenue', session.totalRevenue);
+
+  for (const member of session.members) {
+    assertSafeAuecValue(`Member "${member.handle}" revenue`, member.revenue);
+    assertSafeAuecValue(`Member "${member.handle}" investment`, member.investment);
+    assertSafeAuecValue(`Member "${member.handle}" fixed bonus`, member.fixedBonus);
+    assertSafeAuecValue(`Member "${member.handle}" fixed payout`, member.fixedPayout);
+  }
+
+  for (const expense of session.sharedExpenses ?? []) {
+    assertSafeAuecValue(`Shared expense "${expense.label}" amount`, expense.amount);
+  }
+
+  for (const expense of session.individualExpenses ?? []) {
+    assertSafeAuecValue(`Individual expense "${expense.label}" amount`, expense.amount);
+  }
+}
+
 /**
  * Validates that the session has at least one active member.
  *
@@ -163,6 +192,9 @@ export function validateTaxRate(taxRate: number | undefined): void {
 export function validateSessionInput(session: SessionInput): void {
   // Validate member handles first (before normalization)
   validateMemberHandles(session.members);
+
+  // Reject values JavaScript cannot represent exactly before arithmetic.
+  validateSafeAuecValues(session);
 
   // Validate non-negative values
   validateNonNegativeValues(session);
