@@ -37,6 +37,7 @@ Validated commit containing all executable changes: `dadbd12720103a3edb0be90f9ff
 - Frozen install: `npm ci --no-audit` – PASS, 626 packages installed
 - Full lint: `npm run lint` – PASS, 0 errors and 213 pre-existing warnings
 - Full unit/component suite: `npm test` – PASS, 61 files and 1,800 tests
+- Coverage: `npm test -- --coverage` – PASS; 96.21% statements, 87.29% branches, 100% functions and 96.12% lines
 - Production build: `npm run build` – PASS, TypeScript PASS, no `/api` routes in the route manifest
 - Standalone runtime: home `200`, all 11 scripts nonce-authorized, no cookie, browser hydration PASS
 - Legacy runtime paths: GET/POST/DELETE/export-token probes all returned `404`
