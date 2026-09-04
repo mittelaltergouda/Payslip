@@ -26,6 +26,18 @@ describe('safe aUEC bounds', () => {
     ).toThrow(/safe integer/i);
   });
 
+  it('rejects individually safe values whose aggregate can overflow', () => {
+    const session = sessionWithRevenue(Number.MAX_SAFE_INTEGER);
+    session.members.push({
+      id: 'member-2',
+      handle: 'Wingman',
+      active: true,
+      revenue: 2,
+    });
+
+    expect(() => validateSessionInput(session)).toThrow(/aggregate.*safe integer/i);
+  });
+
   it('rejects unsafe transfer budgets without entering the binary search', () => {
     expect(() =>
       fitTransferToBudget(Number.MAX_SAFE_INTEGER + 1, 0.005),
