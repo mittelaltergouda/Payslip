@@ -159,7 +159,7 @@ function distributeAdjustable(
         // Use proportional distribution based on each member's share of totalPercent
         let baseShare = 0;
         if (totalPercent > 0) {
-          baseShare = (poolAfterBonuses * percentShare) / totalPercent;
+          baseShare = poolAfterBonuses * (percentShare / totalPercent);
         }
 
         // Add fixed bonus on top of base share

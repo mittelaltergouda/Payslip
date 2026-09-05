@@ -120,7 +120,7 @@ export function useAutoSave(
 
     // Set up debounced save
     debounceTimerRef.current = setTimeout(() => {
-      performSave();
+      void performSave();
       debounceTimerRef.current = null;
     }, DEBOUNCE_DELAY_MS);
 

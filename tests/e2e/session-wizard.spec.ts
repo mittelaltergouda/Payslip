@@ -73,7 +73,7 @@ test.describe('Session Wizard - Initialization', () => {
     await page.waitForLoadState('networkidle');
 
     // Verify main app header is visible
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 
   test('Wizard initializes with default session state', async ({ page }) => {
@@ -248,22 +248,16 @@ test.describe('Session Wizard - Session Name Input', () => {
 
     await sessionNameInput.fill(uniqueName);
 
-    // Wait for auto-save debounce (1 second) + save time
-    await page.waitForTimeout(1500);
-
-    // Verify session was auto-saved
-    const savedData = await page.evaluate(() => {
-      const data = localStorage.getItem('sc-payslip-sessions');
-      return data ? JSON.parse(data) : null;
-    });
-
-    expect(savedData).toBeTruthy();
-    expect(Array.isArray(savedData)).toBe(true);
-
-    if (Array.isArray(savedData) && savedData.length > 0) {
-      const session = savedData.find((s: any) => s.session.name === uniqueName);
-      expect(session).toBeTruthy();
-    }
+    await expect.poll(
+      () => page.evaluate((name) => {
+        const data = localStorage.getItem('sc-payslip-sessions');
+        const sessions = data ? JSON.parse(data) : [];
+        return sessions.some(
+          (saved: { session: { name: string } }) => saved.session.name === name
+        );
+      }, uniqueName),
+      { timeout: 5_000 }
+    ).toBe(true);
   });
 });
 
@@ -366,7 +360,7 @@ test.describe('Session Wizard - Session Type Selection', () => {
     } else {
       // No dropdown means no session type selector - this is acceptable
       // The page should still function
-      await expect(page.locator('text=SC Payslip')).toBeVisible();
+      await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
     }
   });
 });
@@ -474,7 +468,7 @@ test.describe('Session Wizard - Distribution Mode Switching', () => {
       await page.waitForTimeout(300);
 
       // Page should still render without errors
-      await expect(page.locator('text=SC Payslip')).toBeVisible();
+      await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
     }
   });
 
@@ -598,7 +592,7 @@ test.describe('Session Wizard - Member Management', () => {
     } else {
       // On some viewports, the member inputs might be in card layout
       // Just verify the page renders correctly
-      await expect(page.locator('text=SC Payslip')).toBeVisible();
+      await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
     }
   });
 
@@ -758,7 +752,7 @@ test.describe('Session Wizard - Revenue Input', () => {
     }
 
     // If no visible numeric inputs, page should still render
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 
   test('Revenue accepts large values', async ({ page }) => {
@@ -782,7 +776,7 @@ test.describe('Session Wizard - Revenue Input', () => {
     }
 
     // If no visible numeric inputs, page should still render
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 
   test('Revenue input updates calculations', async ({ page }) => {
@@ -801,11 +795,9 @@ test.describe('Session Wizard - Revenue Input', () => {
       }
     }
 
-    // Look for results section showing calculations
-    const resultsSection = page.locator('text=/total|gesamt|payout|auszahlung/i');
-    const hasResults = await resultsSection.first().isVisible({ timeout: 3000 }).catch(() => false);
-
-    expect(hasResults).toBeTruthy();
+    await expect(
+      page.getByRole('status', { name: /Gesamt|Totals/i })
+    ).toBeVisible();
   });
 
   test('Multiple member revenues can be entered', async ({ page }) => {
@@ -838,7 +830,7 @@ test.describe('Session Wizard - Revenue Input', () => {
       expect(parseInt(value2.replace(/[,.\s]/g, ''))).toBe(3000);
     } else {
       // Page should still render
-      await expect(page.locator('text=SC Payslip')).toBeVisible();
+      await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
     }
   });
 
@@ -923,10 +915,12 @@ test.describe('Session Wizard - Results Calculation', () => {
     await page.waitForLoadState('networkidle');
 
     // Look for results/summary section
-    const resultsSection = page.locator('text=/result|ergebnis|summary|zusammenfassung|payout|auszahlung/i');
-    const hasResults = await resultsSection.first().isVisible({ timeout: 5000 }).catch(() => false);
+    const resultsSection = page
+      .getByText(/result|ergebnis|summary|zusammenfassung|payout|auszahlung/i)
+      .filter({ visible: true })
+      .first();
 
-    expect(hasResults).toBeTruthy();
+    await expect(resultsSection).toBeVisible();
   });
 
   test('Results update when revenue changes', async ({ page }) => {
@@ -944,7 +938,7 @@ test.describe('Session Wizard - Results Calculation', () => {
         await page.waitForTimeout(500);
 
         // Check that the page still renders (no crashes)
-        await expect(page.locator('text=SC Payslip')).toBeVisible();
+        await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
         // Verify the value was entered (may be formatted)
         const value = await input.inputValue();
@@ -956,7 +950,7 @@ test.describe('Session Wizard - Results Calculation', () => {
 
     if (!inputFound) {
       // Page should still render
-      await expect(page.locator('text=SC Payslip')).toBeVisible();
+      await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
     }
   });
 
@@ -1087,7 +1081,7 @@ test.describe('Session Wizard - Mobile Viewport', () => {
     await page.waitForTimeout(500);
 
     // Main content visible
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // No horizontal scroll
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -1100,7 +1094,7 @@ test.describe('Session Wizard - Mobile Viewport', () => {
     await page.waitForTimeout(500);
 
     // Main content visible
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // No horizontal scroll
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -1147,7 +1141,7 @@ test.describe('Session Wizard - Mobile Viewport', () => {
     }
 
     // If no visible numeric inputs, that's okay on mobile (may be collapsed)
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 
   test('Add member works on mobile', async ({ page }) => {
@@ -1179,7 +1173,7 @@ test.describe('Session Wizard - Mobile Viewport', () => {
       await page.waitForTimeout(300);
 
       // Page should still render without errors
-      await expect(page.locator('text=SC Payslip')).toBeVisible();
+      await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
     }
   });
 
@@ -1188,7 +1182,7 @@ test.describe('Session Wizard - Mobile Viewport', () => {
     await page.waitForTimeout(500);
 
     // Page should render on mobile
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // Try to enter revenue if input is visible
     const numericInputs = page.locator('input[inputmode="numeric"]');
@@ -1205,12 +1199,8 @@ test.describe('Session Wizard - Mobile Viewport', () => {
       }
     }
 
-    // Results section should be visible (may need to scroll on mobile)
-    // Look for results section or payout text
-    const hasResults = await page.locator('text=/payout|auszahlung|gesamt|total/i').first().isVisible({ timeout: 3000 }).catch(() => false);
-
     // On mobile, the page should at least render without errors
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
     // Results may require scrolling, so just verify page works
   });
 
@@ -1376,31 +1366,43 @@ test.describe('Session Wizard - Complete Flow', () => {
     }
   });
 
-  test('Multiple sessions can be created', async ({ page }) => {
+  test('Repeated saves update the current local draft', async ({ page }) => {
     await page.waitForLoadState('networkidle');
 
-    const sessionNames = [
-      'Multi Session 1 ' + Date.now(),
-      'Multi Session 2 ' + Date.now(),
-    ];
+    const firstName = 'Current Draft 1 ' + Date.now();
+    const secondName = 'Current Draft 2 ' + Date.now();
 
     const sessionNameInput = page.locator('input[type="text"]').first();
 
-    // Create multiple sessions
-    for (const name of sessionNames) {
-      await sessionNameInput.fill(name);
-      await page.keyboard.press('Control+KeyS');
-      await page.waitForTimeout(500);
-    }
+    await sessionNameInput.fill(firstName);
+    await page.keyboard.press('Control+KeyS');
 
-    // Verify all sessions were saved
-    const savedData = await page.evaluate(() => {
+    await expect.poll(() => page.evaluate(() => {
       const data = localStorage.getItem('sc-payslip-sessions');
-      return data ? JSON.parse(data) : null;
+      const sessions = data ? JSON.parse(data) : [];
+      return sessions.length === 1 ? sessions[0].session.name : null;
+    })).toBe(firstName);
+
+    const firstId = await page.evaluate(() => {
+      const data = localStorage.getItem('sc-payslip-sessions');
+      const sessions = data ? JSON.parse(data) : [];
+      return sessions[0]?.id;
     });
 
-    expect(savedData).toBeTruthy();
-    expect(Array.isArray(savedData)).toBe(true);
-    expect(savedData.length).toBeGreaterThanOrEqual(2);
+    await sessionNameInput.fill(secondName);
+    await page.keyboard.press('Control+KeyS');
+
+    await expect.poll(() => page.evaluate(() => {
+      const data = localStorage.getItem('sc-payslip-sessions');
+      const sessions = data ? JSON.parse(data) : [];
+      return sessions.length === 1 ? sessions[0].session.name : null;
+    })).toBe(secondName);
+
+    const updatedId = await page.evaluate(() => {
+      const data = localStorage.getItem('sc-payslip-sessions');
+      const sessions = data ? JSON.parse(data) : [];
+      return sessions[0]?.id;
+    });
+    expect(updatedId).toBe(firstId);
   });
 });

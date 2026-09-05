@@ -48,17 +48,16 @@ export interface TransfersListProps {
 
 /**
  * TransfersList component displays a list of suggested transfers between members.
- * It shows the transfer amount (gross and net), the sender and receiver with avatar icons,
- * and any applicable fees.
+ * It shows the amount to enter in Star Citizen, the sender and receiver with
+ * avatar icons, and the fee plus total sender charge.
  *
  * The component displays:
  * - A header with the "Suggested Transfers" title
  * - A "no transfers required" message if the list is empty
  * - Each transfer showing:
  *   - From avatar → arrow icon → To avatar
- *   - Gross amount with currency
- *   - Net amount (in smaller text)
- *   - Fee amount (if > 0)
+ *   - Amount received / entered in the Wallet app
+ *   - Fee and total amount charged to the sender (if > 0)
  *
  * @example
  * ```tsx
@@ -123,12 +122,12 @@ export function TransfersList({
                   </svg>
                   <Avatar name={to} size="sm" />
                 </div>
-                <span className="font-semibold">
-                  {gross} {currency} <span className="text-white/60 text-xs">(net {net})</span>
-                </span>
+                <span className="font-semibold">{net} {currency}</span>
               </div>
               {tr.feeAmount > 0 && (
-                <p className="text-xs text-white/60">Fee: {fee} {currency}</p>
+                <p className="text-xs text-white/60">
+                  {t.fee}: {fee} {currency} · {t.totalCharged}: {gross} {currency}
+                </p>
               )}
             </div>
           );

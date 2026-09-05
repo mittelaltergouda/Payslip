@@ -264,7 +264,7 @@ test.describe('Keyboard Navigation - Arrow Keys and Radix UI', () => {
 
         // The main test is arrow key navigation - Escape closing is tested elsewhere
         // Just verify that the page is still functional
-        await expect(page.locator('text=SC Payslip')).toBeVisible();
+        await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
       }
     }
   });

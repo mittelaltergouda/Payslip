@@ -26,6 +26,46 @@ import type {
 // VALIDATION HELPERS
 // ============================================================================
 
+function assertSafeAuecValue(label: string, value: number | null | undefined): void {
+  if (value === undefined || value === null) {return;}
+  if (!Number.isFinite(value) || Math.abs(value) > Number.MAX_SAFE_INTEGER) {
+    throw new Error(`${label} must be within the finite safe integer range, but got ${value}`);
+  }
+}
+
+/**
+ * Validates every aUEC-denominated input before calculations begin.
+ */
+export function validateSafeAuecValues(session: SessionInput): void {
+  const values: Array<readonly [label: string, value: number | null | undefined]> = [
+    ['Total revenue', session.totalRevenue],
+    ...session.members.flatMap((member) => [
+      [`Member "${member.handle}" revenue`, member.revenue] as const,
+      [`Member "${member.handle}" investment`, member.investment] as const,
+      [`Member "${member.handle}" fixed bonus`, member.fixedBonus] as const,
+      [`Member "${member.handle}" fixed payout`, member.fixedPayout] as const,
+    ]),
+    ...(session.sharedExpenses ?? []).map(
+      (expense) => [`Shared expense "${expense.label}" amount`, expense.amount] as const,
+    ),
+    ...(session.individualExpenses ?? []).map(
+      (expense) => [`Individual expense "${expense.label}" amount`, expense.amount] as const,
+    ),
+  ];
+
+  let aggregateMagnitude = 0;
+  for (const [label, value] of values) {
+    assertSafeAuecValue(label, value);
+    if (value === undefined || value === null) {continue;}
+
+    const magnitude = Math.abs(value);
+    if (magnitude > Number.MAX_SAFE_INTEGER - aggregateMagnitude) {
+      throw new Error('Aggregate aUEC values must remain within the safe integer range');
+    }
+    aggregateMagnitude += magnitude;
+  }
+}
+
 /**
  * Validates that the session has at least one active member.
  *
@@ -87,6 +127,21 @@ export function validateMemberHandles(members: MemberInput[]): void {
 }
 
 /**
+ * Validates percentage shares for every distribution mode.
+ */
+export function validatePercentShareValues(members: MemberInput[]): void {
+  for (const member of members) {
+    const share = member.percentShare;
+    if (share === undefined || share === null) {continue;}
+    if (!Number.isFinite(share) || share < 0 || share > 100) {
+      throw new Error(
+        `Member "${member.handle}" percentage share must be finite and between 0 and 100`
+      );
+    }
+  }
+}
+
+/**
  * Validates that numeric values are not negative where they shouldn't be.
  *
  * @param session - The session input to validate
@@ -131,17 +186,21 @@ export function validateNonNegativeValues(session: SessionInput): void {
 }
 
 /**
- * Validates tax rate is within valid bounds (0 to 1 inclusive).
+ * Validates tax rate is finite and within valid bounds (0 inclusive to 1 exclusive).
  *
- * @param taxRate - The tax rate to validate (0-1 representing 0-100%)
+ * @param taxRate - The tax rate to validate (0 <= rate < 1)
  * @throws Error if tax rate is outside valid bounds
  */
 export function validateTaxRate(taxRate: number | undefined): void {
   if (taxRate === undefined) {return;}
-  if (taxRate < 0 || taxRate > 1) {
-    throw new Error(
-      `Tax rate must be between 0 and 1, but got ${taxRate}`
-    );
+  if (!Number.isFinite(taxRate)) {
+    throw new Error(`Tax rate must be finite, but got ${taxRate}`);
+  }
+  if (taxRate < 0) {
+    throw new Error(`Tax rate must be non-negative, but got ${taxRate}`);
+  }
+  if (taxRate >= 1) {
+    throw new Error(`Tax rate must be less than 1, but got ${taxRate}`);
   }
 }
 
@@ -159,6 +218,12 @@ export function validateTaxRate(taxRate: number | undefined): void {
 export function validateSessionInput(session: SessionInput): void {
   // Validate member handles first (before normalization)
   validateMemberHandles(session.members);
+
+  // Percentage weights must stay finite and within their UI/domain bounds.
+  validatePercentShareValues(session.members);
+
+  // Reject values JavaScript cannot represent exactly before arithmetic.
+  validateSafeAuecValues(session);
 
   // Validate non-negative values
   validateNonNegativeValues(session);

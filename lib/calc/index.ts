@@ -18,7 +18,7 @@ import {
   allocateIndividualExpenses,
 } from './expenses';
 import {
-  settleBalances,
+  settleBalancesDetailed,
 } from './settlement';
 
 // Re-export types for external use
@@ -44,7 +44,7 @@ export { applyTransferTaxes, calculateGrossAmount, calculateFeeAmount } from './
  * 6. Distribute profit using appropriate mode (EQUAL/PERCENT/ADJUSTABLE)
  * 7. Build member breakdowns with final net amounts
  * 8. Generate settlement transfers using greedy matching
- * 9. Apply tax gross-up to transfers if enabled
+ * 9. Add Star Citizen's sender-paid transfer fee if enabled
  *
  * @param session - The session input with members, expenses, and configuration
  * @returns PayslipResult with member breakdowns and suggested transfers
@@ -71,11 +71,9 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
   // -------------------------------------------------------------------------
   const activeMembers = normalized.members.filter((m) => m.active);
 
-  // Total revenue: use provided totalRevenue or sum of member revenues
-  // If totalRevenue is explicitly set, it overrides individual member revenues
-  const totalRevenue =
-    normalized.totalRevenue ??
-    normalized.members.reduce((sum, m) => sum + m.revenue, 0);
+  // Revenue is the cash currently held by members. A stale legacy
+  // totalRevenue value must not create money that cannot be settled.
+  const totalRevenue = normalized.members.reduce((sum, m) => sum + m.revenue, 0);
 
   // Total investments from all members (both active and inactive)
   const totalInvestments = normalized.members.reduce(
@@ -117,36 +115,29 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
   const netProfit = saleRevenue - totalExpenses;
 
   // -------------------------------------------------------------------------
-  // Step 6: Distribute profit using appropriate mode
+  // Steps 6-8: Distribute profit and settle balances
   // -------------------------------------------------------------------------
+  // Session costs are deducted once before distribution. Each no-fee transfer
+  // obligation is then treated as the sender's fixed total budget; the largest
+  // possible recipient amount plus its fee is fitted inside that budget.
+  const taxRateForTransfers = normalized.taxEnabled ? normalized.taxRate : 0;
   const profitDistribution = distributeProfit(
     netProfit,
     activeMembers,
     normalized.distributionMode
   );
 
-  // -------------------------------------------------------------------------
-  // Step 7: Build member breakdowns
-  // -------------------------------------------------------------------------
   const memberBreakdowns: MemberBreakdown[] = normalized.members.map((m) => {
-    // Get this member's allocated shared expenses
     const memberSharedExpenses = sharedExpenseAllocation.get(m.id) ?? 0;
-
-    // Get this member's individual expenses
     const memberIndividualExpenses =
       individualExpenseAllocation.get(m.id) ?? 0;
-
-    // Total expenses for this member (combination of shared and individual)
-    const memberTotalExpenses = memberSharedExpenses + memberIndividualExpenses;
-
-    // Get profit share (0 for inactive members since they're excluded from distribution)
+    const memberTotalExpenses =
+      memberSharedExpenses + memberIndividualExpenses;
     const profitShare = profitDistribution.get(m.id) ?? 0;
 
-    // Final net calculation:
-    // - Start with investment (what they put in gets returned)
-    // - Add profit share (their portion of the distributed profit)
-    // - Subtract expenses (costs allocated to them)
-    const finalNet = m.investment + profitShare - memberTotalExpenses;
+    // Investments are reimbursed and the already cost-adjusted profit is
+    // distributed. Expenses must not be subtracted a second time here.
+    const finalNet = m.investment + profitShare;
 
     return {
       memberId: m.id,
@@ -162,17 +153,7 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
     };
   });
 
-  // -------------------------------------------------------------------------
-  // Step 8: Generate settlement transfers
-  // -------------------------------------------------------------------------
-  // Determine the tax rate to apply to transfers
-  // Only apply tax if explicitly enabled, otherwise use 0
-  const taxRateForTransfers = normalized.taxEnabled ? normalized.taxRate : 0;
-
-  // Use greedy matching algorithm to minimize number of transfers
-  // This algorithm pairs largest debtors with largest creditors to minimize
-  // the total number of transactions needed to settle all balances
-  const suggestedTransfers = settleBalances(
+  const { transfers: suggestedTransfers, unsettledBalances } = settleBalancesDetailed(
     memberBreakdowns,
     taxRateForTransfers
   );
@@ -186,5 +167,6 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
     taxRateApplied: taxRateForTransfers,
     members: memberBreakdowns,
     suggestedTransfers,
+    unsettledBalances,
   };
 }

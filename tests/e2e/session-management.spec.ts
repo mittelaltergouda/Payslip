@@ -1,17 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
-
-/**
- * Helper function to check if database is available.
- * Tests that require database connectivity should call this and skip if unavailable.
- */
-async function checkDatabaseAvailable(page: Page): Promise<boolean> {
-  try {
-    const response = await page.request.get('/api/sessions');
-    return response.status() !== 500;
-  } catch {
-    return false;
-  }
-}
+import { test, expect } from '@playwright/test';
 
 /**
  * Session Management E2E Tests
@@ -278,155 +265,69 @@ test.describe('Session Management E2E Tests', () => {
   });
 
   test('Delete session workflow', async ({ page }) => {
-    // Skip if database is not available
-    if (!await checkDatabaseAvailable(page)) {
-      test.skip();
-      return;
-    }
-
-    await page.waitForLoadState('networkidle');
-
-    // Step 1: Create a test session via API first
     const uniqueName = 'Delete Test ' + Date.now();
-    const createResponse = await page.request.post('/api/sessions', {
-      data: {
-        name: uniqueName,
-        type: 'OTHER',
-        taxEnabled: true,
-        distribution: 'EQUAL',
-        members: [
-          { handle: 'TestUser', role: 'Pilot', revenue: 0, investment: 0 }
-        ]
-      }
+    const sessionNameInput = page.locator('input[type="text"]').first();
+    await sessionNameInput.fill(uniqueName);
+    await page.keyboard.press('Control+KeyS');
+
+    await expect.poll(() => page.evaluate(() => {
+      const data = localStorage.getItem('sc-payslip-sessions');
+      return data ? JSON.parse(data).length : 0;
+    })).toBe(1);
+
+    await page.keyboard.press('Control+KeyO');
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+
+    const sessionCard = dialog.locator('div.glass').filter({
+      has: page.getByRole('heading', { name: uniqueName, exact: true }),
     });
-    const sessionData = await createResponse.json();
-    const sessionId = sessionData.id;
+    await expect(sessionCard).toBeVisible();
 
-    // Step 2: Navigate to /sessions page
-    await page.goto('/sessions');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(500);
+    await sessionCard.getByRole('button', { name: /Delete|Löschen/i }).click();
+    await sessionCard.getByRole('button', { name: /Delete|Löschen/i }).click();
 
-    // Step 3: Find the session
-    const sessionItem = page.locator(`text="${uniqueName}"`).first();
-    await expect(sessionItem).toBeVisible({ timeout: 5000 });
-
-    // Step 4: Click delete button (aria-label)
-    const deleteButton = page.locator('[aria-label="Delete session"]').first();
-    await deleteButton.click();
-    await page.waitForTimeout(500);
-
-    // Step 5: Confirm deletion in dialog
-    const dialogDeleteButton = page.locator('[role="dialog"] button').filter({ hasText: /delete|löschen/i }).first();
-    await expect(dialogDeleteButton).toBeVisible({ timeout: 3000 });
-    await dialogDeleteButton.click();
-    await page.waitForTimeout(500);
-
-    // Step 6: Verify success toast appears
-    await expect(page.locator('text=/deleted|gelöscht/i')).toBeVisible({ timeout: 3000 });
-
-    // Step 7: Verify session is removed from list
-    await page.waitForTimeout(500);
-    const sessionStillExists = await sessionItem.isVisible({ timeout: 1000 }).catch(() => false);
-    expect(sessionStillExists).toBe(false);
-
-    // Step 8: Verify session is deleted from database (direct API call)
-    const checkResponse = await page.request.get(`/api/sessions/${sessionId}`);
-    expect(checkResponse.status()).toBe(404);
+    await expect(sessionCard).toHaveCount(0);
+    await expect.poll(() => page.evaluate(() => {
+      const data = localStorage.getItem('sc-payslip-sessions');
+      return data ? JSON.parse(data).length : 0;
+    })).toBe(0);
   });
 
   test('Export and Import workflow', async ({ page }) => {
-    await page.waitForLoadState('networkidle');
-
-    // Step 1: Save multiple sessions
-    const session1Name = 'Export Session 1 ' + Date.now();
-    const session2Name = 'Export Session 2 ' + Date.now();
-
+    const sessionName = 'Export Session ' + Date.now();
     const sessionNameInput = page.locator('input[type="text"]').first();
-
-    // Save first session
-    await sessionNameInput.fill(session1Name);
+    await sessionNameInput.fill(sessionName);
     await page.keyboard.press('Control+KeyS');
-    await page.waitForTimeout(1000);
 
-    // Save second session
-    await sessionNameInput.fill(session2Name);
-    await page.keyboard.press('Control+KeyS');
-    await page.waitForTimeout(1000);
+    await expect.poll(() => page.evaluate(() => {
+      const data = localStorage.getItem('sc-payslip-sessions');
+      return data ? JSON.parse(data).length : 0;
+    })).toBe(1);
 
-    // Step 2: Export all sessions
-    const exportButton = page.locator('button').filter({ hasText: /export|exportieren/i }).first();
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', {
+      name: /Alle Sessions als JSON herunterladen|Download all sessions as JSON/i,
+    }).click();
+    const download = await downloadPromise;
+    const downloadPath = await download.path();
+    expect(downloadPath).toBeTruthy();
 
-    if (await exportButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-      // Set up download listener
-      const downloadPromise = page.waitForEvent('download', { timeout: 10000 });
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
+    await expect.poll(() => page.evaluate(
+      () => localStorage.getItem('sc-payslip-sessions')
+    )).toBeNull();
 
-      await exportButton.click();
+    await page.locator('input[type="file"]').setInputFiles(downloadPath!);
 
-      try {
-        const download = await downloadPromise;
-        expect(download).toBeTruthy();
-
-        // Get the downloaded file content
-        const path = await download.path();
-        if (path) {
-          const fs = require('fs');
-          const fileContent = fs.readFileSync(path, 'utf-8');
-          const exportedData = JSON.parse(fileContent);
-
-          // Verify exported data
-          expect(Array.isArray(exportedData)).toBe(true);
-          expect(exportedData.length).toBeGreaterThanOrEqual(2);
-
-          // Step 3: Clear localStorage
-          await page.evaluate(() => localStorage.clear());
-          await page.reload();
-          await page.waitForLoadState('networkidle');
-
-          // Verify localStorage is empty
-          const emptyData = await page.evaluate(() => {
-            const data = localStorage.getItem('sc-payslip-sessions');
-            return data ? JSON.parse(data) : null;
-          });
-          expect(emptyData).toBeNull();
-
-          // Step 4: Import the sessions back
-          const importButton = page.locator('button').filter({ hasText: /import|importieren/i }).first();
-
-          if (await importButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-            // Create a file input handler
-            const fileInputPromise = page.waitForEvent('filechooser', { timeout: 10000 });
-
-            await importButton.click();
-
-            try {
-              const fileChooser = await fileInputPromise;
-              await fileChooser.setFiles(path);
-              await page.waitForTimeout(1000);
-
-              // Step 5: Verify sessions were imported
-              const importedData = await page.evaluate(() => {
-                const data = localStorage.getItem('sc-payslip-sessions');
-                return data ? JSON.parse(data) : null;
-              });
-
-              expect(importedData).toBeTruthy();
-              expect(Array.isArray(importedData)).toBe(true);
-              expect(importedData.length).toBeGreaterThanOrEqual(2);
-
-              // Verify session names are present
-              const names = importedData.map((s: any) => s.session.name);
-              expect(names).toContain(session1Name);
-              expect(names).toContain(session2Name);
-            } catch (_error) {
-              console.log('File chooser not triggered, skipping import verification');
-            }
-          }
-        }
-      } catch (_error) {
-        console.log('Download not triggered, skipping export/import verification');
-      }
-    }
+    await expect.poll(() => page.evaluate((name) => {
+      const data = localStorage.getItem('sc-payslip-sessions');
+      const sessions = data ? JSON.parse(data) : [];
+      return sessions.some(
+        (saved: { session: { name: string } }) => saved.session.name === name
+      );
+    }, sessionName)).toBe(true);
   });
 
   test('Session data persists after page reload', async ({ page }) => {
@@ -438,12 +339,12 @@ test.describe('Session Management E2E Tests', () => {
     await sessionNameInput.fill(uniqueName);
 
     // Fill in some revenue data (inputs may use inputMode="numeric" instead of type="number")
-    const numericInputs = page.locator('input[inputmode="numeric"]');
+    const numericInputs = page.locator('input[inputmode="numeric"]:visible');
     if (await numericInputs.count() > 0) {
       await numericInputs.first().fill('7500');
       await page.waitForTimeout(300);
     } else {
-      const numberInputs = await page.locator('input[type="number"]').all();
+      const numberInputs = await page.locator('input[type="number"]:visible').all();
       if (numberInputs.length > 0) {
         await numberInputs[0].fill('7500');
         await page.waitForTimeout(300);
@@ -479,57 +380,41 @@ test.describe('Session Management E2E Tests', () => {
     }
   });
 
-  test('Multiple sessions can be saved and loaded', async ({ page }) => {
-    await page.waitForLoadState('networkidle');
-
-    const sessionNames = [
-      'Multi Session 1 ' + Date.now(),
-      'Multi Session 2 ' + Date.now(),
-      'Multi Session 3 ' + Date.now()
-    ];
-
+  test('Duplicating a session creates an independent local snapshot', async ({ page }) => {
+    const uniqueName = 'Duplicate Test ' + Date.now();
     const sessionNameInput = page.locator('input[type="text"]').first();
+    await sessionNameInput.fill(uniqueName);
+    await page.keyboard.press('Control+KeyS');
 
-    // Save multiple sessions
-    for (const name of sessionNames) {
-      await sessionNameInput.fill(name);
-      await page.keyboard.press('Control+KeyS');
-      await page.waitForTimeout(500);
-    }
-
-    // Verify all sessions were saved
-    const savedData = await page.evaluate(() => {
+    await expect.poll(() => page.evaluate(() => {
       const data = localStorage.getItem('sc-payslip-sessions');
-      return data ? JSON.parse(data) : null;
+      return data ? JSON.parse(data).length : 0;
+    })).toBe(1);
+
+    await page.keyboard.press('Control+KeyO');
+    const historyDialog = page.getByRole('dialog').filter({
+      has: page.getByRole('heading', { name: /Session Verlauf|Session History/i }),
     });
+    const sessionCard = historyDialog.locator('div.glass').filter({
+      has: page.getByRole('heading', { name: uniqueName, exact: true }),
+    });
+    await sessionCard.getByRole('button', { name: /Duplicate|Duplizieren/i }).click();
 
-    expect(savedData).toBeTruthy();
-    expect(Array.isArray(savedData)).toBe(true);
-    expect(savedData.length).toBeGreaterThanOrEqual(3);
+    const duplicateDialog = page.getByRole('dialog').filter({
+      has: page.getByRole('heading', { name: /Duplicate Session|Session duplizieren/i }),
+    });
+    await duplicateDialog.getByRole('button', { name: /Duplicate|Duplizieren/i }).click();
 
-    // Verify sessions were saved (localStorage verified above)
-    // Each session should be findable by name
-    for (const name of sessionNames) {
-      const found = savedData.find((s: any) => s.session?.name === name || s.name === name);
-      expect(found).toBeTruthy();
-    }
+    await expect.poll(() => page.evaluate(() => {
+      const data = localStorage.getItem('sc-payslip-sessions');
+      return data ? JSON.parse(data) : [];
+    })).toHaveLength(2);
 
-    // Optionally open history and verify visibility (may not work in all browsers/viewports)
-    try {
-      await page.keyboard.press('Control+KeyO');
-      await page.waitForTimeout(500);
-
-      // Check if history panel opened (may have different selector on different devices)
-      const historyPanel = page.locator('[role="dialog"], [class*="history"], [class*="sidebar"]').first();
-      if (await historyPanel.isVisible({ timeout: 2000 }).catch(() => false)) {
-        // Just verify at least one session name appears somewhere
-        const firstSessionText = page.locator(`text="${sessionNames[0].slice(0, 15)}"`).first();
-        // Don't fail if session text not found - the main verification is localStorage
-        await firstSessionText.isVisible({ timeout: 2000 }).catch(() => {});
-      }
-    } catch (_e) {
-      // History keyboard shortcut may not work in all environments
-    }
+    const ids = await page.evaluate(() => {
+      const data = localStorage.getItem('sc-payslip-sessions');
+      return data ? JSON.parse(data).map((saved: { id: string }) => saved.id) : [];
+    });
+    expect(new Set(ids).size).toBe(2);
   });
 
   test('Toast notifications appear on save', async ({ page }) => {
@@ -570,7 +455,7 @@ test.describe('Session Management E2E Tests', () => {
     await page.waitForLoadState('networkidle');
 
     // Page should still load without crashing
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // Try to open history (should show empty state or clear corrupt data)
     await page.keyboard.press('Control+KeyO');
@@ -666,7 +551,7 @@ test.describe('Session Management - Cross-Browser Verification', () => {
 
     if (viewport && viewport.width < 768) {
       // On mobile, verify the UI is still accessible
-      await expect(page.locator('text=SC Payslip')).toBeVisible();
+      await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
     }
   });
 

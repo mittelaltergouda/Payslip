@@ -13,7 +13,7 @@
   },
   "infrastructure": {
     "docker": false,
-    "database": "postgresql (via Prisma, but presets use localStorage)",
+    "database": null,
     "ci_cd": "github-actions"
   },
   "conventions": {

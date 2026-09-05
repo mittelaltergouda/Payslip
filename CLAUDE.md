@@ -2,23 +2,22 @@
 
 ## Project Goal
 
-**SC Payslip** is a payout calculator for crew-based revenue splitting in Star Citizen. It calculates fair profit distribution, settlement transfers, and applies transfer taxes (fee gross-up). The app combines a client-side calculation engine with Prisma ORM persistence and read-only share links.
+**SC Payslip** is a payout calculator for crew-based revenue splitting in Star Citizen. It calculates fair profit distribution, settlement transfers, and applies transfer taxes entirely in the browser; session data stays in browser storage.
 
 Key features:
 - Multi-member revenue and expense tracking
 - Three distribution modes: EQUAL, PERCENT, ADJUSTABLE
 - Tax gross-up calculation for transfers
-- Shareable read-only session links
+- Local session history and PDF/CSV exports
 
 ## Tech Stack
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| Next.js | 14 | App Router, API routes |
+| Next.js | 16 | App Router and standalone web runtime |
 | React | 18 | UI components |
 | TypeScript | 5.4+ | Type safety |
 | Tailwind CSS | 3.4+ | Styling |
-| Prisma | 5.18+ | ORM for PostgreSQL |
 | Zod | 3.23+ | Schema validation |
 | Vitest | 4.0+ | Unit testing |
 | Playwright | 1.44+ | E2E testing |
@@ -29,8 +28,8 @@ Key features:
 - Use TypeScript for all new code
 - Follow existing patterns in the codebase
 - Keep calculation logic in `lib/` as pure functions
-- Use Zod for input validation at API boundaries
-- Use camelCase for TS/JS, snake_case for database columns
+- Use Zod for imported and browser-stored data validation
+- Use camelCase for TS/JS
 
 ### Testing
 - Every new logic needs tests
@@ -54,16 +53,13 @@ npm run check        # Verify changes
 npm test             # Run unit tests
 npm run test:e2e     # Run E2E tests
 npm run lint         # ESLint
-npm run prisma:generate  # Regenerate Prisma client
-npm run prisma:push      # Push schema to database
 ```
 
 ### Architecture Guidelines
 - Domain logic belongs in `lib/calc.ts` (pure, testable, shareable)
 - Types and interfaces in `lib/types.ts`
-- API validation in `app/api/sessions/validation.ts`
+- Session data stays in browser storage; do not add server persistence or share APIs
 - Client components marked with `"use client"`
-- Database schema in `prisma/schema.prisma`
 
 ### Do Not
 - Edit AGENTS.md

@@ -95,7 +95,7 @@ describe('SummaryStats - Basic Rendering', () => {
     expect(screen.getByText('Investment')).toBeInTheDocument();
     expect(screen.getByText('Kosten')).toBeInTheDocument();
     expect(screen.getByText('Gewinn (Brutto)')).toBeInTheDocument();
-    expect(screen.getByText('Steuern (Fees)')).toBeInTheDocument();
+    expect(screen.getByText('Transfergebühren')).toBeInTheDocument();
     expect(screen.getByText('Gewinn (Netto)')).toBeInTheDocument();
   });
 
@@ -116,7 +116,7 @@ describe('SummaryStats - Basic Rendering', () => {
     expect(screen.getByText('Investment')).toBeInTheDocument();
     expect(screen.getByText('Expenses')).toBeInTheDocument();
     expect(screen.getByText('Profit (Gross)')).toBeInTheDocument();
-    expect(screen.getByText('Taxes (fees)')).toBeInTheDocument();
+    expect(screen.getByText('Transfer fees')).toBeInTheDocument();
     expect(screen.getByText('Profit (Net)')).toBeInTheDocument();
   });
 });

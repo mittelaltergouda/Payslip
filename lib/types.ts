@@ -72,12 +72,19 @@ export type Transfer = {
   feeAmount: number;
 };
 
+export type UnsettledBalance = {
+  memberId: string;
+  /** Positive = still to receive, negative = excess cash still retained. */
+  amount: number;
+};
+
 export type PayslipResult = {
   saleRevenue: number;
   netProfit: number;
   taxRateApplied: number;
   members: MemberBreakdown[];
   suggestedTransfers: Transfer[];
+  unsettledBalances?: UnsettledBalance[];
 };
 
 // Zod schemas for localStorage session management
@@ -116,7 +123,7 @@ const sessionInputSchema = z.object({
   totalRevenue: z.number().optional(),
   distributionMode: z.enum(["EQUAL", "PERCENT", "ADJUSTABLE"]),
   taxEnabled: z.boolean().optional(),
-  taxRate: z.number().optional(),
+  taxRate: z.number().min(0).lt(1).optional(),
   members: z.array(memberInputSchema),
   sharedExpenses: z.array(sharedExpenseInputSchema).optional(),
   individualExpenses: z.array(individualExpenseInputSchema).optional(),

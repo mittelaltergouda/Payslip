@@ -65,10 +65,12 @@ test.describe('SessionWizard Browser Verification', () => {
 
   test('SessionWizard renders without errors', async ({ page }) => {
     // Wait for the main component to load (look for app name or session settings)
-    await page.waitForSelector('text=SC Payslip', { timeout: 10000 });
+    await expect(
+      page.getByRole('main', { name: 'SC Payslip', exact: true })
+    ).toBeVisible({ timeout: 10_000 });
 
-    // Check that the app name is present
-    const appName = await page.locator('text=SC Payslip').textContent();
+    // Check that the exact app name is present
+    const appName = await page.getByText('SC Payslip', { exact: true }).textContent();
     expect(appName).toContain('SC Payslip');
 
     // Verify key elements are present (distribution mode button - now a custom dropdown)
@@ -87,7 +89,7 @@ test.describe('SessionWizard Browser Verification', () => {
     await page.waitForTimeout(1000);
 
     // Main content should be visible
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 
   test('DE/EN language switch works', async ({ page }) => {
@@ -154,7 +156,7 @@ test.describe('SessionWizard Browser Verification', () => {
     }
 
     // Main content should be visible
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 });
 
@@ -178,7 +180,7 @@ test.describe('Responsive Design Verification', () => {
     }
 
     // Verify main content is visible (app name)
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 
   test('Desktop viewport renders correctly', async ({ page, viewport }) => {
@@ -188,7 +190,7 @@ test.describe('Responsive Design Verification', () => {
     // On desktop viewports (>= 768px), check layout
     if (viewport && viewport.width >= 768) {
       // Main content should be visible (app name and h2)
-      await expect(page.locator('text=SC Payslip')).toBeVisible();
+      await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
       // Session settings should be visible
       await expect(page.locator('h2').first()).toBeVisible();

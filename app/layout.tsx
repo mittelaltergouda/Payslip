@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { ToastProvider } from "@/components/Toast";
 import { SiteFooter } from "@/components/SiteFooter";
+import { CookieNotice } from "@/components/CookieNotice";
 import { Space_Grotesk, Inter } from "next/font/google";
 
 const spaceGrotesk = Space_Grotesk({
@@ -23,6 +24,9 @@ export const metadata: Metadata = {
   description: "Teilt Profite, Kosten und Steuern fair auf  Star Citizen ready."
 };
 
+// Request-specific CSP nonces require server rendering for every page request.
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children
 }: {
@@ -38,6 +42,7 @@ export default function RootLayout({
             </div>
             <SiteFooter />
           </div>
+          <CookieNotice />
         </ToastProvider>
       </body>
     </html>

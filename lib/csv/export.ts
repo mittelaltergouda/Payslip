@@ -8,6 +8,7 @@
 import type { SessionInput, PayslipResult } from "@/lib/types";
 import type { Lang } from "@/lib/i18n/translations";
 import { format } from "@/lib/format";
+import { getMemberPayoutSummaries } from "@/lib/export/payoutSummary";
 
 /**
  * CSV generation options for customizing output format and styling.
@@ -42,16 +43,21 @@ const csvTranslations = {
     revenue: "Umsatz",
     investment: "Investment",
     expenses: "Ausgaben",
-    taxes: "Steuern",
+    transferFees: "Transfergebühren",
     profitShare: "Gewinnanteil",
     netPayout: "Netto Auszahlung",
     settlementTransfers: "Überweisungen",
     from: "Von",
     to: "An",
-    netAmount: "Netto Betrag",
-    grossAmount: "Brutto Betrag",
+    netAmount: "Überweisungsbetrag",
+    grossAmount: "Gesamtbelastung",
     fee: "Gebühr",
     noTransfers: "Keine Überweisungen erforderlich",
+    unsettledBalances: "Offene Restbeträge",
+    status: "Status",
+    amount: "Betrag",
+    stillToReceive: "Noch zu erhalten",
+    excessRetained: "Überschuss verblieben",
   },
   en: {
     exportTitle: "SC Payslip Export",
@@ -63,16 +69,21 @@ const csvTranslations = {
     revenue: "Revenue",
     investment: "Investment",
     expenses: "Expenses",
-    taxes: "Taxes",
+    transferFees: "Transfer Fees",
     profitShare: "Profit Share",
     netPayout: "Net Payout",
     settlementTransfers: "Settlement Transfers",
     from: "From",
     to: "To",
-    netAmount: "Net Amount",
-    grossAmount: "Gross Amount",
+    netAmount: "Amount to Send",
+    grossAmount: "Total Charged",
     fee: "Fee",
     noTransfers: "No transfers required",
+    unsettledBalances: "Unsettled balances",
+    status: "Status",
+    amount: "Amount",
+    stillToReceive: "Still to receive",
+    excessRetained: "Excess retained",
   },
 };
 
@@ -194,12 +205,9 @@ export function generateCSV(
     }
   );
 
-  // Calculate fees per member for display
-  const feeByPayer: Record<string, number> = {};
-  result.suggestedTransfers.forEach((transfer) => {
-    feeByPayer[transfer.fromMemberId] =
-      (feeByPayer[transfer.fromMemberId] || 0) + transfer.feeAmount;
-  });
+  const payoutByMember = new Map(
+    getMemberPayoutSummaries(result).map((payout) => [payout.memberId, payout])
+  );
 
   // Build CSV rows
   const rows: (string | number | undefined | null)[][] = [];
@@ -222,22 +230,23 @@ export function generateCSV(
     t.revenue,
     t.investment,
     t.expenses,
-    t.taxes,
+    t.transferFees,
     t.profitShare,
     t.netPayout,
   ]);
 
   // Add member rows
   for (const member of result.members) {
-    const taxes = feeByPayer[member.memberId] ?? 0;
-    const netAfterFees = member.finalNet - taxes;
+    const payout = payoutByMember.get(member.memberId);
+    const transferFees = payout?.transferFeesDeducted ?? 0;
+    const netAfterFees = payout?.netPayout ?? member.finalNet;
 
     rows.push([
       member.handle,
       format(member.revenue, lang),
       format(member.investment, lang),
       format(member.expenses, lang),
-      format(taxes, lang),
+      format(transferFees, lang),
       format(member.profitShare, lang),
       format(netAfterFees, lang),
     ]);
@@ -273,6 +282,20 @@ export function generateCSV(
         format(transfer.netAmount, lang),
         format(transfer.grossAmount, lang),
         format(transfer.feeAmount, lang),
+      ]);
+    }
+  }
+
+  if ((result.unsettledBalances?.length ?? 0) > 0) {
+    rows.push([]);
+    rows.push([t.unsettledBalances]);
+    rows.push([t.handle, t.status, t.amount]);
+    for (const balance of result.unsettledBalances ?? []) {
+      const member = result.members.find((candidate) => candidate.memberId === balance.memberId);
+      rows.push([
+        member?.handle ?? balance.memberId,
+        balance.amount > 0 ? t.stillToReceive : t.excessRetained,
+        format(Math.abs(balance.amount), lang),
       ]);
     }
   }
