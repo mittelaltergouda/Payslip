@@ -331,7 +331,8 @@ test.describe('Session Management E2E Tests', () => {
   });
 
   test('Session data persists after page reload', async ({ page }) => {
-    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true }))
+      .toHaveAttribute('data-app-ready', 'true');
 
     // Save a session with specific data
     const uniqueName = 'Persistence Test ' + Date.now();

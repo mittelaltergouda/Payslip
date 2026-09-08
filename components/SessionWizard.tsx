@@ -63,28 +63,18 @@ type Props = { initialLang?: Lang };
 export function SessionWizard({ initialLang = "de" }: Props) {
   const [lang, setLang] = useState<Lang>(initialLang);
   const t = translations[lang];
-  const [session, setSession] = useState<SessionInput>(() => {
-    if (typeof window === "undefined") {
-      return buildInitialSession();
-    }
-    const draft = getCurrentDraft();
-    return draft ? draft.session : buildInitialSession();
-  });
+  const [session, setSession] = useState<SessionInput>(buildInitialSession);
   const updateSession = setSession;
   const [error, setError] = useState<string | null>(null);
   const [showRole, setShowRole] = useState(false);
   const [isAppReady, setIsAppReady] = useState(false);
+  const [isStorageHydrated, setIsStorageHydrated] = useState(false);
 
   // Session management state
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isPresetManagerOpen, setIsPresetManagerOpen] = useState(false);
   const [savedSessions, setSavedSessions] = useState<SavedSession[]>([]);
-  const [currentDraftId, setCurrentDraftIdState] = useState<string | null>(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
-    return getCurrentDraftId();
-  });
+  const [currentDraftId, setCurrentDraftIdState] = useState<string | null>(null);
   const [duplicateDialogSession, setDuplicateDialogSession] = useState<SavedSession | null>(null);
   const [isSavingSession, setIsSavingSession] = useState(false);
   const { showToast } = useToast();
@@ -134,13 +124,18 @@ export function SessionWizard({ initialLang = "de" }: Props) {
 
   const { saveStatus, manualSave, error: saveError } = useAutoSave(
     session,
-    true,
+    isStorageHydrated,
     { onSaveSuccess: handleDraftSaved }
   );
 
-  // Load saved sessions on mount
+  // Read browser-only state after hydration so server and client markup match.
   useEffect(() => {
+    const currentDraft = getCurrentDraft();
+    if (currentDraft) {
+      setSession(currentDraft.session);
+    }
     refreshSessionList();
+    setIsStorageHydrated(true);
   }, [refreshSessionList]);
 
   // Show toast on save error
