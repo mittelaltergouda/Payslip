@@ -1556,14 +1556,18 @@ let fetchMock: ReturnType<typeof vi.fn>;
   });
 
   describe('Auto-Save Integration', () => {
-    it('should call useAutoSave with session data', () => {
+    it('should enable auto-save only after browser storage hydration', async () => {
       renderWithToast(<SessionWizard />);
 
       expect(mockUseAutoSave).toHaveBeenCalled();
-      const callArgs = mockUseAutoSave.mock.calls[0];
-      expect(callArgs[0]).toHaveProperty('name');
-      expect(callArgs[0]).toHaveProperty('members');
-      expect(callArgs[1]).toBe(true); // enabled
+      const initialCallArgs = mockUseAutoSave.mock.calls[0];
+      expect(initialCallArgs[0]).toHaveProperty('name');
+      expect(initialCallArgs[0]).toHaveProperty('members');
+      expect(initialCallArgs[1]).toBe(false);
+
+      await waitFor(() => {
+        expect(mockUseAutoSave.mock.calls.some((call) => call[1] === true)).toBe(true);
+      });
     });
 
     it('should update auto-save when session changes', () => {
