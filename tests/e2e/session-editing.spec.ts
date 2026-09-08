@@ -402,6 +402,8 @@ test.describe('Session Editing - Editing Member Data', () => {
 
   test('Edited member data persists after save', async ({ page }) => {
     await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true }))
+      .toHaveAttribute('data-app-ready', 'true');
 
     // Create session and edit
     const uniqueName = 'Edit Persist Test ' + Date.now();

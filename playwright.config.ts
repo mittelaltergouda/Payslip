@@ -10,6 +10,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 4 : undefined,
+  timeout: process.env.CI ? 60_000 : 30_000,
   reporter: process.env.CI
     ? [
         ['line'],
@@ -47,9 +48,9 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
+    command: process.env.CI ? 'npm run build && npm start' : 'npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 120000,
+    timeout: 120_000,
   },
 });

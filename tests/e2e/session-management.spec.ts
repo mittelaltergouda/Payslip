@@ -381,6 +381,9 @@ test.describe('Session Management E2E Tests', () => {
   });
 
   test('Duplicating a session creates an independent local snapshot', async ({ page }) => {
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true }))
+      .toHaveAttribute('data-app-ready', 'true');
+
     const uniqueName = 'Duplicate Test ' + Date.now();
     const sessionNameInput = page.locator('input[type="text"]').first();
     await sessionNameInput.fill(uniqueName);

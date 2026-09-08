@@ -20,6 +20,8 @@ test.describe('Local-only sharing boundaries', () => {
     await page.goto('/');
     await page.evaluate(() => localStorage.clear());
     await page.reload();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true }))
+      .toHaveAttribute('data-app-ready', 'true');
 
     const privateName = 'Private Session ' + Date.now();
     await page.locator('input[type="text"]').first().fill(privateName);

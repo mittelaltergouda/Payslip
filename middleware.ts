@@ -4,6 +4,11 @@ import { NextResponse } from "next/server";
 export function middleware(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDevelopment = process.env.NODE_ENV === "development";
+  const forwardedProtocol = request.headers.get("x-forwarded-proto")
+    ?.split(",")[0]
+    .trim();
+  const isHttpsRequest =
+    forwardedProtocol === "https" || request.nextUrl.protocol === "https:";
 
   // Create Content-Security-Policy header with nonce
   const cspHeader = [
@@ -17,7 +22,7 @@ export function middleware(request: NextRequest) {
     `frame-ancestors 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,
-    ...(isDevelopment ? [] : [`upgrade-insecure-requests`]),
+    ...(isDevelopment || !isHttpsRequest ? [] : [`upgrade-insecure-requests`]),
   ].join("; ");
 
   // Clone the request headers and add the request nonce.

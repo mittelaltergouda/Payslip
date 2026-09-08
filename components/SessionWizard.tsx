@@ -50,8 +50,8 @@ function buildInitialSession(): SessionInput {
     taxEnabled: true,
     taxRate: taxFixed,
     members: [
-      { id: rndId(), handle: "Player 1", role: "Pilot", revenue: 0, investment: 0, active: true },
-      { id: rndId(), handle: "Player 2", role: "Crew", revenue: 0, investment: 0, active: true }
+      { id: "initial-player-1", handle: "Player 1", role: "Pilot", revenue: 0, investment: 0, active: true },
+      { id: "initial-player-2", handle: "Player 2", role: "Crew", revenue: 0, investment: 0, active: true }
     ],
     individualExpenses: [],
     sharedExpenses: []
@@ -73,6 +73,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
   const updateSession = setSession;
   const [error, setError] = useState<string | null>(null);
   const [showRole, setShowRole] = useState(false);
+  const [isAppReady, setIsAppReady] = useState(false);
 
   // Session management state
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -117,7 +118,13 @@ export function SessionWizard({ initialLang = "de" }: Props) {
 
   const handleDraftSaved = useCallback(
     (savedSession: SavedSession) => {
-      setSession(savedSession.session);
+      setSession((currentSession) => {
+        if (currentSession.id && currentSession.id !== savedSession.id) {
+          return currentSession;
+        }
+
+        return { ...currentSession, id: savedSession.id };
+      });
       setStoredCurrentDraftId(savedSession.id);
       setCurrentDraftIdState(savedSession.id);
       refreshSessionList();
@@ -167,6 +174,10 @@ export function SessionWizard({ initialLang = "de" }: Props) {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [manualSave, showToast, t.sessionSaved]);
+
+  useEffect(() => {
+    setIsAppReady(true);
+  }, []);
 
   // Unsaved changes warning
   useEffect(() => {
@@ -355,7 +366,12 @@ export function SessionWizard({ initialLang = "de" }: Props) {
   };
 
   return (
-    <div className="space-y-8" role="main" aria-label={t.appName}>
+    <div
+      className="space-y-8"
+      role="main"
+      aria-label={t.appName}
+      data-app-ready={isAppReady ? "true" : "false"}
+    >
       {/* Header with app name and language switcher */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
