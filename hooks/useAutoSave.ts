@@ -49,13 +49,16 @@ export function useAutoSave(
   // Refs
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const previousSessionRef = useRef<string | null>(null);
+  const latestSessionRef = useRef(session);
+  latestSessionRef.current = session;
   const onSaveSuccess = options?.onSaveSuccess;
 
   /**
    * Performs the actual save operation
    */
   const performSave = useCallback(async () => {
-    if (!session) {
+    const sessionToSave = latestSessionRef.current;
+    if (!sessionToSave) {
       return;
     }
 
@@ -63,11 +66,11 @@ export function useAutoSave(
     setError(null);
 
     try {
-      const result = save(session);
+      const result = save(sessionToSave);
 
       if (result.success) {
         setSaveStatus('saved');
-        previousSessionRef.current = JSON.stringify(session);
+        previousSessionRef.current = JSON.stringify(sessionToSave);
         if (result.data) {
           onSaveSuccess?.(result.data);
         }
@@ -79,7 +82,7 @@ export function useAutoSave(
       setSaveStatus('unsaved');
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
     }
-  }, [session, onSaveSuccess]);
+  }, [onSaveSuccess]);
 
   /**
    * Manual save function (can be called directly, e.g., on Ctrl+S)
