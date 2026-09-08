@@ -80,9 +80,12 @@ test.describe('Security Headers Verification', () => {
     expect(csp).toContain("base-uri 'self'");
     expect(csp).toContain("form-action 'self'");
 
-    // Playwright starts the Next development server, which needs eval for HMR.
-    // Middleware unit tests and the standalone smoke test verify it is absent in production.
-    expect(csp).toContain("'unsafe-eval'");
+    // CI exercises the optimized production server; local runs use Next's HMR server.
+    if (process.env.CI) {
+      expect(csp).not.toContain("'unsafe-eval'");
+    } else {
+      expect(csp).toContain("'unsafe-eval'");
+    }
 
     const nonce = csp.match(/'nonce-([^']+)'/)?.[1];
     expect(nonce).toBeTruthy();
