@@ -1,4 +1,5 @@
 "use client";
+import { MoneyItemsEditor } from "./MoneyItemsEditor";
 
 import type { DistributionMode, IndividualExpenseInput, MemberBreakdown, MemberInput } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -169,24 +170,12 @@ export function MemberCard({
 
         <div>
           <label className="block text-xs text-white/60 mb-1" htmlFor={`revenue-${member.id}`}>{t.revenueLabel}</label>
-          <NumericInput
-            id={`revenue-${member.id}`}
-            value={member.revenue ?? 0}
-            onValueChange={(value) => updateMember(member.id!, { revenue: value })}
-            lang={lang}
-            aria-label={`${t.revenueLabel} ${t.for || "for"} ${member.handle}`}
-          />
+          <MoneyItemsEditor member={member} kind="revenue" lang={lang} onChange={patch => updateMember(member.id!, patch)} />
         </div>
 
         <div>
           <label className="block text-xs text-white/60 mb-1" htmlFor={`investment-${member.id}`}>{t.investmentLabel}</label>
-          <NumericInput
-            id={`investment-${member.id}`}
-            value={member.investment ?? 0}
-            onValueChange={(value) => updateMember(member.id!, { investment: value })}
-            lang={lang}
-            aria-label={`${t.investmentLabel} ${t.for || "for"} ${member.handle}`}
-          />
+          <MoneyItemsEditor member={member} kind="investment" lang={lang} onChange={patch => updateMember(member.id!, patch)} />
         </div>
       </div>
 

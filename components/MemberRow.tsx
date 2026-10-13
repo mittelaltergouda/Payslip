@@ -1,4 +1,5 @@
 "use client";
+import { MoneyItemsEditor } from "./MoneyItemsEditor";
 
 import type { DistributionMode, IndividualExpenseInput, MemberBreakdown, MemberInput } from "@/lib/types";
 import { NumericInput } from "@/components/ui/numeric-input";
@@ -162,24 +163,10 @@ export function MemberRow({
         </td>
       )}
       <td className="py-3 px-3 w-[300px]">
-        <NumericInput
-          className="input w-full"
-          data-nav-col="revenue"
-          data-nav-row={rowIndex}
-          value={member.revenue ?? 0}
-          onValueChange={(v) => updateMember(member.id!, { revenue: v })}
-          lang={lang}
-        />
+        <MoneyItemsEditor member={member} kind="revenue" lang={lang} onChange={patch => updateMember(member.id!, patch)} rowIndex={rowIndex} />
       </td>
       <td className="py-3 px-3 w-[300px]">
-        <NumericInput
-          className="input w-full"
-          data-nav-col="investment"
-          data-nav-row={rowIndex}
-          value={member.investment ?? 0}
-          onValueChange={(v) => updateMember(member.id!, { investment: v })}
-          lang={lang}
-        />
+        <MoneyItemsEditor member={member} kind="investment" lang={lang} onChange={patch => updateMember(member.id!, patch)} rowIndex={rowIndex} />
       </td>
       <td className="py-3 px-3">
         <div className="flex flex-col gap-1 min-w-[220px]">

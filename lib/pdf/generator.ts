@@ -6,6 +6,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { SessionInput, PayslipResult } from "@/lib/types";
 import type { Lang } from "@/lib/i18n/translations";
+import { buildArithmeticExplanation } from "@/lib/accounting";
 import { format } from "@/lib/format";
 import { getMemberPayoutSummaries } from "@/lib/export/payoutSummary";
 
@@ -163,8 +164,8 @@ export function generatePDF(
   const margin = 16;
   const contentWidth = pageWidth - margin * 2;
 
-  const totalRevenue = session.members.reduce((sum, member) => sum + (member.revenue ?? 0), 0);
-  const totalInvestment = session.members.reduce((sum, member) => sum + (member.investment ?? 0), 0);
+  const totalRevenue = result.members.reduce((sum, member) => sum + member.revenue, 0);
+  const totalInvestment = result.members.reduce((sum, member) => sum + member.investment, 0);
   const totalExpenses = result.members.reduce((sum, member) => sum + member.expenses, 0);
   const totalFees = result.suggestedTransfers.reduce((sum, transfer) => sum + transfer.feeAmount, 0);
   const netResult = result.netProfit - totalFees;
@@ -269,6 +270,31 @@ export function generatePDF(
     doc.text(amount(value), x + 3, cardY + 12.5);
   });
   y += cardHeight * 2 + cardGap + 6;
+
+  // Arithmetic starts on page two, before potentially long tables.
+  doc.addPage();
+  drawHeader();
+  y = drawSectionTitle(lang === "de" ? "Rechnung nachvollziehen" : "Calculation explained", 44);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  setText(COLORS.slate);
+  for (const line of buildArithmeticExplanation(session, result, lang)) {
+    // Keep text wrapping deterministic and compatible with the test PDF adapter.
+    const words = line.split(" ");
+    let row = "";
+    for (const word of words) {
+      if ((row + word).length > 105 && row) {
+        y = ensureSpace(y, 5);
+        doc.text(row, margin, y);
+        y += 5;
+        row = "";
+      }
+      row += (row ? " " : "") + word;
+    }
+    y = ensureSpace(y, 5);
+    doc.text(row, margin, y);
+    y += 7;
+  }
 
   // Member table
   y = ensureSpace(y, 35);

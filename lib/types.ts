@@ -22,6 +22,9 @@ export type PaidTransferInput = {
   toMemberId: string;
   netAmount: number;
   feeAmount: number;
+  /** Legacy transfers default to SETTLEMENT (recipient bears fee). */
+  label?: string;
+  kind?: "SETTLEMENT" | "SESSION_CASH" | "COST_CONTRIBUTION";
 };
 
 export type MemberInput = {
@@ -81,6 +84,7 @@ export type MemberBreakdown = {
   individualExpenses: number;
   profitShare: number;
   finalNet: number;
+  fundingAdjustment?: number;
 };
 
 export type Transfer = {
@@ -116,6 +120,7 @@ export type PayslipResult = {
 
 // Zod schemas for localStorage session management
 
+const moneySchema = z.number().finite().min(0).max(Number.MAX_SAFE_INTEGER);
 const memberInputSchema = z.object({
   id: z.string().optional(),
   handle: z.string(),
@@ -123,8 +128,8 @@ const memberInputSchema = z.object({
   active: z.boolean().optional(),
   revenue: z.number().optional(),
   investment: z.number().optional(),
-  revenues: z.array(z.object({ id: z.string().optional(), label: z.string(), amount: z.number() })).optional(),
-  investments: z.array(z.object({ id: z.string().optional(), label: z.string(), amount: z.number() })).optional(),
+  revenues: z.array(z.object({ id: z.string().optional(), label: z.string(), amount: moneySchema })).optional(),
+  investments: z.array(z.object({ id: z.string().optional(), label: z.string(), amount: moneySchema })).optional(),
   percentShare: z.number().nullable().optional(),
   fixedBonus: z.number().nullable().optional(),
   fixedPayout: z.number().nullable().optional(),
@@ -148,8 +153,10 @@ const paidTransferInputSchema = z.object({
   id: z.string().optional(),
   fromMemberId: z.string(),
   toMemberId: z.string(),
-  netAmount: z.number(),
-  feeAmount: z.number(),
+  netAmount: moneySchema,
+  feeAmount: moneySchema,
+  label: z.string().optional(),
+  kind: z.enum(["SETTLEMENT", "SESSION_CASH", "COST_CONTRIBUTION"]).optional(),
 });
 
 const sessionInputSchema = z.object({
@@ -165,6 +172,16 @@ const sessionInputSchema = z.object({
   sharedExpenses: z.array(sharedExpenseInputSchema).optional(),
   individualExpenses: z.array(individualExpenseInputSchema).optional(),
   paidTransfers: z.array(paidTransferInputSchema).optional(),
+}).superRefine((session, ctx) => {
+  const ids = session.members.map(m => m.id).filter((id): id is string => !!id);
+  if (new Set(ids).size !== ids.length) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Duplicate member IDs" });
+  }
+  for (const transfer of session.paidTransfers ?? []) {
+    if (!ids.includes(transfer.fromMemberId) || !ids.includes(transfer.toMemberId) || transfer.fromMemberId === transfer.toMemberId || transfer.netAmount + transfer.feeAmount > Number.MAX_SAFE_INTEGER) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Invalid recorded transfer" });
+    }
+  }
 });
 
 export const savedSessionSchema = z.object({

@@ -8,6 +8,7 @@ import type { Lang } from "@/lib/i18n/translations";
 import { translations } from "@/lib/i18n/translations";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { SessionSettings } from "./SessionSettings";
+import { PaidTransfersEditor } from "./PaidTransfersEditor";
 import { MembersTable } from "./MembersTable";
 import { ResultsDisplay } from "./ResultsDisplay";
 import { useAutoSave } from "@/hooks/useAutoSave";
@@ -283,6 +284,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
         distributionMode: distributionMode ?? prev.distributionMode,
         // Clear individual expenses since members changed
         individualExpenses: [],
+        paidTransfers: [],
       }));
 
       showToast(t.presetLoaded || "Crew preset loaded", "success");
@@ -340,6 +342,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
     setSession((prev) => ({
       ...prev,
       members: prev.members.filter((m) => m.id !== id),
+      paidTransfers: (prev.paidTransfers ?? []).filter(t => t.fromMemberId !== id && t.toMemberId !== id),
       individualExpenses: (prev.individualExpenses ?? []).filter((exp) => exp.memberId !== id)
     }));
   };
@@ -476,6 +479,8 @@ export function SessionWizard({ initialLang = "de" }: Props) {
         removeIndividualExpense={removeIndividualExpense}
         onOpenPresetManager={() => setIsPresetManagerOpen(true)}
       />
+
+      <PaidTransfersEditor session={session} lang={lang} onChange={paidTransfers => setSession(prev => ({ ...prev, paidTransfers }))} />
 
       <ResultsDisplay
         result={result}

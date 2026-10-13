@@ -366,7 +366,7 @@ export function duplicate(
       if (member.id) {
         memberIdMap.set(member.id, newMemberId);
       }
-      return { ...member, id: newMemberId };
+      return { ...member, id: newMemberId, revenues: member.revenues?.map(item => ({ ...item, id: generateId() })), investments: member.investments?.map(item => ({ ...item, id: generateId() })) };
     });
 
     // Copy expenses if requested
@@ -407,6 +407,7 @@ export function duplicate(
       members: newMembers,
       sharedExpenses: newSharedExpenses,
       individualExpenses: newIndividualExpenses,
+      paidTransfers: original.paidTransfers?.filter(t => copyExpenses || t.kind !== "COST_CONTRIBUTION").map(t => ({ ...t, id: generateId(), fromMemberId: memberIdMap.get(t.fromMemberId)!, toMemberId: memberIdMap.get(t.toMemberId)! })),
     };
 
     // Save the duplicated session

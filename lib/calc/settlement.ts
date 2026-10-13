@@ -75,12 +75,13 @@ export function settleBalancesDetailed(
 
   const balanceByMember = new Map(balances.map((balance) => [balance.memberId, balance]));
   for (const transfer of paidTransfers) {
+    if (transfer.kind === "COST_CONTRIBUTION") {continue;}
     const grossAmount = transfer.netAmount + transfer.feeAmount;
     const sender = balanceByMember.get(transfer.fromMemberId);
     const recipient = balanceByMember.get(transfer.toMemberId);
     if (sender && recipient) {
       sender.balance += grossAmount;
-      recipient.balance -= grossAmount;
+      recipient.balance -= transfer.kind === "SESSION_CASH" ? transfer.netAmount : grossAmount;
     }
   }
 

@@ -39,9 +39,12 @@ function assertSafeAuecValue(label: string, value: number | null | undefined): v
 export function validateSafeAuecValues(session: SessionInput): void {
   const values: Array<readonly [label: string, value: number | null | undefined]> = [
     ['Total revenue', session.totalRevenue],
+    ...(session.paidTransfers ?? []).flatMap(t => [['Recorded transfer net', t.netAmount] as const, ['Recorded transfer fee', t.feeAmount] as const]),
     ...session.members.flatMap((member) => [
       [`Member "${member.handle}" revenue`, member.revenue] as const,
       [`Member "${member.handle}" investment`, member.investment] as const,
+      ...(member.revenues ?? []).map(item => [`Revenue item ${item.label}`, item.amount] as const),
+      ...(member.investments ?? []).map(item => [`Investment item ${item.label}`, item.amount] as const),
       [`Member "${member.handle}" fixed bonus`, member.fixedBonus] as const,
       [`Member "${member.handle}" fixed payout`, member.fixedPayout] as const,
     ]),
@@ -228,6 +231,18 @@ export function validateSessionInput(session: SessionInput): void {
   // Validate non-negative values
   validateNonNegativeValues(session);
 
+  const ids = session.members.map(m => m.id).filter((id): id is string => !!id);
+  if (new Set(ids).size !== ids.length) {throw new Error("Duplicate member IDs");}
+  for (const member of session.members) {
+    for (const item of [...(member.revenues ?? []), ...(member.investments ?? [])]) {
+      if (item.amount < 0) {throw new Error("Item amounts must be non-negative");}
+    }
+  }
+  for (const transfer of session.paidTransfers ?? []) {
+    if (transfer.netAmount < 0 || transfer.feeAmount < 0) {throw new Error("Recorded transfers must be non-negative");}
+    if (!ids.includes(transfer.fromMemberId) || !ids.includes(transfer.toMemberId) || transfer.fromMemberId === transfer.toMemberId) {throw new Error("Recorded transfers require existing distinct members");}
+    if (transfer.kind && !["SETTLEMENT", "SESSION_CASH", "COST_CONTRIBUTION"].includes(transfer.kind)) {throw new Error("Unknown recorded transfer kind");}
+  }
   // Validate tax rate
   validateTaxRate(session.taxRate);
 }

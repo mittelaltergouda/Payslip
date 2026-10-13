@@ -112,7 +112,8 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
   // Step 5: Calculate net profit
   // -------------------------------------------------------------------------
   // Net profit = saleRevenue - total expenses
-  const netProfit = saleRevenue - totalExpenses;
+  const sessionCashFees = normalized.paidTransfers.filter(t => t.kind === "SESSION_CASH" || t.kind === "COST_CONTRIBUTION").reduce((sum, t) => sum + t.feeAmount, 0);
+  const netProfit = saleRevenue - totalExpenses - sessionCashFees;
 
   // -------------------------------------------------------------------------
   // Steps 6-8: Distribute profit and settle balances
@@ -137,7 +138,13 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
 
     // Costs are deducted once from profit, then reimbursed once to the members
     // who funded them. Shared expense participantIds identify those funders.
-    const finalNet = m.investment + memberTotalExpenses + profitShare;
+    const contributions = normalized.paidTransfers.filter(t => t.kind === "COST_CONTRIBUTION");
+    const fundedByOthers = contributions.filter(t => t.toMemberId === m.id).reduce((sum, t) => sum + t.netAmount, 0);
+    if (fundedByOthers > m.investment + memberTotalExpenses) {
+      throw new Error("Cost contributions exceed recipient recorded costs");
+    }
+    const fundingAdjustment = contributions.filter(t => t.fromMemberId === m.id).reduce((sum, t) => sum + t.netAmount + t.feeAmount, 0) - fundedByOthers;
+    const finalNet = m.investment + memberTotalExpenses + fundingAdjustment + profitShare;
 
     return {
       memberId: m.id,
@@ -150,6 +157,7 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
       individualExpenses: memberIndividualExpenses,
       profitShare,
       finalNet,
+      fundingAdjustment,
     };
   });
 

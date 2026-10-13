@@ -7,6 +7,7 @@ import { TransfersList } from "./TransfersList";
 import { ExportPDFButton } from "./ExportPDFButton";
 import { ExportClipboardButton } from "./ExportClipboardButton";
 import { ExportCSVButton } from "./ExportCSVButton";
+import { buildArithmeticExplanation } from "@/lib/accounting";
 import { format } from "@/lib/format";
 
 
@@ -66,8 +67,8 @@ export function ResultsDisplay({
   currency = "aUEC",
   className = "",
 }: ResultsDisplayProps) {
-  const totalRevenue = session.members.reduce((sum, m) => sum + (m.revenue ?? 0), 0);
-  const totalInvestment = session.members.reduce((sum, m) => sum + (m.investment ?? 0), 0);
+  const totalRevenue = result?.members.reduce((sum, m) => sum + m.revenue, 0) ?? 0;
+  const totalInvestment = result?.members.reduce((sum, m) => sum + m.investment, 0) ?? 0;
   const totalExpenses = result?.members.reduce((sum, m) => sum + m.expenses, 0) ?? 0;
   const totalFees = result?.suggestedTransfers.reduce((sum, tr) => sum + tr.feeAmount, 0) ?? 0;
 
@@ -124,6 +125,8 @@ export function ResultsDisplay({
           </ul>
         </div>
       )}
+
+      {result && <details className="rounded-xl border border-white/10 p-4"><summary className="cursor-pointer font-semibold">{lang === "de" ? "Rechnung nachvollziehen" : "Calculation explained"}</summary><ol className="mt-3 space-y-2 text-sm break-words">{buildArithmeticExplanation(session, result, lang).map((line, index) => <li key={index}>{line}</li>)}</ol></details>}
 
       {result && (
         <div className="grid gap-6 lg:grid-cols-2">
