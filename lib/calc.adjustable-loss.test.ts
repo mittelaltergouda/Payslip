@@ -6,8 +6,11 @@ import type { SessionInput } from "./types";
 // - profit >= all fixed amounts: fixed payouts and fixed bonuses first (unchanged)
 // - 0 <= profit < fixed amounts: fixed amounts are cut proportionally to the
 //   available profit; pool members get 0, never a negative share
-// - loss: fixed amounts are suspended, every active member bears the loss
-//   equally; funders are still reimbursed their investments and costs first
+// - loss: fixed amounts are suspended; the loss follows the same key as profit
+//   (pool percentages if set, otherwise equal among pool members). Fixed-payout
+//   members get 0 (no payout, no loss). If every active member has a fixed
+//   payout, all of them share the loss equally. Funders are still reimbursed
+//   their investments and costs first.
 
 function adjustable(members: SessionInput["members"], extra: Partial<SessionInput> = {}): SessionInput {
   return {
@@ -29,21 +32,21 @@ function transfers(result: ReturnType<typeof calculatePayslip>) {
 }
 
 describe("ADJUSTABLE fixed amounts on loss and low profit", () => {
-  it("suspends a fixed payout on a loss and splits the loss equally", () => {
+  it("suspends a fixed payout on a loss: the fixed member gets 0, the pool bears the loss", () => {
     const result = calculatePayslip(adjustable([
       { id: "alice", handle: "Alice", active: true, revenue: 0, fixedPayout: 200 },
       { id: "bob", handle: "Bob", active: true, revenue: 0, investment: 600 },
     ]));
 
     expect(result.netProfit).toBe(-600);
-    expect(shares(result)).toEqual([["alice", -300], ["bob", -300]]);
-    // Bob is reimbursed 600 and bears 300 of the loss; Alice pays her 300.
-    expect(result.members.map((m) => m.finalNet)).toEqual([-300, 300]);
-    expect(transfers(result)).toEqual([["alice", "bob", 300]]);
+    expect(shares(result)).toEqual([["alice", 0], ["bob", -600]]);
+    // Bob is reimbursed 600 and bears the whole 600 loss; Alice neither gains nor pays.
+    expect(result.members.map((m) => m.finalNet)).toEqual([0, 0]);
+    expect(transfers(result)).toEqual([]);
     expect(result.fixedAmountsStatus).toBe("SUSPENDED_FOR_LOSS");
   });
 
-  it("ignores fixed bonuses and percentages on a loss: every active member bears the same", () => {
+  it("shares a loss by pool percentages, ignoring fixed bonuses", () => {
     const result = calculatePayslip(adjustable([
       { id: "a", handle: "A", active: true, revenue: 0, investment: 1_000, percentShare: 70, fixedBonus: 100 },
       { id: "b", handle: "B", active: true, revenue: 0, percentShare: 30 },
@@ -51,8 +54,10 @@ describe("ADJUSTABLE fixed amounts on loss and low profit", () => {
     ]));
 
     expect(result.netProfit).toBe(-1_000);
-    expect(result.members.map((m) => m.profitShare)).toEqual([-1_000 / 3, -1_000 / 3, -1_000 / 3]);
-    expect(result.members[0].finalNet).toBeCloseTo(2_000 / 3, 9);
+    expect(shares(result)).toEqual([["a", -700], ["b", -300], ["c", 0]]);
+    // A is reimbursed 1000 and bears 700; B pays A her 300.
+    expect(result.members.map((m) => m.finalNet)).toEqual([300, -300, 0]);
+    expect(transfers(result)).toEqual([["b", "a", 300]]);
     expect(result.fixedAmountsStatus).toBe("SUSPENDED_FOR_LOSS");
   });
 
@@ -65,7 +70,31 @@ describe("ADJUSTABLE fixed amounts on loss and low profit", () => {
     ]));
 
     expect(result.netProfit).toBe(-900);
-    expect(shares(result)).toEqual([["a", -300], ["b", -300], ["c", -300], ["x", 0]]);
+    expect(shares(result)).toEqual([["a", 0], ["b", -450], ["c", -450], ["x", 0]]);
+  });
+
+  it("does not let a tiny fixed bonus change how a loss is split", () => {
+    const base = [
+      { id: "a", handle: "A", active: true, revenue: 0, investment: 1_000, percentShare: 70 },
+      { id: "b", handle: "B", active: true, revenue: 0, percentShare: 30 },
+    ];
+    const withoutBonus = calculatePayslip(adjustable(base));
+    const withBonus = calculatePayslip(adjustable([{ ...base[0], fixedBonus: 1 }, base[1]]));
+
+    expect(shares(withoutBonus)).toEqual([["a", -700], ["b", -300]]);
+    expect(shares(withBonus)).toEqual([["a", -700], ["b", -300]]);
+    expect(withBonus.fixedAmountsStatus).toBe("SUSPENDED_FOR_LOSS");
+  });
+
+  it("splits a loss equally when every active member has a fixed payout", () => {
+    const result = calculatePayslip(adjustable([
+      { id: "a", handle: "A", active: true, revenue: 0, investment: 600, fixedPayout: 100 },
+      { id: "b", handle: "B", active: true, revenue: 0, fixedPayout: 100 },
+    ]));
+
+    expect(result.netProfit).toBe(-600);
+    expect(shares(result)).toEqual([["a", -300], ["b", -300]]);
+    expect(transfers(result)).toEqual([["b", "a", 300]]);
   });
 
   it("cuts fixed payouts and bonuses proportionally when profit cannot cover them", () => {
@@ -148,8 +177,10 @@ describe("ADJUSTABLE fixed amounts on loss and low profit", () => {
       individualExpenses: [{ id: "e", memberId: "c", label: "Fuel", amount: 120 }],
     }));
 
-    // net = 300 - 400 - 120 = -220 -> loss, fixed amounts suspended
+    // net = 300 - 400 - 120 = -220 -> loss, fixed amounts suspended;
+    // A (fixed payout) gets 0, B and C share equally: -110 each
     expect(result.netProfit).toBe(-220);
+    expect(shares(result)).toEqual([["a", 0], ["b", -110], ["c", -110]]);
     expect(result.fixedAmountsStatus).toBe("SUSPENDED_FOR_LOSS");
     const targets = result.members.reduce((sum, m) => sum + m.finalNet, 0);
     expect(targets).toBeCloseTo(300, 9);

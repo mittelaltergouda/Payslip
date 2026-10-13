@@ -107,8 +107,7 @@ function distributeAdjustable(
 
   const status = getFixedAmountsStatus(netProfit, activeMembers, 'ADJUSTABLE');
   if (status === 'SUSPENDED_FOR_LOSS') {
-    // A loss is borne equally by every active member; fixed amounts pause.
-    return distributeEqual(netProfit, activeMembers);
+    return distributeLossWithoutFixedAmounts(netProfit, activeMembers);
   }
   if (status === 'SCALED_TO_PROFIT') {
     return distributeScaledFixedAmounts(netProfit, activeMembers);
@@ -234,6 +233,39 @@ export function getFixedAmountsStatus(
     return 'SUSPENDED_FOR_LOSS';
   }
   return netProfit < totalFixedAmounts(activeMembers) ? 'SCALED_TO_PROFIT' : 'APPLIED';
+}
+
+/**
+ * Loss session: fixed payouts and bonuses pause. The loss follows the same key
+ * as profit: pool percentages if set, otherwise equal among pool members.
+ * Fixed-payout members get 0. Without any pool member, all active members
+ * share the loss equally so the money still adds up.
+ */
+function distributeLossWithoutFixedAmounts(
+  netProfit: number,
+  activeMembers: NormalizedMember[]
+): ProfitDistribution[] {
+  const poolMembers = activeMembers.filter((m) => m.fixedPayout === null);
+  if (poolMembers.length === 0) {
+    return distributeEqual(netProfit, activeMembers);
+  }
+
+  const totalPercent = poolMembers.reduce(
+    (sum, m) => sum + (m.percentShare ?? 0),
+    0
+  );
+  const poolShares =
+    totalPercent > 0
+      ? poolMembers.map((m) => ({
+          memberId: m.id,
+          profitShare: netProfit * ((m.percentShare ?? 0) / totalPercent),
+        }))
+      : distributeEqual(netProfit, poolMembers);
+  const fixedMembers = activeMembers
+    .filter((m) => m.fixedPayout !== null)
+    .map((m) => ({ memberId: m.id, profitShare: 0 }));
+
+  return [...fixedMembers, ...poolShares];
 }
 
 /**
