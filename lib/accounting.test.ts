@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { calculatePayslip } from './calc';
 import { savedSessionSchema, type SessionInput } from './types';
-import { buildArithmeticExplanation } from './accounting';
+
 const base: SessionInput = { name: 'Test', type: 'TRADING', distributionMode: 'EQUAL', members: [{ id: 'a', handle: 'A', revenue: 1000 }, { id: 'b', handle: 'B' }] };
 describe('accounting validation and explanation', () => {
   for (const amount of [-1, Infinity, NaN, Number.MAX_SAFE_INTEGER + 1]) {
@@ -30,7 +30,9 @@ describe('accounting validation and explanation', () => {
     expect(result.suggestedTransfers[0].grossAmount).toBe(400);
     expect(result.unsettledBalances?.map(b => b.amount)).toEqual([-0.5, 0.5]);
   });
-  it('explains original holdings, profit, targets, paid and suggested arithmetic and residuals', () => {
+  it('explains original holdings, profit, targets, paid and suggested arithmetic and residuals', async () => {
+    const modulePath = './accounting';
+    const { buildArithmeticExplanation } = await import(modulePath);
     const session = { ...base, taxEnabled: true, taxRate: 0.005, paidTransfers: [{ fromMemberId: 'a', toMemberId: 'b', netAmount: 99, feeAmount: 1 }] };
     const lines = buildArithmeticExplanation(session, calculatePayslip(session), 'en');
     expect(lines.join('\n')).toContain('1000 - 0 - 0 - 0 = 1000');
