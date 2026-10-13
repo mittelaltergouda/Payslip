@@ -106,6 +106,15 @@ export function ResultsDisplay({
         )}
       </div>
 
+      {result && (result.fixedAmountsStatus === "SUSPENDED_FOR_LOSS" || result.fixedAmountsStatus === "SCALED_TO_PROFIT") && (
+        <p
+          role="note"
+          className="rounded-xl border border-sky-400/30 bg-sky-400/10 p-4 text-sm text-sky-100"
+        >
+          {result.fixedAmountsStatus === "SUSPENDED_FOR_LOSS" ? t.fixedAmountsSuspended : t.fixedAmountsScaled}
+        </p>
+      )}
+
       {result && (result.unsettledBalances?.length ?? 0) > 0 && (
         <div
           role="alert"

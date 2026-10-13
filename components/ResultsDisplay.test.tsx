@@ -109,6 +109,48 @@ describe('ResultsDisplay - Basic Rendering', () => {
     expect(screen.getByText('Escort: still to receive 1 aUEC.')).toBeInTheDocument();
   });
 
+  it('should explain suspended fixed amounts on a loss session', () => {
+    render(
+      <ResultsDisplay
+        result={{ ...mockResult, fixedAmountsStatus: 'SUSPENDED_FOR_LOSS' }}
+        session={mockSession}
+        error={null}
+        translations={translations.de}
+        lang="de"
+      />
+    );
+
+    expect(screen.getByRole('note')).toHaveTextContent('Verlust-Session: Fixbeträge ausgesetzt');
+  });
+
+  it('should explain proportionally cut fixed amounts when profit is too small', () => {
+    render(
+      <ResultsDisplay
+        result={{ ...mockResult, fixedAmountsStatus: 'SCALED_TO_PROFIT' }}
+        session={mockSession}
+        error={null}
+        translations={translations.en}
+        lang="en"
+      />
+    );
+
+    expect(screen.getByRole('note')).toHaveTextContent('Fixed amounts reduced proportionally');
+  });
+
+  it('should show no fixed-amount note when fixed amounts were applied in full', () => {
+    render(
+      <ResultsDisplay
+        result={{ ...mockResult, fixedAmountsStatus: 'APPLIED' }}
+        session={mockSession}
+        error={null}
+        translations={translations.en}
+        lang="en"
+      />
+    );
+
+    expect(screen.queryByRole('note')).not.toBeInTheDocument();
+  });
+
   it('should render the results heading with German translations', () => {
     render(
       <ResultsDisplay
