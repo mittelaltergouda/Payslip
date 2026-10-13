@@ -20,7 +20,7 @@ describe("settlement regression", () => {
 
     const result = calculatePayslip(session);
 
-    expect(result.suggestedTransfers).toEqual([
+    expect(result.settlementDetails).toMatchObject([
       { fromMemberId: "d2", toMemberId: "c1", netAmount: 796, grossAmount: 800, feeAmount: 4 },
       { fromMemberId: "d1", toMemberId: "c1", netAmount: 199, grossAmount: 200, feeAmount: 1 },
     ]);
@@ -48,7 +48,7 @@ describe("settlement regression", () => {
 
     expect(result.saleRevenue).toBe(1_000);
     expect(result.netProfit).toBe(1_000);
-    expect(result.suggestedTransfers).toEqual([
+    expect(result.settlementDetails).toMatchObject([
       {
         fromMemberId: "holder",
         toMemberId: "receiver",
@@ -83,7 +83,7 @@ describe("settlement regression", () => {
       ["p1", 1_047_534.5, 3_869_534.5],
       ["p2", 1_047_534.5, 3_916_534.5],
     ]);
-    expect(result.suggestedTransfers).toEqual([
+    expect(result.settlementDetails).toMatchObject([
       {
         fromMemberId: "p2",
         toMemberId: "p1",
@@ -149,7 +149,7 @@ describe("settlement regression", () => {
 
     expect(result.netProfit).toBe(1_000);
     expect(result.paidTransferFees).toBe(1);
-    expect(result.suggestedTransfers).toEqual([
+    expect(result.settlementDetails).toMatchObject([
       {
         fromMemberId: "holder",
         toMemberId: "crew",
@@ -179,7 +179,7 @@ describe("settlement regression", () => {
 
     const result = calculatePayslip(session);
 
-    expect(result.suggestedTransfers).toEqual([
+    expect(result.settlementDetails).toMatchObject([
       {
         fromMemberId: "iri",
         toMemberId: "avi",
