@@ -1,10 +1,12 @@
-import type { PayslipResult, SessionInput, MemberInput } from "./types";
+import type { PayslipResult, SessionInput, MemberInput, SettlementDetail, Transfer } from "./types";
 import type { Lang } from "./i18n/translations";
 
 export function memberAmount(member: MemberInput, kind: "revenue" | "investment"): number {
   const items = kind === "revenue" ? member.revenues : member.investments;
   return items ? items.reduce((sum, item) => sum + item.amount, 0) : member[kind] ?? 0;
 }
+
+const isSettlementDetail = (t: Transfer | SettlementDetail): t is SettlementDetail => "exactBudget" in t;
 
 /** Shared by UI and PDF: no recalculation or rounded intermediate arithmetic. */
 export function buildArithmeticExplanation(session: SessionInput, result: PayslipResult, lang: Lang): string[] {
@@ -40,7 +42,7 @@ export function buildArithmeticExplanation(session: SessionInput, result: Paysli
   lines.push(de ? "SETTLEMENT: Empfänger trägt die Gebühr im Bruttoanspruch. SESSION_CASH: Nettobestand verschoben, historische Gebühr einmal im Gewinn. COST_CONTRIBUTION: externes Geld, Erstattung plus Gebühr an Geldgeber." : "SETTLEMENT: fee consumes recipient gross entitlement. SESSION_CASH: net holdings moved, historical fee deducted once from profit. COST_CONTRIBUTION: external funding, funder reimbursed plus fee.");
   for (const t of result.settlementDetails ?? result.suggestedTransfers) {
     lines.push(`${de ? "Vorschlag" : "Suggested"} ${name(t.fromMemberId)} -> ${name(t.toMemberId)}: ${n(t.netAmount)} + ${n(t.feeAmount)} = ${n(t.grossAmount)}`);
-    if ("exactBudget" in t) {lines.push(`${de ? "Budget / Rundung" : "Budget / rounding"}: ${n(t.exactBudget)} -> ${n(t.budgetAmount)}, ${n(t.roundingRemainder)}`);}
+    if (isSettlementDetail(t)) {lines.push(`${de ? "Budget / Rundung" : "Budget / rounding"}: ${n(t.exactBudget)} -> ${n(t.budgetAmount)}, ${n(t.roundingRemainder)}`);}
   }
   lines.push(`${de ? "Vorschlagsgebühr" : "Suggested fee"}: ceil(net * ${n(result.taxRateApplied)}), minimum 1 when enabled; net + fee fits integer sender budget.`);
   for (const r of result.unsettledBalances ?? []) {lines.push(`${de ? "Rest" : "Residual"} ${name(r.memberId)}: ${n(r.amount)}`);}
