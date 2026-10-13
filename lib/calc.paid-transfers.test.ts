@@ -108,6 +108,29 @@ describe("funder reimbursement (900k revenue, 100k funded by one player)", () =>
   });
 });
 
+describe("loss sharing", () => {
+  it("shares a loss by percent after reimbursing every funder", () => {
+    // A spent 800, B spent 700 (200 investment + 500 repair); revenue 1,000
+    // profit = 1,000 - 800 - 200 - 500 = -500 -> A 60 % = -300, B 40 % = -200
+    // targets: A 800 - 300 = 500, B 200 + 500 - 200 = 500 (sum 1,000 = held)
+    // A holds 1,000 -> pays B 500; out of pocket A -300, B -200
+    const session: SessionInput = {
+      ...base, distributionMode: "PERCENT",
+      members: [
+        { id: "a", handle: "A", revenue: 1_000, investment: 800, percentShare: 60 },
+        { id: "b", handle: "B", investment: 200, percentShare: 40 },
+      ],
+      individualExpenses: [{ memberId: "b", label: "Repair", amount: 500 }],
+    };
+    const result = calculatePayslip(session);
+    expect(result.netProfit).toBe(-500);
+    expect(result.members.map((m) => [m.memberId, m.profitShare])).toEqual([["a", -300], ["b", -200]]);
+    expect(targets(result)).toEqual([["a", 500], ["b", 500]]);
+    expect(transfers(result)).toEqual([["a", "b", 500, 0, 500]]);
+    expectCashConserved(session, result);
+  });
+});
+
 describe("SESSION_CASH advances", () => {
   // A advances session cash to B, who buys fuel with it.
   // profit = 1,000 - 99 (fuel) - 1 (historical fee) = 900 -> 450 each
