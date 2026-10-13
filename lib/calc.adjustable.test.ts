@@ -299,37 +299,39 @@ describe('calculatePayslip - ADJUSTABLE mode', () => {
       name: 'Adjustable Settlement Test',
       type: 'TRADING',
       distributionMode: 'ADJUSTABLE',
-      totalRevenue: 1000,
+      totalRevenue: 1200,
       taxEnabled: false,
       members: [
         { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000, investment: 1000, fixedPayout: 200 },
-        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 0 }
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 200, investment: 0 }
       ]
     };
 
     const result = calculatePayslip(input);
 
-    // saleRevenue = 1000 - 1000 = 0, netProfit = 0
-    expect(result.saleRevenue).toBe(0);
-    expect(result.netProfit).toBe(0);
+    // Fixed payouts apply only when profit covers them, so Bob holds the
+    // session cash instead of owing money that never existed.
+    // saleRevenue = 1200 - 1000 = 200, netProfit = 200 = Alice's fixed payout
+    expect(result.saleRevenue).toBe(200);
+    expect(result.netProfit).toBe(200);
 
     const alice = result.members.find(m => m.memberId === 'member-1');
     const bob = result.members.find(m => m.memberId === 'member-2');
 
     // Alice gets fixed payout of 200
-    // Bob gets remainder: 0 - 200 = -200
+    // Bob gets remainder: 200 - 200 = 0
     expect(alice?.profitShare).toBe(200);
-    expect(bob?.profitShare).toBe(-200);
+    expect(bob?.profitShare).toBe(0);
 
     // finalNet = investment + profitShare
     // Alice: 1000 + 200 = 1200
-    // Bob: 0 + (-200) = -200
+    // Bob: 0 + 0 = 0
     expect(alice?.finalNet).toBe(1200);
-    expect(bob?.finalNet).toBe(-200);
+    expect(bob?.finalNet).toBe(0);
 
-    // Transfers: Bob owes Alice (balance after investment)
-    // Alice: finalNet - investment = 1200 - 1000 = 200 (creditor)
-    // Bob: finalNet - investment = -200 - 0 = -200 (debtor)
+    // Transfers: balance = finalNet - revenue held
+    // Alice: 1200 - 1000 = 200 (creditor)
+    // Bob: 0 - 200 = -200 (debtor)
     // Bob needs to transfer 200 to Alice
     expect(result.suggestedTransfers.length).toBe(1);
     expect(result.suggestedTransfers[0].fromMemberId).toBe('member-2');

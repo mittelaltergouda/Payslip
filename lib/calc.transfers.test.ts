@@ -9,42 +9,44 @@ describe('Settlement/Transfer Generation', () => {
       name: '3-Way Settlement',
       type: 'TRADING',
       distributionMode: 'ADJUSTABLE',
-      totalRevenue: 1500,
+      totalRevenue: 2800,
       taxEnabled: false,
       members: [
         { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1500, investment: 1500, fixedPayout: 700 },
         { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 0, fixedPayout: 600 },
-        { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 0, investment: 0 }
+        { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 1300, investment: 0 }
       ]
     };
 
     const result = calculatePayslip(input);
 
-    // saleRevenue = 1500 - 1500 = 0, netProfit = 0
-    expect(result.saleRevenue).toBe(0);
-    expect(result.netProfit).toBe(0);
+    // Fixed payouts apply only when profit covers them, so the debtor holds
+    // the session cash instead of owing money that never existed.
+    // saleRevenue = 2800 - 1500 = 1300, netProfit = 1300 = fixed 700 + 600
+    expect(result.saleRevenue).toBe(1300);
+    expect(result.netProfit).toBe(1300);
 
     const alice = result.members.find(m => m.memberId === 'member-1');
     const bob = result.members.find(m => m.memberId === 'member-2');
     const charlie = result.members.find(m => m.memberId === 'member-3');
 
-    // Alice gets fixed payout 700, Bob gets 600, Charlie gets remainder: 0 - 700 - 600 = -1300
+    // Alice gets fixed payout 700, Bob gets 600, Charlie gets remainder: 1300 - 700 - 600 = 0
     expect(alice?.profitShare).toBe(700);
     expect(bob?.profitShare).toBe(600);
-    expect(charlie?.profitShare).toBe(-1300);
+    expect(charlie?.profitShare).toBe(0);
 
     // finalNet = investment + profitShare
     // Alice: 1500 + 700 = 2200
     // Bob: 0 + 600 = 600
-    // Charlie: 0 + (-1300) = -1300
+    // Charlie: 0 + 0 = 0
     expect(alice?.finalNet).toBe(2200);
     expect(bob?.finalNet).toBe(600);
-    expect(charlie?.finalNet).toBe(-1300);
+    expect(charlie?.finalNet).toBe(0);
 
-    // Balance: finalNet - investment
+    // Balance: finalNet - revenue held
     // Alice: 2200 - 1500 = 700 (creditor)
     // Bob: 600 - 0 = 600 (creditor)
-    // Charlie: -1300 - 0 = -1300 (debtor, owes 1300)
+    // Charlie: 0 - 1300 = -1300 (debtor, owes 1300)
 
     // Charlie needs to pay both Alice and Bob
     expect(result.suggestedTransfers.length).toBe(2);
@@ -68,36 +70,39 @@ describe('Settlement/Transfer Generation', () => {
       name: 'Complex Settlement',
       type: 'TRADING',
       distributionMode: 'ADJUSTABLE',
-      totalRevenue: 2000,
+      totalRevenue: 3600,
       taxEnabled: false,
       members: [
         { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000, investment: 1000, fixedPayout: 800 },
         { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 1000, investment: 1000, fixedPayout: 800 },
-        { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 0, investment: 0 },
-        { id: 'member-4', handle: 'Dave', role: 'Member', active: true, revenue: 0, investment: 0 }
+        { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 800, investment: 0 },
+        { id: 'member-4', handle: 'Dave', role: 'Member', active: true, revenue: 800, investment: 0 }
       ]
     };
 
     const result = calculatePayslip(input);
 
-    // saleRevenue = 2000 - 2000 = 0, netProfit = 0
-    // Alice gets 800, Bob gets 800, Charlie and Dave split remainder: 0 - 800 - 800 = -1600 / 2 = -800 each
+    // Fixed payouts apply only when profit covers them, so the debtor holds
+    // the session cash instead of owing money that never existed.
+    // saleRevenue = 3600 - 2000 = 1600, netProfit = 1600 = fixed 800 + 800
+    // Alice gets 800, Bob gets 800, Charlie and Dave split remainder: 1600 - 800 - 800 = 0
+    expect(result.netProfit).toBe(1600);
     const alice = result.members.find(m => m.memberId === 'member-1');
     const bob = result.members.find(m => m.memberId === 'member-2');
     const charlie = result.members.find(m => m.memberId === 'member-3');
     const dave = result.members.find(m => m.memberId === 'member-4');
 
-    // finalNet: Alice 1800, Bob 1800, Charlie -800, Dave -800
-    // Balance: Alice -200, Bob -200, Charlie -800, Dave -800
+    // finalNet: Alice 1800, Bob 1800, Charlie 0, Dave 0
     expect(alice?.finalNet).toBe(1800);
     expect(bob?.finalNet).toBe(1800);
-    expect(charlie?.finalNet).toBe(-800);
-    expect(dave?.finalNet).toBe(-800);
+    expect(charlie?.finalNet).toBe(0);
+    expect(dave?.finalNet).toBe(0);
 
+    // Balance = finalNet - revenue held
     // Alice balance: 1800 - 1000 = 800 (creditor)
     // Bob balance: 1800 - 1000 = 800 (creditor)
-    // Charlie balance: -800 - 0 = -800 (debtor)
-    // Dave balance: -800 - 0 = -800 (debtor)
+    // Charlie balance: 0 - 800 = -800 (debtor)
+    // Dave balance: 0 - 800 = -800 (debtor)
 
     // Should generate efficient transfers
     expect(result.suggestedTransfers.length).toBeGreaterThanOrEqual(2);
@@ -147,13 +152,13 @@ describe('Settlement/Transfer Generation', () => {
       name: 'Multi-Transfer Tax Settlement',
       type: 'TRADING',
       distributionMode: 'ADJUSTABLE',
-      totalRevenue: 1500,
+      totalRevenue: 2800,
       taxEnabled: true,
       taxRate: 0.005, // Fixed tax rate: always 0.5%
       members: [
         { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1500, investment: 1500, fixedPayout: 800 },
         { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 0, fixedPayout: 500 },
-        { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 0, investment: 0 }
+        { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 1300, investment: 0 }
       ]
     };
 
@@ -161,8 +166,11 @@ describe('Settlement/Transfer Generation', () => {
 
     expect(result.taxRateApplied).toBe(0.005); // Fixed tax rate: always 0.5%
 
-    // saleRevenue = 0, netProfit = 0
-    // Alice gets 800, Bob gets 500, Charlie gets remainder: -1300
+    // Fixed payouts apply only when profit covers them, so the debtor holds
+    // the session cash instead of owing money that never existed.
+    // saleRevenue = 2800 - 1500 = 1300, netProfit = 1300 = fixed 800 + 500
+    // Alice gets 800, Bob gets 500, Charlie gets remainder: 0
+    expect(result.netProfit).toBe(1300);
     const alice = result.members.find(m => m.memberId === 'member-1');
     const bob = result.members.find(m => m.memberId === 'member-2');
     const charlie = result.members.find(m => m.memberId === 'member-3');
@@ -170,9 +178,9 @@ describe('Settlement/Transfer Generation', () => {
     // Fixed payouts stay fixed; fees fit inside Charlie's transfer budgets.
     expect(alice?.finalNet).toBe(2300);
     expect(bob?.finalNet).toBe(500);
-    expect(charlie?.finalNet).toBe(-1300);
+    expect(charlie?.finalNet).toBe(0);
 
-    // Balance: Alice 800 (creditor), Bob 500 (creditor), Charlie -1300 (debtor)
+    // Balance: Alice 800 (creditor), Bob 500 (creditor), Charlie 0 - 1300 = -1300 (debtor)
     // Charlie owes: 800 to Alice, 500 to Bob
     expect(result.suggestedTransfers.length).toBe(2);
 
@@ -269,20 +277,23 @@ describe('Settlement/Transfer Generation', () => {
       name: 'One Debtor Multiple Creditors',
       type: 'TRADING',
       distributionMode: 'ADJUSTABLE',
-      totalRevenue: 1800,
+      totalRevenue: 2800,
       taxEnabled: false,
       members: [
         { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000, investment: 1000, fixedPayout: 500 },
         { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 500, investment: 500, fixedPayout: 300 },
         { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 300, investment: 300, fixedPayout: 200 },
-        { id: 'member-4', handle: 'Dave', role: 'Member', active: true, revenue: 0, investment: 0 }
+        { id: 'member-4', handle: 'Dave', role: 'Member', active: true, revenue: 1000, investment: 0 }
       ]
     };
 
     const result = calculatePayslip(input);
 
-    // saleRevenue = 1800 - 1800 = 0, netProfit = 0
-    // Alice gets 500, Bob gets 300, Charlie gets 200, Dave gets remainder: 0 - 500 - 300 - 200 = -1000
+    // Fixed payouts apply only when profit covers them, so the debtor holds
+    // the session cash instead of owing money that never existed.
+    // saleRevenue = 2800 - 1800 = 1000, netProfit = 1000 = fixed 500 + 300 + 200
+    // Alice gets 500, Bob gets 300, Charlie gets 200, Dave gets remainder: 1000 - 1000 = 0
+    expect(result.netProfit).toBe(1000);
     const alice = result.members.find(m => m.memberId === 'member-1');
     const bob = result.members.find(m => m.memberId === 'member-2');
     const charlie = result.members.find(m => m.memberId === 'member-3');
@@ -291,23 +302,23 @@ describe('Settlement/Transfer Generation', () => {
     expect(alice?.profitShare).toBe(500);
     expect(bob?.profitShare).toBe(300);
     expect(charlie?.profitShare).toBe(200);
-    expect(dave?.profitShare).toBe(-1000);
+    expect(dave?.profitShare).toBe(0);
 
     // finalNet = investment + profitShare
     // Alice: 1000 + 500 = 1500
     // Bob: 500 + 300 = 800
     // Charlie: 300 + 200 = 500
-    // Dave: 0 + (-1000) = -1000
+    // Dave: 0 + 0 = 0
     expect(alice?.finalNet).toBe(1500);
     expect(bob?.finalNet).toBe(800);
     expect(charlie?.finalNet).toBe(500);
-    expect(dave?.finalNet).toBe(-1000);
+    expect(dave?.finalNet).toBe(0);
 
-    // Balance: finalNet - investment
+    // Balance: finalNet - revenue held
     // Alice: 1500 - 1000 = 500 (creditor)
     // Bob: 800 - 500 = 300 (creditor)
     // Charlie: 500 - 300 = 200 (creditor)
-    // Dave: -1000 - 0 = -1000 (debtor)
+    // Dave: 0 - 1000 = -1000 (debtor)
 
     // Dave owes 1000 total, distributed among creditors
     // Should generate 3 transfers from Dave to Alice (500), Bob (300), Charlie (200)
@@ -333,33 +344,36 @@ describe('Settlement/Transfer Generation', () => {
       name: 'Multiple Debtors One Creditor',
       type: 'TRADING',
       distributionMode: 'ADJUSTABLE',
-      totalRevenue: 1000,
+      totalRevenue: 2600,
       taxEnabled: false,
       members: [
         { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000, investment: 1000, fixedPayout: 1600 },
-        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 0 },
-        { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 0, investment: 0 }
+        { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 800, investment: 0 },
+        { id: 'member-3', handle: 'Charlie', role: 'Member', active: true, revenue: 800, investment: 0 }
       ]
     };
 
     const result = calculatePayslip(input);
 
-    // saleRevenue = 1000 - 1000 = 0, netProfit = 0
-    // Alice gets 1600 (fixed), Bob and Charlie split remainder: (0 - 1600) / 2 = -800 each
+    // Fixed payouts apply only when profit covers them, so the debtor holds
+    // the session cash instead of owing money that never existed.
+    // saleRevenue = 2600 - 1000 = 1600, netProfit = 1600 = fixed 1600
+    // Alice gets 1600 (fixed), Bob and Charlie split remainder: (1600 - 1600) / 2 = 0 each
+    expect(result.netProfit).toBe(1600);
     const alice = result.members.find(m => m.memberId === 'member-1');
     const bob = result.members.find(m => m.memberId === 'member-2');
     const charlie = result.members.find(m => m.memberId === 'member-3');
 
     expect(alice?.profitShare).toBe(1600);
-    expect(bob?.profitShare).toBe(-800);
-    expect(charlie?.profitShare).toBe(-800);
+    expect(bob?.profitShare).toBe(0);
+    expect(charlie?.profitShare).toBe(0);
 
-    // finalNet: Alice 2600, Bob -800, Charlie -800
+    // finalNet: Alice 2600, Bob 0, Charlie 0
     expect(alice?.finalNet).toBe(2600);
-    expect(bob?.finalNet).toBe(-800);
-    expect(charlie?.finalNet).toBe(-800);
+    expect(bob?.finalNet).toBe(0);
+    expect(charlie?.finalNet).toBe(0);
 
-    // Balance: Alice 1600 (creditor), Bob -800 (debtor), Charlie -800 (debtor)
+    // Balance: Alice 2600 - 1000 = 1600 (creditor), Bob 0 - 800 = -800, Charlie 0 - 800 = -800
     // Both Bob and Charlie owe Alice
     expect(result.suggestedTransfers.length).toBe(2);
 

@@ -140,20 +140,22 @@ describe('Star Citizen transfer fee calculations', () => {
         name: 'Tax Enabled Session',
         type: 'TRADING',
         distributionMode: 'ADJUSTABLE',
-        totalRevenue: 1000,
+        totalRevenue: 1200,
         taxEnabled: true,
         taxRate: 0.005, // Fixed tax rate: always 0.5%
         members: [
           { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000, investment: 1000, fixedPayout: 200 },
-          { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 0 }
+          { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 200, investment: 0 }
         ]
       };
 
       const result = calculatePayslip(input);
 
-      // saleRevenue = 1000 - 1000 = 0, netProfit = 0
-      expect(result.saleRevenue).toBe(0);
-      expect(result.netProfit).toBe(0);
+      // Fixed payouts apply only when profit covers them, so Bob holds the
+      // session cash instead of owing money that never existed.
+      // saleRevenue = 1200 - 1000 = 200, netProfit = 200 = Alice's fixed payout
+      expect(result.saleRevenue).toBe(200);
+      expect(result.netProfit).toBe(200);
       expect(result.taxRateApplied).toBe(0.005); // Fixed tax rate: always 0.5%
 
       const alice = result.members.find(m => m.memberId === 'member-1');
@@ -161,15 +163,15 @@ describe('Star Citizen transfer fee calculations', () => {
 
       // The fee is fitted inside Bob's 200 aUEC transfer budget.
       expect(alice?.profitShare).toBe(200);
-      expect(bob?.profitShare).toBe(-200);
+      expect(bob?.profitShare).toBe(0);
 
       // finalNet = investment + profitShare
       // Alice: 1000 + 200 = 1200
-      // Bob: 0 + (-200) = -200
+      // Bob: 0 + 0 = 0
       expect(alice?.finalNet).toBe(1200);
-      expect(bob?.finalNet).toBe(-200);
+      expect(bob?.finalNet).toBe(0);
 
-      // Balance: Alice = 1200 - 1000 = 200 (creditor), Bob = -200 - 0 = -200 (debtor)
+      // Balance = finalNet - revenue held: Alice 1200 - 1000 = 200 (creditor), Bob 0 - 200 = -200 (debtor)
       // Bob owes Alice 200
       // With 0.5% tax, 199 reaches Alice and 1 is charged as the fee.
       expect(result.suggestedTransfers.length).toBe(1);
@@ -185,12 +187,12 @@ describe('Star Citizen transfer fee calculations', () => {
         name: 'Tax Disabled Session',
         type: 'TRADING',
         distributionMode: 'ADJUSTABLE',
-        totalRevenue: 1000,
+        totalRevenue: 1200,
         taxEnabled: false,
         taxRate: 0.05, // Rate specified but should be ignored
         members: [
           { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000, investment: 1000, fixedPayout: 200 },
-          { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 0 }
+          { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 200, investment: 0 }
         ]
       };
 
@@ -199,9 +201,11 @@ describe('Star Citizen transfer fee calculations', () => {
       expect(result.taxRateApplied).toBe(0);
 
       // Transfers should not have tax applied
-      // saleRevenue = 1000 - 1000 = 0, netProfit = 0
+      // Fixed payouts apply only when profit covers them, so Bob holds the
+      // session cash instead of owing money that never existed.
+      // saleRevenue = 1200 - 1000 = 200, netProfit = 200 = Alice's fixed payout
       // Alice: finalNet = 1000 + 200 = 1200, balance = 1200 - 1000 = 200 (creditor)
-      // Bob: finalNet = 0 + (-200) = -200, balance = -200 - 0 = -200 (debtor)
+      // Bob: finalNet = 0 + 0 = 0, balance = 0 - 200 = -200 (debtor)
       expect(result.suggestedTransfers.length).toBe(1);
       expect(result.suggestedTransfers[0].netAmount).toBe(200);
       expect(result.suggestedTransfers[0].grossAmount).toBe(200); // No fee

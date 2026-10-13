@@ -271,19 +271,25 @@ describe('calculatePayslip - Edge Cases', () => {
 
     const result = calculatePayslip(input);
 
-    // saleRevenue = 500 - 500 = 0
-    // Alice gets 200 (fixed), Bob gets 100 (fixed)
-    // Remainder: 0 - 200 - 100 = -300 (distributed to remaining, but all have fixed)
+    // Nobody holds revenue (the legacy totalRevenue is ignored), so
+    // netProfit = 0 - 500 = -500: a loss. Fixed payouts are suspended and
+    // the loss is shared equally; investments are still reimbursed.
+    expect(result.netProfit).toBe(-500);
+    expect(result.fixedAmountsStatus).toBe('SUSPENDED_FOR_LOSS');
 
     const alice = result.members.find(m => m.memberId === 'member-1');
     const bob = result.members.find(m => m.memberId === 'member-2');
 
-    expect(alice?.profitShare).toBe(200);
-    expect(bob?.profitShare).toBe(100);
+    expect(alice?.profitShare).toBe(-250);
+    expect(bob?.profitShare).toBe(-250);
 
     // finalNet = investment + profitShare
-    expect(alice?.finalNet).toBe(500); // 300 + 200
-    expect(bob?.finalNet).toBe(300); // 200 + 100
+    expect(alice?.finalNet).toBe(50); // 300 - 250
+    expect(bob?.finalNet).toBe(-50); // 200 - 250
+    // Targets add up to the 0 aUEC actually held: Bob pays Alice 50.
+    expect(result.suggestedTransfers).toMatchObject([
+      { fromMemberId: 'member-2', toMemberId: 'member-1', netAmount: 50 },
+    ]);
   });
 
   it('should handle zero total revenue correctly', () => {
