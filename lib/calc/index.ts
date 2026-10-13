@@ -135,9 +135,9 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
       memberSharedExpenses + memberIndividualExpenses;
     const profitShare = profitDistribution.get(m.id) ?? 0;
 
-    // Investments are reimbursed and the already cost-adjusted profit is
-    // distributed. Expenses must not be subtracted a second time here.
-    const finalNet = m.investment + profitShare;
+    // Costs are deducted once from profit, then reimbursed once to the members
+    // who funded them. Shared expense participantIds identify those funders.
+    const finalNet = m.investment + memberTotalExpenses + profitShare;
 
     return {
       memberId: m.id,
@@ -153,9 +153,10 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
     };
   });
 
-  const { transfers: suggestedTransfers, unsettledBalances } = settleBalancesDetailed(
+  const { transfers: suggestedTransfers, details: settlementDetails, unsettledBalances } = settleBalancesDetailed(
     memberBreakdowns,
-    taxRateForTransfers
+    taxRateForTransfers,
+    normalized.paidTransfers
   );
 
   // -------------------------------------------------------------------------
@@ -168,5 +169,7 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
     members: memberBreakdowns,
     suggestedTransfers,
     unsettledBalances,
+    paidTransferFees: normalized.paidTransfers.reduce((sum, transfer) => sum + transfer.feeAmount, 0),
+    settlementDetails,
   };
 }

@@ -2,6 +2,7 @@ import type {
   DistributionMode,
   SharedExpenseInput,
   IndividualExpenseInput,
+  PaidTransferInput,
 } from '../types';
 
 /**
@@ -35,4 +36,5 @@ export type NormalizedSessionInput = {
   members: NormalizedMember[];
   sharedExpenses: SharedExpenseInput[];
   individualExpenses: IndividualExpenseInput[];
+  paidTransfers: PaidTransferInput[];
 };

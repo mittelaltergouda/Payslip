@@ -10,6 +10,20 @@ export type SessionType =
   | "BOUNTY"
   | "OTHER";
 
+export type MoneyItemInput = {
+  id?: string;
+  label: string;
+  amount: number;
+};
+
+export type PaidTransferInput = {
+  id?: string;
+  fromMemberId: string;
+  toMemberId: string;
+  netAmount: number;
+  feeAmount: number;
+};
+
 export type MemberInput = {
   id?: string;
   handle: string;
@@ -17,6 +31,10 @@ export type MemberInput = {
   active?: boolean;
   revenue?: number;
   investment?: number;
+  /** Itemized values replace, rather than add to, the legacy scalar. */
+  revenues?: MoneyItemInput[];
+  /** Itemized values replace, rather than add to, the legacy scalar. */
+  investments?: MoneyItemInput[];
   percentShare?: number | null;
   fixedBonus?: number | null;
   fixedPayout?: number | null;
@@ -48,6 +66,7 @@ export type SessionInput = {
   members: MemberInput[];
   sharedExpenses?: SharedExpenseInput[];
   individualExpenses?: IndividualExpenseInput[];
+  paidTransfers?: PaidTransferInput[];
 };
 
 export type MemberBreakdown = {
@@ -72,6 +91,12 @@ export type Transfer = {
   feeAmount: number;
 };
 
+export type SettlementDetail = Transfer & {
+  exactBudget: number;
+  budgetAmount: number;
+  roundingRemainder: number;
+};
+
 export type UnsettledBalance = {
   memberId: string;
   /** Positive = still to receive, negative = excess cash still retained. */
@@ -85,6 +110,8 @@ export type PayslipResult = {
   members: MemberBreakdown[];
   suggestedTransfers: Transfer[];
   unsettledBalances?: UnsettledBalance[];
+  paidTransferFees?: number;
+  settlementDetails?: SettlementDetail[];
 };
 
 // Zod schemas for localStorage session management
@@ -96,6 +123,8 @@ const memberInputSchema = z.object({
   active: z.boolean().optional(),
   revenue: z.number().optional(),
   investment: z.number().optional(),
+  revenues: z.array(z.object({ id: z.string().optional(), label: z.string(), amount: z.number() })).optional(),
+  investments: z.array(z.object({ id: z.string().optional(), label: z.string(), amount: z.number() })).optional(),
   percentShare: z.number().nullable().optional(),
   fixedBonus: z.number().nullable().optional(),
   fixedPayout: z.number().nullable().optional(),
@@ -115,6 +144,14 @@ const individualExpenseInputSchema = z.object({
   amount: z.number(),
 });
 
+const paidTransferInputSchema = z.object({
+  id: z.string().optional(),
+  fromMemberId: z.string(),
+  toMemberId: z.string(),
+  netAmount: z.number(),
+  feeAmount: z.number(),
+});
+
 const sessionInputSchema = z.object({
   id: z.string().optional(),
   name: z.string(),
@@ -127,6 +164,7 @@ const sessionInputSchema = z.object({
   members: z.array(memberInputSchema),
   sharedExpenses: z.array(sharedExpenseInputSchema).optional(),
   individualExpenses: z.array(individualExpenseInputSchema).optional(),
+  paidTransfers: z.array(paidTransferInputSchema).optional(),
 });
 
 export const savedSessionSchema = z.object({

@@ -17,7 +17,7 @@
  * @module lib/calc/settlement
  */
 
-import type { MemberBreakdown, Transfer, UnsettledBalance } from '../types';
+import type { MemberBreakdown, PaidTransferInput, SettlementDetail, Transfer, UnsettledBalance } from '../types';
 import { fitTransferToBudget } from './tax';
 
 // ============================================================================
@@ -50,12 +50,14 @@ type MemberBalance = {
  */
 export type SettlementResult = {
   transfers: Transfer[];
+  details: SettlementDetail[];
   unsettledBalances: UnsettledBalance[];
 };
 
 export function settleBalancesDetailed(
   memberBreakdowns: MemberBreakdown[],
-  taxRate: number = 0
+  taxRate: number = 0,
+  paidTransfers: PaidTransferInput[] = []
 ): SettlementResult {
   // Small epsilon for floating point comparisons
   const EPSILON = 0.01;
@@ -71,6 +73,17 @@ export function settleBalancesDetailed(
     balance: m.finalNet - m.revenue,
   }));
 
+  const balanceByMember = new Map(balances.map((balance) => [balance.memberId, balance]));
+  for (const transfer of paidTransfers) {
+    const grossAmount = transfer.netAmount + transfer.feeAmount;
+    const sender = balanceByMember.get(transfer.fromMemberId);
+    const recipient = balanceByMember.get(transfer.toMemberId);
+    if (sender && recipient) {
+      sender.balance += grossAmount;
+      recipient.balance -= grossAmount;
+    }
+  }
+
   // Separate into debtors and creditors, filtering out zero balances
   const debtors = balances
     .filter((b) => b.balance < -EPSILON)
@@ -82,6 +95,7 @@ export function settleBalancesDetailed(
     .sort((a, b) => b.balance - a.balance); // Sort descending by amount owed
 
   const transfers: Transfer[] = [];
+  const details: SettlementDetail[] = [];
 
   // Greedy matching: pair largest debtor with largest creditor
   let debtorIdx = 0;
@@ -136,6 +150,16 @@ export function settleBalancesDetailed(
         grossAmount,
         feeAmount,
       });
+      details.push({
+        fromMemberId: debtor.memberId,
+        toMemberId: creditor.memberId,
+        netAmount,
+        grossAmount,
+        feeAmount,
+        exactBudget,
+        budgetAmount: transferBudget,
+        roundingRemainder: exactBudget - transferBudget,
+      });
 
       // The fee consumes part of the creditor's gross entitlement. Both sides
       // are settled by the sender's actual total balance reduction.
@@ -161,7 +185,7 @@ export function settleBalancesDetailed(
       .map((creditor) => ({ memberId: creditor.memberId, amount: creditor.balance })),
   ];
 
-  return { transfers, unsettledBalances };
+  return { transfers, details, unsettledBalances };
 }
 
 export function settleBalances(
