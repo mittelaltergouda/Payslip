@@ -176,7 +176,9 @@ const sessionInputSchema = z.object({
   paidTransfers: z.array(paidTransferInputSchema).optional(),
 }).superRefine((session, ctx) => {
   const ids = session.members.map(m => m.id).filter((id): id is string => !!id);
-  if (new Set(ids).size !== ids.length) {
+  // Only recorded transfers need unambiguous member references. Older
+  // sessions with duplicate IDs stayed valid and must not be dropped on load.
+  if ((session.paidTransfers ?? []).length > 0 && new Set(ids).size !== ids.length) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Duplicate member IDs" });
   }
   for (const transfer of session.paidTransfers ?? []) {
