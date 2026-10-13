@@ -6,7 +6,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { SessionInput, PayslipResult } from "@/lib/types";
 import type { Lang } from "@/lib/i18n/translations";
-import { buildArithmeticExplanation } from "@/lib/accounting";
+import { buildArithmeticSections } from "@/lib/accounting";
 import { format } from "@/lib/format";
 import { getMemberPayoutSummaries } from "@/lib/export/payoutSummary";
 
@@ -150,6 +150,11 @@ function shareSetting(member: SessionInput["members"][number], session: SessionI
 }
 
 /** Generates a polished, print-friendly PDF with all data visible in the app. */
+// jsPDF's built-in Helvetica uses WinAnsi: "→" and "−" have no glyph there.
+function toWinAnsi(text: string): string {
+  return text.replace(/→/g, "->").replace(/−/g, "-");
+}
+
 export function generatePDF(
   session: SessionInput,
   result: PayslipResult,
@@ -275,10 +280,14 @@ export function generatePDF(
   doc.addPage();
   drawHeader();
   y = drawSectionTitle(lang === "de" ? "Rechnung nachvollziehen" : "Calculation explained", 44);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  setText(COLORS.slate);
-  for (const line of buildArithmeticExplanation(session, result, lang)) {
+  const arithmeticLines = buildArithmeticSections(session, result, lang).flatMap((section) => [
+    { text: section.title, isTitle: true },
+    ...section.lines.map((text) => ({ text, isTitle: false })),
+  ].map((entry) => ({ ...entry, text: toWinAnsi(entry.text) })));
+  for (const { text: line, isTitle } of arithmeticLines) {
+    doc.setFont("helvetica", isTitle ? "bold" : "normal");
+    doc.setFontSize(isTitle ? 9 : 8);
+    setText(isTitle ? COLORS.ink : COLORS.slate);
     // Keep text wrapping deterministic and compatible with the test PDF adapter.
     const words = line.split(" ");
     let row = "";

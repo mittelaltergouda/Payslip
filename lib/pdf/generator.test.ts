@@ -64,8 +64,25 @@ describe('generatePDF', () => {
   it('starts arithmetic detail on page two', () => {
     const session: SessionInput = { name: 'Arithmetic', type: 'TRADING', distributionMode: 'EQUAL', members: [{ id: 'a', handle: 'A', revenue: 1000 }, { id: 'b', handle: 'B' }] };
     generatePDF(session, calculatePayslip(session), { lang: 'en' });
-    expect(pageTextCalls.find(call => call.text.includes('Profit: 1000'))?.page).toBe(2);
-    expect(pageTextCalls.some(call => call.text.includes('A: target'))).toBe(true);
+    const pageOf = (text: string) => pageTextCalls.find(call => call.text.includes(text))?.page;
+    expect(pageOf('1. Profit')).toBe(2);
+    expect(pageOf('Profit = 1,000 - 0 - 0 = 1,000')).toBe(2);
+    expect(pageOf('A: 0 Investment + 0 costs + 500 share = 500')).toBe(2);
+    expect(pageOf('A -> B: 500 arrives + 0 fee = 500 charged')).toBe(2);
+  });
+
+  it('only prints characters the built-in PDF font can show', () => {
+    const session: SessionInput = { name: 'Loss', type: 'TRADING', distributionMode: 'EQUAL', members: [{ id: 'a', handle: 'A', revenue: 0, investment: 600 }, { id: 'b', handle: 'B' }] };
+    generatePDF(session, calculatePayslip(session), { lang: 'de' });
+    expect(pageTextCalls.filter(call => /[→−]/.test(call.text))).toEqual([]);
+  });
+
+  it('prints every arithmetic section title as its own line on page two', () => {
+    const session: SessionInput = { name: 'Arithmetic', type: 'TRADING', distributionMode: 'EQUAL', members: [{ id: 'a', handle: 'A', revenue: 1000 }, { id: 'b', handle: 'B' }] };
+    generatePDF(session, calculatePayslip(session), { lang: 'de' });
+    for (const title of ['1. Gewinn', '2. Verteilung', '3. Ziel je Spieler', '4. Überweisungen']) {
+      expect(pageTextCalls.some(call => call.page === 2 && call.text === title)).toBe(true);
+    }
   });
 
   it('should generate a PDF blob from session and result data', () => {

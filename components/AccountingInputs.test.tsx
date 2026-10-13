@@ -34,6 +34,9 @@ describe('accounting input and explanation UI', () => {
   const summary = screen.getByText('Calculation explained');
   expect(summary.closest('details')).not.toHaveAttribute('open');
   fireEvent.click(summary);
-  expect(screen.getByText('Profit: 1000 - 0 - 0 - 0 = 1000')).toBeInTheDocument();
+  expect(screen.getByText('Profit = 1,000 − 0 − 0 = 1,000')).toBeInTheDocument();
+  for (const title of ['1. Profit', '2. Distribution', '3. Target per player', '4. Transfers']) {
+    expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
+  }
  });
 });

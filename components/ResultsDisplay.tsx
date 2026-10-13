@@ -7,7 +7,7 @@ import { TransfersList } from "./TransfersList";
 import { ExportPDFButton } from "./ExportPDFButton";
 import { ExportClipboardButton } from "./ExportClipboardButton";
 import { ExportCSVButton } from "./ExportCSVButton";
-import { buildArithmeticExplanation } from "@/lib/accounting";
+import { buildArithmeticSections } from "@/lib/accounting";
 import { format } from "@/lib/format";
 
 
@@ -135,7 +135,7 @@ export function ResultsDisplay({
         </div>
       )}
 
-      {result && <details className="rounded-xl border border-white/10 p-4"><summary className="cursor-pointer font-semibold">{lang === "de" ? "Rechnung nachvollziehen" : "Calculation explained"}</summary><ol className="mt-3 space-y-2 text-sm break-words">{buildArithmeticExplanation(session, result, lang).map((line, index) => <li key={index}>{line}</li>)}</ol></details>}
+      {result && <details className="rounded-xl border border-white/10 p-4"><summary className="cursor-pointer font-semibold">{lang === "de" ? "Rechnung nachvollziehen" : "Calculation explained"}</summary><div className="mt-3 space-y-4 text-sm break-words">{buildArithmeticSections(session, result, lang).map((section) => <section key={section.title}><h4 className="font-semibold">{section.title}</h4><ul className="mt-1 space-y-1">{section.lines.map((line, index) => <li key={index}>{line}</li>)}</ul></section>)}</div></details>}
 
       {result && (
         <div className="grid gap-6 lg:grid-cols-2">
