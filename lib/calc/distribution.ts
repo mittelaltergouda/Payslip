@@ -105,6 +105,15 @@ function distributeAdjustable(
     return [];
   }
 
+  const status = getFixedAmountsStatus(netProfit, activeMembers, 'ADJUSTABLE');
+  if (status === 'SUSPENDED_FOR_LOSS') {
+    // A loss is borne equally by every active member; fixed amounts pause.
+    return distributeEqual(netProfit, activeMembers);
+  }
+  if (status === 'SCALED_TO_PROFIT') {
+    return distributeScaledFixedAmounts(netProfit, activeMembers);
+  }
+
   const results: ProfitDistribution[] = [];
   let remainingProfit = netProfit;
 
@@ -188,6 +197,61 @@ function distributeAdjustable(
   }
 
   return results;
+}
+
+/**
+ * How ADJUSTABLE fixed payouts and fixed bonuses were treated.
+ * - APPLIED: profit covers all fixed amounts, they are paid first
+ * - SCALED_TO_PROFIT: profit is too small, fixed amounts are cut proportionally
+ * - SUSPENDED_FOR_LOSS: loss session, everyone bears the loss equally
+ */
+export type FixedAmountsStatus = 'APPLIED' | 'SCALED_TO_PROFIT' | 'SUSPENDED_FOR_LOSS';
+
+function totalFixedAmounts(activeMembers: NormalizedMember[]): number {
+  return activeMembers.reduce(
+    (sum, m) =>
+      sum + (m.fixedPayout !== null ? m.fixedPayout : (m.fixedBonus ?? 0)),
+    0
+  );
+}
+
+/**
+ * Returns the fixed-amount status for ADJUSTABLE sessions that use fixed
+ * payouts or bonuses, otherwise undefined.
+ */
+export function getFixedAmountsStatus(
+  netProfit: number,
+  activeMembers: NormalizedMember[],
+  mode: DistributionMode
+): FixedAmountsStatus | undefined {
+  const hasFixedAmounts = activeMembers.some(
+    (m) => m.fixedPayout !== null || (m.fixedBonus ?? 0) > 0
+  );
+  if (mode !== 'ADJUSTABLE' || !hasFixedAmounts) {
+    return undefined;
+  }
+  if (netProfit < 0) {
+    return 'SUSPENDED_FOR_LOSS';
+  }
+  return netProfit < totalFixedAmounts(activeMembers) ? 'SCALED_TO_PROFIT' : 'APPLIED';
+}
+
+/**
+ * Profit below the sum of fixed amounts: every fixed payout and fixed bonus
+ * gets the same fraction of its amount, pool shares are 0.
+ */
+function distributeScaledFixedAmounts(
+  netProfit: number,
+  activeMembers: NormalizedMember[]
+): ProfitDistribution[] {
+  const fixedTotal = totalFixedAmounts(activeMembers);
+  const factor = fixedTotal > 0 ? netProfit / fixedTotal : 0;
+
+  return activeMembers.map((m) => ({
+    memberId: m.id,
+    profitShare:
+      (m.fixedPayout !== null ? m.fixedPayout : (m.fixedBonus ?? 0)) * factor,
+  }));
 }
 
 /**

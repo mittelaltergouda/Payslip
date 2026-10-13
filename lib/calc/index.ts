@@ -12,6 +12,7 @@ import {
 } from './normalization';
 import {
   distributeProfit,
+  getFixedAmountsStatus,
 } from './distribution';
 import {
   allocateSharedExpenses,
@@ -179,5 +180,10 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
     unsettledBalances,
     paidTransferFees: normalized.paidTransfers.reduce((sum, transfer) => sum + transfer.feeAmount, 0),
     settlementDetails,
+    fixedAmountsStatus: getFixedAmountsStatus(
+      netProfit,
+      activeMembers,
+      normalized.distributionMode
+    ),
   };
 }

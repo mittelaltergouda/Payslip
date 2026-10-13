@@ -116,6 +116,8 @@ export type PayslipResult = {
   unsettledBalances?: UnsettledBalance[];
   paidTransferFees?: number;
   settlementDetails?: SettlementDetail[];
+  /** ADJUSTABLE only: how fixed payouts/bonuses were treated (loss, low profit). */
+  fixedAmountsStatus?: 'APPLIED' | 'SCALED_TO_PROFIT' | 'SUSPENDED_FOR_LOSS';
 };
 
 // Zod schemas for localStorage session management
