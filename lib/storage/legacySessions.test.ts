@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { getAll, importAll, save } from "./sessionStorage";
+import { deleteSession, getAll, importAll, save } from "./sessionStorage";
 import type { SessionInput } from "../types";
 
 // Old sessions must survive the update. The live version accepted sessions
@@ -76,5 +76,38 @@ describe("legacy sessions stay loadable", () => {
     };
 
     expect(importAll(JSON.stringify([ambiguous])).success).toBe(false);
+  });
+});
+
+describe("unreadable stored data is never overwritten", () => {
+  beforeEach(() => localStorage.clear());
+
+  const unreadable = { id: "broken", session: { name: "Half-written", members: "not-a-list" }, createdAt: "x", updatedAt: "x" };
+  const rawIds = () => (JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]") as { id: string }[]).map((s) => s.id);
+
+  it("keeps an unreadable entry when another session is saved", () => {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify([unreadable]));
+
+    expect(save(other).success).toBe(true);
+
+    expect(getAll().map((s) => s.session.name)).toEqual(["New session"]);
+    expect(rawIds()).toContain("broken");
+  });
+
+  it("keeps an unreadable entry when a readable session is deleted", () => {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify([unreadable, legacyWithDuplicateIds]));
+
+    expect(deleteSession("legacy-dup").success).toBe(true);
+
+    expect(rawIds()).toEqual(["broken"]);
+  });
+
+  it("backs up completely unreadable storage before writing a new list", () => {
+    localStorage.setItem(HISTORY_KEY, "{not json");
+
+    expect(save(other).success).toBe(true);
+
+    expect(localStorage.getItem("sc-payslip-sessions-unreadable-backup")).toBe("{not json");
+    expect(getAll().map((s) => s.session.name)).toEqual(["New session"]);
   });
 });
