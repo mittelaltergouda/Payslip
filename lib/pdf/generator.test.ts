@@ -10,6 +10,8 @@ import { calculatePayslip } from '@/lib/calc';
 
 // Track text calls to verify Type field removal
 let textCalls: string[] = [];
+let currentPage = 1;
+let pageTextCalls: Array<{ page: number; text: string }> = [];
 
 // Mock jsPDF and jsPDF-AutoTable
 vi.mock('jspdf', () => {
@@ -29,9 +31,10 @@ vi.mock('jspdf', () => {
       rect = vi.fn();
       roundedRect = vi.fn();
       line = vi.fn();
-      addPage = vi.fn();
+      addPage = vi.fn(() => { currentPage++; });
       text = vi.fn((content: string) => {
         textCalls.push(content);
+        pageTextCalls.push({ page: currentPage, text: content });
       });
       setTextColor = vi.fn();
       setPage = vi.fn();
@@ -54,6 +57,15 @@ describe('generatePDF', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     textCalls = [];
+    currentPage = 1;
+    pageTextCalls = [];
+  });
+
+  it('starts arithmetic detail on page two', () => {
+    const session: SessionInput = { name: 'Arithmetic', type: 'TRADING', distributionMode: 'EQUAL', members: [{ id: 'a', handle: 'A', revenue: 1000 }, { id: 'b', handle: 'B' }] };
+    generatePDF(session, calculatePayslip(session), { lang: 'en' });
+    expect(pageTextCalls.find(call => call.text.includes('Profit: 1000'))?.page).toBe(2);
+    expect(pageTextCalls.some(call => call.text.includes('A: target'))).toBe(true);
   });
 
   it('should generate a PDF blob from session and result data', () => {
