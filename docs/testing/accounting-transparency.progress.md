@@ -1,5 +1,14 @@
 # Accounting transparency implementation progress
 
+## Status 2026-10-13 (Claude Code) — supersedes older sections below
+
+- Commits: c966812 (WIP snapshot), 1e065cc + dbb31de (new core tests), fb695e8 (15 legacy expense tests realigned).
+- Agreed rule (Marco): costs and investments are paid by the player they are entered for, deducted once from profit and fully reimbursed to that player; profit AND loss are then shared by the distribution mode (equal or proportional). Legacy shared expenses without payer: participants (default all active) count as equal funders.
+- Task 1 (t_ab2856dc) DONE: `lib/calc.paid-transfers.test.ts` (13 tests, cash-conservation invariant, mutation-checked). Unit suite 1843/1843 green; lint 0 errors.
+- Known open: `npx tsc --noEmit` fails in `lib/accounting.ts:43` (settlementDetails typing) -> fix in task 4; build and E2E not yet run.
+- Note: creditor rounding residuals can add up across pairings (e.g. 1.25); debtor residual always < 1. Disclosed, not hidden.
+- Next: task 2 (itemized revenue/investment: MoneyItemsEditor exists, verify wiring + tests), task 3 (PaidTransfersEditor exists, verify wiring + tests), task 4 (arithmetic UI/PDF page 2, fix TS error).
+
 ## Resume location
 
 - Worktree: `/root/sc-payslip-accounting`
