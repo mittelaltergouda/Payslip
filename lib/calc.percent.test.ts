@@ -172,10 +172,10 @@ describe('calculatePayslip - PERCENT mode', () => {
     expect(alice?.profitShare).toBe(540);
     expect(bob?.profitShare).toBe(360);
 
-    // finalNet = investment + profitShare - expenses
-    // Expenses are already deducted before the percentage split.
-    expect(alice?.finalNet).toBe(540);
-    expect(bob?.finalNet).toBe(360);
+    // finalNet = investment + own expenses (reimbursed) + profitShare
+    // Alice 50 + 540 = 590, Bob 50 + 360 = 410 (sum 1000 = revenue held)
+    expect(alice?.finalNet).toBe(590);
+    expect(bob?.finalNet).toBe(410);
   });
 
   it('should handle individual expenses in PERCENT mode', () => {
@@ -210,8 +210,9 @@ describe('calculatePayslip - PERCENT mode', () => {
     expect(alice?.profitShare).toBe(450);
     expect(bob?.profitShare).toBe(450);
 
-    // The individual expense is deducted once from the shared pool.
-    expect(alice?.finalNet).toBe(450);
+    // The expense is deducted once from profit and reimbursed to Alice:
+    // Alice 100 + 450 = 550, Bob 450 (sum 1000 = revenue held)
+    expect(alice?.finalNet).toBe(550);
     expect(bob?.finalNet).toBe(450);
   });
 
@@ -315,8 +316,8 @@ describe('calculatePayslip - PERCENT mode', () => {
     expect(alice?.profitShare).toBe(480); // 800 * 0.6
     expect(bob?.profitShare).toBe(320); // 800 * 0.4
 
-    // The expense is already reflected in the 800 distributable profit.
-    expect(alice?.finalNet).toBe(480);
+    // Alice paid the 200 repair and gets it back: 200 + 480 = 680, Bob 320.
+    expect(alice?.finalNet).toBe(680);
     expect(bob?.finalNet).toBe(320);
   });
 });

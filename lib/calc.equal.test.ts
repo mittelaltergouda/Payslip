@@ -145,9 +145,10 @@ describe('calculatePayslip - EQUAL mode', () => {
     expect(alice?.profitShare).toBe(450);
     expect(bob?.profitShare).toBe(450);
 
-    // Expenses are already deducted before the 450 profit share is calculated.
-    expect(alice?.finalNet).toBe(450);
-    expect(bob?.finalNet).toBe(450);
+    // Both funded 50 of the shared fuel and get it back: 50 + 450 = 500 each.
+    // Sum 1000 equals the revenue held.
+    expect(alice?.finalNet).toBe(500);
+    expect(bob?.finalNet).toBe(500);
   });
 
   it('should handle individual expenses in EQUAL mode', () => {
@@ -182,8 +183,9 @@ describe('calculatePayslip - EQUAL mode', () => {
     expect(alice?.profitShare).toBe(450);
     expect(bob?.profitShare).toBe(450);
 
-    // The 100 expense is deducted once from the pool before distribution.
-    expect(alice?.finalNet).toBe(450);
+    // The 100 expense is deducted once from profit, then reimbursed to Alice
+    // who paid it: Alice 100 + 450 = 550, Bob 450. Sum 1000 = revenue held.
+    expect(alice?.finalNet).toBe(550);
     expect(bob?.finalNet).toBe(450);
   });
 

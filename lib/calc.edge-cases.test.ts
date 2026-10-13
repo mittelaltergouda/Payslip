@@ -141,9 +141,11 @@ describe('calculatePayslip - Edge Cases', () => {
     expect(alice?.profitShare).toBe(-250);
     expect(bob?.profitShare).toBe(-250);
 
-    // Expenses are deducted once before the loss is distributed.
-    expect(alice?.finalNet).toBe(-250);
-    expect(bob?.finalNet).toBe(-250);
+    // Each funded 750 and carries half of the 500 loss: 750 - 250 = 500.
+    // Sum 1000 equals the revenue held, so nobody owes anyone.
+    expect(alice?.finalNet).toBe(500);
+    expect(bob?.finalNet).toBe(500);
+    expect(result.suggestedTransfers).toEqual([]);
   });
 
   it('should handle individual expense for a member in PERCENT mode', () => {
@@ -177,8 +179,8 @@ describe('calculatePayslip - Edge Cases', () => {
     expect(alice?.profitShare).toBe(480); // 800 * 0.6
     expect(bob?.profitShare).toBe(320); // 800 * 0.4
 
-    // The expense is already reflected in the 800 distributable profit.
-    expect(alice?.finalNet).toBe(480);
+    // Alice paid the 200 repair and gets it back: 200 + 480 = 680, Bob 320.
+    expect(alice?.finalNet).toBe(680);
     expect(bob?.finalNet).toBe(320);
   });
 
@@ -396,16 +398,18 @@ describe('calculatePayslip - Edge Cases', () => {
     expect(bob?.profitShare).toBe(0);
     expect(bob?.individualExpenses).toBe(50);
 
-    // Bob is inactive and receives only the investment reimbursement.
-    expect(bob?.finalNet).toBe(300);
+    // Bob is inactive: no profit share, but his investment and his own
+    // repair are reimbursed: 300 + 50 = 350.
+    expect(bob?.finalNet).toBe(350);
 
     // Alice is the only active member
     // Total expenses: 100 (shared) + 50 (individual) = 150
     // netProfit = 1000 - 300 - 150 = 550
-    // Alice receives the full already cost-adjusted profit.
+    // Alice funded the whole shared fuel as the only active member:
+    // 100 + 550 = 650 (sum with Bob: 1000 = revenue held).
     expect(alice?.sharedExpenses).toBe(100);
     expect(alice?.profitShare).toBe(550);
-    expect(alice?.finalNet).toBe(550);
+    expect(alice?.finalNet).toBe(650);
   });
 });
 

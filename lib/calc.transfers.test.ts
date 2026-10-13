@@ -222,15 +222,15 @@ describe('Settlement/Transfer Generation', () => {
     expect(alice?.profitShare).toBe(-300);
     expect(bob?.profitShare).toBe(-300);
 
-    // Expenses are already deducted before the loss is distributed.
-    expect(alice?.finalNet).toBe(500);
-    expect(bob?.finalNet).toBe(-100);
+    // Funders are reimbursed, the loss is shared:
+    // Alice 800 + 300 - 300 = 800, Bob 200 + 300 - 300 = 200 (sum 1000 = held)
+    expect(alice?.finalNet).toBe(800);
+    expect(bob?.finalNet).toBe(200);
 
-    // Balance: finalNet - investment
-    // Alice: 200 - 800 = -600 (debtor, she lost 600)
-    // Bob: -400 - 200 = -600 (debtor, he also lost 600)
-    // Both are debtors - no transfers needed (both owe the session, not each other)
-    expect(result.suggestedTransfers.length).toBe(0);
+    // Both hold 500: Alice is owed 300, Bob holds 300 too much.
+    expect(result.suggestedTransfers).toMatchObject([
+      { fromMemberId: 'member-2', toMemberId: 'member-1', netAmount: 300, grossAmount: 300, feeAmount: 0 },
+    ]);
   });
 
   it('should correctly round transfer amounts to 2 decimal places', () => {
@@ -404,15 +404,11 @@ describe('Settlement/Transfer Generation', () => {
     expect(pilot?.profitShare).toBe(450000);
     expect(escort?.profitShare).toBe(450000);
 
-    // The expense has already been deducted before equal distribution.
-    expect(pilot?.finalNet).toBe(450000);
+    // The pilot paid the fuel and gets it back: 100,000 + 450,000 = 550,000.
+    expect(pilot?.finalNet).toBe(550000);
     expect(escort?.finalNet).toBe(450000);
 
-    // Balance calculation with revenue:
-    // Pilot's actual cash position = revenue(1,000,000) - expenses(100,000) = 900,000
-    // Pilot balance = finalNet(350,000) - actualCash(900,000) = -550,000 (debtor - has 550k more than they should)
-    // Escort's actual cash position = revenue(0) - expenses(0) = 0
-    // Escort balance = finalNet(450,000) - actualCash(0) = 450,000 (creditor - should receive 450k)
+    // Pilot holds 1,000,000 and keeps 550,000; escort holds 0 and is owed 450,000.
 
     // Pilot should transfer to Escort
     expect(result.suggestedTransfers.length).toBe(1);

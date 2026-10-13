@@ -18,20 +18,21 @@ const base = { name: "Paid transfers", type: "TRADING", taxEnabled: false } as c
  */
 function expectCashConserved(session: SessionInput, result: PayslipResult): void {
   const held = new Map(result.members.map((m) => [m.memberId, m.revenue]));
+  const add = (id: string, delta: number) => held.set(id, (held.get(id) ?? Number.NaN) + delta);
   for (const t of session.paidTransfers ?? []) {
     if (t.kind === "COST_CONTRIBUTION") {continue;}
     const gross = t.netAmount + t.feeAmount;
-    held.set(t.fromMemberId, held.get(t.fromMemberId)! - gross);
-    held.set(t.toMemberId, held.get(t.toMemberId)! + (t.kind === "SESSION_CASH" ? t.netAmount : gross));
+    add(t.fromMemberId, -gross);
+    add(t.toMemberId, t.kind === "SESSION_CASH" ? t.netAmount : gross);
   }
   for (const t of result.suggestedTransfers) {
-    held.set(t.fromMemberId, held.get(t.fromMemberId)! - t.grossAmount);
-    held.set(t.toMemberId, held.get(t.toMemberId)! + t.grossAmount);
+    add(t.fromMemberId, -t.grossAmount);
+    add(t.toMemberId, t.grossAmount);
   }
   for (const r of result.unsettledBalances ?? []) {
     // Senders never pay more than they owe, so a debtor's residual stays below 1.
     if (r.amount < 0) {expect(r.amount).toBeGreaterThan(-1);}
-    held.set(r.memberId, held.get(r.memberId)! + r.amount);
+    add(r.memberId, r.amount);
   }
   for (const m of result.members) {
     expect(held.get(m.memberId)).toBeCloseTo(m.finalNet, 9);

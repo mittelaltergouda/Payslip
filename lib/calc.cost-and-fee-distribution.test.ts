@@ -19,14 +19,17 @@ describe("costs deducted before distribution", () => {
 
     const result = calculatePayslip(input);
 
+    // profit = 1,000,000 - 100,000 = 900,000 -> 450,000 each.
+    // Without participantIds both active players are equal funders (50,000
+    // each) and are reimbursed: 50,000 + 450,000 = 500,000 each.
     expect(result.netProfit).toBe(900_000);
-    expect(result.members.map((member) => member.finalNet)).toEqual([450_000, 450_000]);
+    expect(result.members.map((member) => member.finalNet)).toEqual([500_000, 500_000]);
     expect(result.suggestedTransfers).toEqual([
       {
         fromMemberId: "player-1",
         toMemberId: "player-2",
-        netAmount: 450_000,
-        grossAmount: 450_000,
+        netAmount: 500_000,
+        grossAmount: 500_000,
         feeAmount: 0,
       },
     ]);

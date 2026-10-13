@@ -221,10 +221,10 @@ describe('calculatePayslip - Expense Allocation', () => {
     expect(alice?.profitShare).toBe(410);
     expect(bob?.profitShare).toBe(410);
 
-    // finalNet = investment + profitShare - expenses
-    // All expenses are already deducted before equal distribution.
-    expect(alice?.finalNet).toBe(410);
-    expect(bob?.finalNet).toBe(410);
+    // finalNet = investment + own expenses (reimbursed) + profitShare
+    // Alice 130 + 410 = 540, Bob 50 + 410 = 460 (sum 1000 = revenue held)
+    expect(alice?.finalNet).toBe(540);
+    expect(bob?.finalNet).toBe(460);
   });
 
   it('should exclude inactive members from shared expense allocation by default', () => {
@@ -293,9 +293,13 @@ describe('calculatePayslip - Expense Allocation', () => {
     expect(alice?.profitShare).toBe(-75);
     expect(bob?.profitShare).toBe(-75);
 
-    // finalNet = investment + profitShare - expenses
-    // The total expense of 150 is shared through the equal distribution.
-    expect(alice?.finalNet).toBe(-75);
-    expect(bob?.finalNet).toBe(-75);
+    // finalNet = investment + own expenses (reimbursed) + profitShare
+    // Alice funded 100: 100 - 75 = 25; Bob funded 50: 50 - 75 = -25.
+    // Sum 0 = revenue held. Bob pays Alice 25, so both end at -75 out of pocket.
+    expect(alice?.finalNet).toBe(25);
+    expect(bob?.finalNet).toBe(-25);
+    expect(result.suggestedTransfers).toMatchObject([
+      { fromMemberId: 'member-2', toMemberId: 'member-1', netAmount: 25, grossAmount: 25, feeAmount: 0 },
+    ]);
   });
 });
