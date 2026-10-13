@@ -156,6 +156,17 @@ describe("ADJUSTABLE fixed amounts on loss and low profit", () => {
     expect(result.fixedAmountsStatus).toBeUndefined();
   });
 
+  it("splits profit equally when percentages are set but all of them are 0", () => {
+    const result = calculatePayslip(adjustable([
+      { id: "a", handle: "A", active: true, revenue: 1_000, percentShare: 0 },
+      { id: "b", handle: "B", active: true, revenue: 0 },
+    ]));
+
+    // No usable percentages: nothing may vanish, the pool splits equally.
+    expect(shares(result)).toEqual([["a", 500], ["b", 500]]);
+    expect(transfers(result)).toEqual([["a", "b", 500]]);
+  });
+
   it("sets no status outside ADJUSTABLE mode", () => {
     const result = calculatePayslip({
       ...adjustable([

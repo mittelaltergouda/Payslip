@@ -146,18 +146,16 @@ function distributeAdjustable(
 
   // Step 3: Distribute remaining profit to pool members
   if (poolMembers.length > 0) {
-    // Check if any pool member has a percentShare set
-    // If so, use percentage-based distribution; otherwise use equal distribution
-    const hasPercentShares = poolMembers.some((m) => m.percentShare !== null);
+    // Use percentage-based distribution only when the percentages add up to
+    // something; all-zero percentages would otherwise make the pool vanish.
+    // Note: In ADJUSTABLE mode, percentShares don't need to sum to 100%
+    const totalPercent = poolMembers.reduce(
+      (sum, m) => sum + (m.percentShare ?? 0),
+      0
+    );
 
-    if (hasPercentShares) {
+    if (totalPercent > 0) {
       // Distribute by percentShare (for members without percentShare, treat as 0)
-      // Note: In ADJUSTABLE mode, percentShares don't need to sum to 100%
-      // Calculate total percent among pool members for proportional distribution
-      const totalPercent = poolMembers.reduce(
-        (sum, m) => sum + (m.percentShare ?? 0),
-        0
-      );
 
       for (const member of poolMembers) {
         const percentShare = member.percentShare ?? 0;
