@@ -341,6 +341,35 @@ describe('MemberRow - User Interactions', () => {
     expect(mockCallbacks.updateMember).toHaveBeenCalledWith('member-1', { handle: 'NewHandle' });
   });
 
+  it('should turn the single investment into labelled positions and pass the sum on', () => {
+    render(
+      <table>
+        <tbody>
+          <MemberRow
+            rowIndex={0}
+            member={sampleMember}
+            showRole={false}
+            distributionMode="EQUAL"
+            individualExpenses={[]}
+            resultMember={sampleResultMember}
+            feeByPayer={{}}
+            lang="en"
+            t={mockTranslationsEN}
+            format={mockFormat}
+            {...mockCallbacks}
+          />
+        </tbody>
+      </table>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add investment' }));
+
+    const [memberId, patch] = mockCallbacks.updateMember.mock.calls[0];
+    expect(memberId).toBe('member-1');
+    expect(patch.investments.map((item: { amount: number }) => item.amount)).toEqual([2000, 0]);
+    expect(patch.investment).toBe(2000);
+  });
+
   it('should call updateMember when role is changed', () => {
     render(
       <table>
