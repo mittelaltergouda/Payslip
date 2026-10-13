@@ -59,6 +59,109 @@ describe("settlement regression", () => {
     ]);
   });
 
+  it("reimburses individual expenses once before splitting profit", () => {
+    const session: SessionInput = {
+      name: "Reported reimbursement fixture",
+      type: "TRADING",
+      distributionMode: "EQUAL",
+      taxEnabled: true,
+      taxRate: 0.005,
+      members: [
+        { id: "p1", handle: "P1", active: true, revenue: 0, investment: 0 },
+        { id: "p2", handle: "P2", active: true, revenue: 7_786_069, investment: 2_822_000 },
+      ],
+      individualExpenses: [
+        { id: "e1", memberId: "p1", label: "Funded cost", amount: 2_822_000 },
+        { id: "e2", memberId: "p2", label: "Funded cost", amount: 47_000 },
+      ],
+    };
+
+    const result = calculatePayslip(session);
+
+    expect(result.netProfit).toBe(2_095_069);
+    expect(result.members.map((member) => [member.memberId, member.profitShare, member.finalNet])).toEqual([
+      ["p1", 1_047_534.5, 3_869_534.5],
+      ["p2", 1_047_534.5, 3_916_534.5],
+    ]);
+    expect(result.suggestedTransfers).toEqual([
+      {
+        fromMemberId: "p2",
+        toMemberId: "p1",
+        netAmount: 3_850_282,
+        grossAmount: 3_869_534,
+        feeAmount: 19_252,
+        budgetAmount: 3_869_534,
+        roundingRemainder: 0.5,
+      },
+    ]);
+    expect(result.unsettledBalances).toEqual([
+      { memberId: "p2", amount: -0.5 },
+      { memberId: "p1", amount: 0.5 },
+    ]);
+  });
+
+  it("uses itemized revenue and investment instead of adding legacy scalar fallbacks", () => {
+    const result = calculatePayslip({
+      name: "Itemized inputs",
+      type: "TRADING",
+      distributionMode: "EQUAL",
+      taxEnabled: false,
+      members: [
+        {
+          id: "holder",
+          handle: "Holder",
+          active: true,
+          revenue: 999_999,
+          investment: 999_999,
+          revenues: [
+            { id: "r1", label: "Cargo", amount: 700 },
+            { id: "r2", label: "Bonus", amount: 300 },
+          ],
+          investments: [
+            { id: "i1", label: "Cargo purchase", amount: 200 },
+            { id: "i2", label: "Fuel", amount: 100 },
+          ],
+        },
+        { id: "crew", handle: "Crew", active: true, revenue: 0, investment: 0 },
+      ],
+    });
+
+    expect(result.saleRevenue).toBe(700);
+    expect(result.netProfit).toBe(700);
+    expect(result.members[0]).toMatchObject({ revenue: 1_000, investment: 300, finalNet: 650 });
+  });
+
+  it("applies already-paid transfers as settlement progress without changing profit", () => {
+    const result = calculatePayslip({
+      name: "Partial settlement",
+      type: "TRADING",
+      distributionMode: "EQUAL",
+      taxEnabled: true,
+      taxRate: 0.005,
+      members: [
+        { id: "holder", handle: "Holder", active: true, revenue: 1_000, investment: 0 },
+        { id: "crew", handle: "Crew", active: true, revenue: 0, investment: 0 },
+      ],
+      paidTransfers: [
+        { id: "paid-1", fromMemberId: "holder", toMemberId: "crew", netAmount: 99, feeAmount: 1 },
+      ],
+    });
+
+    expect(result.netProfit).toBe(1_000);
+    expect(result.paidTransferFees).toBe(1);
+    expect(result.suggestedTransfers).toEqual([
+      {
+        fromMemberId: "holder",
+        toMemberId: "crew",
+        netAmount: 398,
+        grossAmount: 400,
+        feeAmount: 2,
+        budgetAmount: 400,
+        roundingRemainder: 0,
+      },
+    ]);
+  });
+
   it("makes every revenue holder pay their surplus after investment reimbursements", () => {
     const session: SessionInput = {
       name: "Gouda crew payout",
