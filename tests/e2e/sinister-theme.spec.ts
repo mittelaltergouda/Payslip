@@ -17,9 +17,8 @@ test.describe('Hidden Sinister theme', () => {
     await expect(html).not.toHaveAttribute('data-theme', 'sinister');
 
     const title = page.getByText('SC Payslip', { exact: true }).first();
-    for (let i = 0; i < 5; i++) {
-      await title.click();
-    }
+    // Five quick taps in one go: per-click actionability waits are slow on WebKit.
+    await title.click({ clickCount: 5 });
     const terminal = page.getByRole('dialog');
     await expect(terminal).toContainText('Sinister Terminal');
 
@@ -60,9 +59,8 @@ test.describe('Hidden Sinister theme', () => {
     await expect(themeSwitch).toBeVisible();
 
     const title = page.getByText('SC Payslip', { exact: true }).first();
-    for (let i = 0; i < 5; i++) {
-      await title.click();
-    }
+    // Five quick taps in one go: per-click actionability waits are slow on WebKit.
+    await title.click({ clickCount: 5 });
     const terminal = page.getByRole('dialog');
     await expect(terminal).toContainText('ZUGANG AKTIV');
     await terminal.getByRole('button', { name: 'Zugang entfernen' }).click();

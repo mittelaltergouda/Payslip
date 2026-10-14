@@ -89,7 +89,7 @@ export function advanceKonami(progress: number, key: string): number {
 
 /** Taps on the app title within this window count towards opening the terminal. */
 export const TITLE_TAPS_REQUIRED = 5;
-export const TITLE_TAP_WINDOW_MS = 2000;
+export const TITLE_TAP_WINDOW_MS = 3000;
 
 /**
  * Registers a tap on the app title. Returns the taps still inside the time
