@@ -167,6 +167,18 @@ describe("ADJUSTABLE fixed amounts on loss and low profit", () => {
     expect(transfers(result)).toEqual([["a", "b", 500]]);
   });
 
+  it("shares profit left over after fixed payouts equally when nobody is in the pool", () => {
+    const result = calculatePayslip(adjustable([
+      { id: "a", handle: "A", active: true, revenue: 1_000, fixedPayout: 100 },
+      { id: "b", handle: "B", active: true, revenue: 0, fixedPayout: 100 },
+    ]));
+
+    // 1000 - 200 fixed = 800 left, nobody in the pool: 400 each on top
+    expect(shares(result)).toEqual([["a", 500], ["b", 500]]);
+    expect(transfers(result)).toEqual([["a", "b", 500]]);
+    expect(result.fixedAmountsStatus).toBe("APPLIED");
+  });
+
   it("sets no status outside ADJUSTABLE mode", () => {
     const result = calculatePayslip({
       ...adjustable([

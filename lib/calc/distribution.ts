@@ -191,6 +191,11 @@ function distributeAdjustable(
         });
       }
     }
+  } else if (poolAfterBonuses !== 0) {
+    // Everyone has a fixed payout: the remaining profit must not vanish,
+    // so it is shared equally among all active members.
+    const extra = poolAfterBonuses / results.length;
+    return results.map((r) => ({ ...r, profitShare: r.profitShare + extra }));
   }
 
   return results;

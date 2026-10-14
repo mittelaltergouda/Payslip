@@ -139,14 +139,16 @@ describe('distributeProfit - uneven splits and rounding', () => {
     expect((result.get('a') ?? 0) + (result.get('b') ?? 0)).toBe(1000);
   });
 
-  it('ADJUSTABLE with all members on fixedPayout leaves no pool to split', () => {
+  it('ADJUSTABLE with all members on fixedPayout shares the leftover equally', () => {
     const members = [
       member({ id: 'a', fixedPayout: 300 }),
       member({ id: 'b', fixedPayout: 400 }),
     ];
     const result = distributeProfit(1000, members, 'ADJUSTABLE');
-    expect(result.get('a')).toBe(300);
-    expect(result.get('b')).toBe(400);
+    // 1000 - 700 fixed = 300 left with no pool: 150 each on top, nothing vanishes
+    expect(result.get('a')).toBe(450);
+    expect(result.get('b')).toBe(550);
+    expect((result.get('a') ?? 0) + (result.get('b') ?? 0)).toBe(1000);
   });
 });
 
