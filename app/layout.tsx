@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ToastProvider } from "@/components/Toast";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CookieNotice } from "@/components/CookieNotice";
+import { rootMetadata, WEB_APPLICATION_STRUCTURED_DATA } from "@/lib/seo";
 import { Space_Grotesk, Inter } from "next/font/google";
 
 const spaceGrotesk = Space_Grotesk({
@@ -19,10 +20,7 @@ const inter = Inter({
   display: "swap"
 });
 
-export const metadata: Metadata = {
-  title: "SC Payslip",
-  description: "Teilt Profite, Kosten und Steuern fair auf  Star Citizen ready."
-};
+export const metadata: Metadata = rootMetadata;
 
 // Request-specific CSP nonces require server rendering for every page request.
 export const dynamic = "force-dynamic";
@@ -35,6 +33,12 @@ export default function RootLayout({
   return (
     <html lang="de" className={`${spaceGrotesk.variable} ${inter.variable}`}>
       <body className="font-body min-h-screen">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(WEB_APPLICATION_STRUCTURED_DATA).replace(/</g, "\\u003c"),
+          }}
+        />
         <ToastProvider>
           <div className="flex min-h-screen flex-col">
             <div className="flex-1">
