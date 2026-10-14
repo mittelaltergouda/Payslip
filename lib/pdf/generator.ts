@@ -155,6 +155,33 @@ function toWinAnsi(text: string): string {
   return text.replace(/→/g, "->").replace(/−/g, "-");
 }
 
+const ARITHMETIC_LINE_CHARS = 105;
+
+// Wraps by character count so it stays deterministic and works with the test
+// PDF adapter. Words longer than a line (e.g. labels without spaces) are split.
+function wrapPdfLine(line: string, maxChars: number): string[] {
+  const rows: string[] = [];
+  let row = "";
+  for (const word of line.split(" ")) {
+    const candidate = row ? `${row} ${word}` : word;
+    if (candidate.length <= maxChars) {
+      row = candidate;
+      continue;
+    }
+    if (row) {
+      rows.push(row);
+    }
+    let rest = word;
+    while (rest.length > maxChars) {
+      rows.push(rest.slice(0, maxChars));
+      rest = rest.slice(maxChars);
+    }
+    row = rest;
+  }
+  rows.push(row);
+  return rows;
+}
+
 export function generatePDF(
   session: SessionInput,
   result: PayslipResult,
@@ -288,21 +315,12 @@ export function generatePDF(
     doc.setFont("helvetica", isTitle ? "bold" : "normal");
     doc.setFontSize(isTitle ? 9 : 8);
     setText(isTitle ? COLORS.ink : COLORS.slate);
-    // Keep text wrapping deterministic and compatible with the test PDF adapter.
-    const words = line.split(" ");
-    let row = "";
-    for (const word of words) {
-      if ((row + word).length > 105 && row) {
-        y = ensureSpace(y, 5);
-        doc.text(row, margin, y);
-        y += 5;
-        row = "";
-      }
-      row += (row ? " " : "") + word;
-    }
-    y = ensureSpace(y, 5);
-    doc.text(row, margin, y);
-    y += 7;
+    const rows = wrapPdfLine(line, ARITHMETIC_LINE_CHARS);
+    rows.forEach((row, index) => {
+      y = ensureSpace(y, 5);
+      doc.text(row, margin, y);
+      y += index === rows.length - 1 ? 7 : 5;
+    });
   }
 
   // Member table

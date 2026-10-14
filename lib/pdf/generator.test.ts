@@ -77,6 +77,15 @@ describe('generatePDF', () => {
     expect(pageTextCalls.filter(call => /[→−]/.test(call.text))).toEqual([]);
   });
 
+  it('breaks arithmetic words longer than a line instead of overflowing the page', () => {
+    const longLabel = 'X'.repeat(150);
+    const session: SessionInput = { name: 'Long', type: 'TRADING', distributionMode: 'EQUAL', members: [{ id: 'a', handle: 'A', revenues: [{ id: 'r1', label: longLabel, amount: 1000 }] }, { id: 'b', handle: 'B' }] };
+    generatePDF(session, calculatePayslip(session), { lang: 'en' });
+    const pageTwo = pageTextCalls.filter(call => call.page === 2).map(call => call.text);
+    expect(pageTwo.filter(text => text.length > 105)).toEqual([]);
+    expect(pageTwo.join('').replace(/\s/g, '')).toContain(longLabel);
+  });
+
   it('prints every arithmetic section title as its own line on page two', () => {
     const session: SessionInput = { name: 'Arithmetic', type: 'TRADING', distributionMode: 'EQUAL', members: [{ id: 'a', handle: 'A', revenue: 1000 }, { id: 'b', handle: 'B' }] };
     generatePDF(session, calculatePayslip(session), { lang: 'de' });
