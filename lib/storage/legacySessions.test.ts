@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { deleteSession, getAll, importAll, save } from "./sessionStorage";
 import type { SessionInput } from "../types";
+import { calculatePayslip } from "../calc";
 
 // Old sessions must survive the update. The live version accepted sessions
 // whose members share an ID (e.g. hand-edited JSON imports); loading drops
@@ -59,6 +60,16 @@ describe("legacy sessions stay loadable", () => {
 
     const names = getAll().map((s) => s.session.name).sort();
     expect(names).toEqual(["New session", "Old crew night"]);
+  });
+
+  it("still calculates such a legacy session like the live version did", () => {
+    const [loaded] = (() => {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify([legacyWithDuplicateIds]));
+      return getAll();
+    })();
+
+    expect(() => calculatePayslip(loaded.session)).not.toThrow();
+    expect(calculatePayslip(loaded.session).netProfit).toBe(600);
   });
 
   it("still imports such a legacy JSON export", () => {

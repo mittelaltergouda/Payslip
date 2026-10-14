@@ -232,7 +232,9 @@ export function validateSessionInput(session: SessionInput): void {
   validateNonNegativeValues(session);
 
   const ids = session.members.map(m => m.id).filter((id): id is string => !!id);
-  if (new Set(ids).size !== ids.length) {throw new Error("Duplicate member IDs");}
+  // Only recorded transfers need unambiguous member references; older
+  // sessions with duplicate IDs calculated fine and must keep working.
+  if ((session.paidTransfers ?? []).length > 0 && new Set(ids).size !== ids.length) {throw new Error("Duplicate member IDs");}
   for (const member of session.members) {
     for (const item of [...(member.revenues ?? []), ...(member.investments ?? [])]) {
       if (item.amount < 0) {throw new Error("Item amounts must be non-negative");}
