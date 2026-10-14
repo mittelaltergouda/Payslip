@@ -170,12 +170,12 @@ export function MemberCard({
 
         <div>
           <label className="block text-xs text-white/60 mb-1" htmlFor={`revenue-${member.id}`}>{t.revenueLabel}</label>
-          <MoneyItemsEditor member={member} kind="revenue" lang={lang} onChange={patch => updateMember(member.id!, patch)} />
+          <MoneyItemsEditor member={member} kind="revenue" lang={lang} variant="card" onChange={patch => updateMember(member.id!, patch)} />
         </div>
 
         <div>
           <label className="block text-xs text-white/60 mb-1" htmlFor={`investment-${member.id}`}>{t.investmentLabel}</label>
-          <MoneyItemsEditor member={member} kind="investment" lang={lang} onChange={patch => updateMember(member.id!, patch)} />
+          <MoneyItemsEditor member={member} kind="investment" lang={lang} variant="card" onChange={patch => updateMember(member.id!, patch)} />
         </div>
       </div>
 
