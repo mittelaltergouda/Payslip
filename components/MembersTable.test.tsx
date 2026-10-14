@@ -523,4 +523,39 @@ describe('MembersTable - Enter Navigation', () => {
 
     expect(document.activeElement).toBe(secondHandle);
   });
+
+  it('keeps Enter navigation when the next row uses itemized positions', () => {
+    const members: MemberInput[] = [
+      sampleMembers[0],
+      {
+        ...sampleMembers[1],
+        revenues: [
+          { id: 'rev-1', label: 'Cargo', amount: 3000 },
+          { id: 'rev-2', label: 'Bounty', amount: 2000 },
+        ],
+      },
+    ];
+    render(
+      <MembersTable
+        members={members}
+        individualExpenses={sampleIndividualExpenses}
+        result={sampleResult}
+        showRole={false}
+        distributionMode="EQUAL"
+        feeByPayer={{}}
+        lang="en"
+        t={mockTranslationsEN}
+        format={mockFormat}
+        {...mockCallbacks}
+      />
+    );
+
+    const pilotRevenue = screen.getAllByLabelText('revenue Pilot', { selector: 'input' })[0];
+    const escortFirstItemAmount = screen.getAllByLabelText('revenue amount 1', { selector: 'input' })[0];
+    pilotRevenue.focus();
+
+    fireEvent.keyDown(pilotRevenue, { key: 'Enter', code: 'Enter' });
+
+    expect(document.activeElement).toBe(escortFirstItemAmount);
+  });
 });
