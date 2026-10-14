@@ -10,8 +10,9 @@ Make reimbursements and settlement conserve session cash, support itemized membe
 2. **Investments and expenses** are legitimate session costs paid/funded by members. They are deducted once to calculate profit and then reimbursed once to their funder in that member's target payout.
 3. **Individual expenses** are reimbursed to their selected member.
 4. **Shared expenses** use `participantIds` as the funders/reimbursement recipients. The expense amount is split equally among those members (or all active members when omitted), and those allocated amounts are reimbursed. This preserves the existing schema while making the previously ambiguous field auditable.
-5. **Already-paid intra-session transfers** are settlement progress, not revenue, investment, or expense. Revenue remains the pre-transfer held-cash amount. A recorded transfer consumes its sender's gross amount (`net + fee`) and the same gross settlement entitlement of its receiver. The fee is disclosed but is not deducted from profit a second time.
-6. Suggested transfer amounts are integer sender budgets. The displayed net plus fee equals the gross budget; fractional entitlement and minimum-fee residuals remain explicit.
+5. **Already-paid intra-session transfers** are settlement progress, not revenue, investment, or expense. Revenue remains the pre-transfer held-cash amount. A recorded transfer moves its sender's total cost (`net + fee`) out and its amount (`net`) to the receiver.
+6. **Service fees of all transfers** (recorded and suggested) are a shared session cost: they are deducted once from profit before the split, like any other cost. Nobody bears a fee alone for being a recipient. Because the suggested transfers' fees depend on the shares, the calculation iterates to a fixed point (usually 2-3 rounds).
+7. Suggested transfers move whole aUEC: the recipient gets the full amount still due, the sender pays amount plus fee. Fractional entitlements and minimum-fee residuals remain explicit.
 
 ## Non-goals
 

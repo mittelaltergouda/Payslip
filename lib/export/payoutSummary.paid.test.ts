@@ -5,8 +5,8 @@ import type { SessionInput } from "../types";
 
 // Export payouts (PDF, CSV, clipboard) must include transfers that already
 // happened: SETTLEMENT and SESSION_CASH move cash (sender pays net + fee,
-// recipient gets net; a SETTLEMENT fee is borne by the recipient), a
-// COST_CONTRIBUTION is outside money and does not change session holdings.
+// recipient gets net; every fee is a shared cost), a COST_CONTRIBUTION is
+// outside money and does not change session holdings.
 
 const twoPlayers = (extra: Partial<SessionInput>): SessionInput => ({
   name: "Paid",
@@ -31,32 +31,33 @@ describe("payout summaries with recorded transfers", () => {
     }))).toEqual([["a", 500, 0], ["b", 500, 0]]);
   });
 
-  it("charges the recorded settlement fee to the recipient", () => {
-    // paid 99 + 1, suggested 398 + 2: A 1000 - 100 - 400, B 99 + 398, B's fees 1 + 2
+  it("shares the recorded settlement fee instead of charging it to the recipient", () => {
+    // fees 1 paid + 2 suggested -> profit 997 -> 498.5 each, 1.5 fees each;
+    // paid 99 + 1, suggested 399 + 2: A 1000 - 100 - 401 = 499, B 99 + 399 = 498
     expect(payouts(twoPlayers({
       taxEnabled: true,
       taxRate: 0.005,
       paidTransfers: [{ fromMemberId: "a", toMemberId: "b", netAmount: 99, feeAmount: 1 }],
-    }))).toEqual([["a", 500, 0], ["b", 497, 3]]);
+    }))).toEqual([["a", 499, 1.5], ["b", 498, 1.5]]);
   });
 
-  it("moves the cash of a session advance without charging its fee to the recipient", () => {
-    // profit 1000 - 1 = 999 -> 499.5 each; A holds 900, B 99; suggested 398 + 2
+  it("treats the fee of a session advance the same way", () => {
     expect(payouts(twoPlayers({
       taxEnabled: true,
       taxRate: 0.005,
       paidTransfers: [{ fromMemberId: "a", toMemberId: "b", netAmount: 99, feeAmount: 1, kind: "SESSION_CASH" }],
-    }))).toEqual([["a", 500, 0], ["b", 497, 2]]);
+    }))).toEqual([["a", 499, 1.5], ["b", 498, 1.5]]);
   });
 
   it("leaves session holdings untouched by an external cost contribution", () => {
-    // A invested 300, B paid 100 + 1 of it: targets A 549.5, B 450.5; A sends B 450
+    // A invested 300, B paid 100 + 1 of it: targets A 549.5, B 450.5; A sends B 450.
+    // The contribution fee is shared too: 0.5 each.
     expect(payouts(twoPlayers({
       members: [
         { id: "a", handle: "A", active: true, revenue: 1_000, investment: 300 },
         { id: "b", handle: "B", active: true, revenue: 0 },
       ],
       paidTransfers: [{ fromMemberId: "b", toMemberId: "a", netAmount: 100, feeAmount: 1, kind: "COST_CONTRIBUTION" }],
-    }))).toEqual([["a", 550, 0], ["b", 450, 0]]);
+    }))).toEqual([["a", 550, 0.5], ["b", 450, 0.5]]);
   });
 });

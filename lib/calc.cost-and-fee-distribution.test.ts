@@ -37,7 +37,7 @@ describe("costs deducted before distribution", () => {
 });
 
 describe("transfer fees deducted before distribution", () => {
-  it("fits the largest possible recipient amount into the sender's transfer budget", () => {
+  it("shares the suggested transfer's service fee like any other session cost", () => {
     const input: SessionInput = {
       name: "Fee included in transfer budget",
       type: "OTHER",
@@ -54,18 +54,24 @@ describe("transfer fees deducted before distribution", () => {
 
     const result = calculatePayslip(input);
 
+    // profit = 500,000 − 1,247 fee = 498,753 → 249,376.5 each. Player 2
+    // receives their whole share; Player 1 pays the amount plus the fee and
+    // keeps 1,000,000 − 250,623 = 749,377 = 500,000 + 249,376.5 (+ 0.5 rounding).
+    expect(result.netProfit).toBe(498_753);
+    expect(result.suggestedTransferFees).toBe(1_247);
+    expect(result.members.map((member) => member.serviceFeeShare)).toEqual([623.5, 623.5]);
     expect(result.suggestedTransfers).toEqual([
       {
         fromMemberId: "player-1",
         toMemberId: "player-2",
-        netAmount: 248_756,
-        feeAmount: 1_244,
-        grossAmount: 250_000,
+        netAmount: 249_376,
+        feeAmount: 1_247,
+        grossAmount: 250_623,
       },
     ]);
   });
 
-  it("deducts the sender-paid fee inside the gross transfer budget", () => {
+  it("adds the service fee to the shared loss", () => {
     const input: SessionInput = {
       name: "Loss with fee inside transfer budget",
       type: "OTHER",
@@ -82,16 +88,19 @@ describe("transfer fees deducted before distribution", () => {
 
     const result = calculatePayslip(input);
 
-    expect(result.members.map((member) => member.profitShare)).toEqual([-500_000, -500_000]);
-    expect(result.members.map((member) => member.finalNet)).toEqual([1_500_000, -500_000]);
+    // loss = 1,000,000 + 2,494 fee → −501,247 each. Player 2 pays exactly
+    // their share of the loss: 498,753 + 2,494 fee = 501,247.
+    expect(result.members.map((member) => member.profitShare)).toEqual([-501_247, -501_247]);
+    expect(result.members.map((member) => member.finalNet)).toEqual([1_498_753, -501_247]);
     expect(result.suggestedTransfers).toEqual([
       {
         fromMemberId: "player-2",
         toMemberId: "player-1",
-        netAmount: 497_512,
-        feeAmount: 2_488,
-        grossAmount: 500_000,
+        netAmount: 498_753,
+        feeAmount: 2_494,
+        grossAmount: 501_247,
       },
     ]);
+    expect(result.unsettledBalances).toEqual([]);
   });
 });

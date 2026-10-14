@@ -3,31 +3,31 @@ import { calculatePayslip } from "./calc";
 import type { PayslipResult, SessionInput } from "./types";
 
 // Expected values are derived by hand from the accounting rules:
-// profit = revenue - investments - expenses - historical session-cash fees;
+// profit = revenue - investments - expenses - service fees of all transfers
+// (recorded and suggested; a shared cost);
 // target = own investments + own expenses + funding adjustment + profit share;
-// suggested transfers fit net + fee inside an integer sender budget.
+// a suggested transfer pays the recipient's whole amount, the sender pays the fee on top.
 
 const base = { name: "Paid transfers", type: "TRADING", taxEnabled: false } as const;
 
 /**
  * Cash conservation invariant, independent of the implementation:
- * held cash after recorded transfers, plus suggested gross received, minus
- * suggested gross sent, plus the disclosed residual must equal the target.
- * SETTLEMENT moves the sender's gross entitlement, SESSION_CASH moves net cash
- * (the fee leaves the session), COST_CONTRIBUTION is external money.
+ * held cash after recorded transfers, plus suggested amounts received, minus
+ * suggested total cost sent, plus the disclosed residual must equal the target.
+ * Every transfer moves the amount to the recipient and the fee leaves the
+ * session (a shared cost); COST_CONTRIBUTION is external money.
  */
 function expectCashConserved(session: SessionInput, result: PayslipResult): void {
   const held = new Map(result.members.map((m) => [m.memberId, m.revenue]));
   const add = (id: string, delta: number) => held.set(id, (held.get(id) ?? Number.NaN) + delta);
   for (const t of session.paidTransfers ?? []) {
     if (t.kind === "COST_CONTRIBUTION") {continue;}
-    const gross = t.netAmount + t.feeAmount;
-    add(t.fromMemberId, -gross);
-    add(t.toMemberId, t.kind === "SESSION_CASH" ? t.netAmount : gross);
+    add(t.fromMemberId, -(t.netAmount + t.feeAmount));
+    add(t.toMemberId, t.netAmount);
   }
   for (const t of result.suggestedTransfers) {
     add(t.fromMemberId, -t.grossAmount);
-    add(t.toMemberId, t.grossAmount);
+    add(t.toMemberId, t.netAmount);
   }
   for (const r of result.unsettledBalances ?? []) {
     // Senders never pay more than they owe, so a debtor's residual stays below 1.
@@ -154,12 +154,13 @@ describe("SESSION_CASH advances", () => {
     expectCashConserved(session, result);
   });
 
-  it("fits the suggested fee into the 450 sender budget when the fee is enabled", () => {
-    // net 447 + ceil(447 * 0.005 = 2.235) = 3 -> 450; net 448 would cost 451
+  it("shares the suggested fee like the historical one when the fee is enabled", () => {
+    // profit = 900 - 3 suggested fee = 897 -> 448.5 each; B needs 99 + 448.5 - 99
+    // = 448.5 -> 448 arrive, A pays 448 + ceil(2.24) = 451 and keeps 449.
     const taxed = { ...session, taxEnabled: true, taxRate: 0.005 };
     const result = calculatePayslip(taxed);
-    expect(result.netProfit).toBe(900);
-    expect(transfers(result)).toEqual([["a", "b", 447, 3, 450]]);
+    expect(result.netProfit).toBe(897);
+    expect(transfers(result)).toEqual([["a", "b", 448, 3, 451]]);
     expectCashConserved(taxed, result);
   });
 
@@ -275,10 +276,9 @@ describe("COST_CONTRIBUTION (external money toward another player's costs)", () 
 });
 
 describe("recorded SETTLEMENT payouts", () => {
-  it("continues the reported fixture after a partial payout without deducting its fee twice", () => {
-    // P2 already sent P1 1,000,000 + 5,000 fee. Remaining budget:
-    // 3,869,534.5 - 1,005,000 = 2,864,534.5 -> integer budget 2,864,534
-    // net 2,850,282 + ceil(14,251.41) = 14,252 -> 2,864,534
+  it("continues the reported fixture after a partial payout and shares both fees", () => {
+    // P2 already sent P1 1,000,000 + 5,000 fee. Both that fee and the fee of
+    // the remaining transfer reduce profit before the equal split.
     const session: SessionInput = {
       ...base, distributionMode: "EQUAL", taxEnabled: true, taxRate: 0.005,
       members: [
@@ -292,9 +292,12 @@ describe("recorded SETTLEMENT payouts", () => {
       paidTransfers: [{ fromMemberId: "p2", toMemberId: "p1", netAmount: 1_000_000, feeAmount: 5_000 }],
     };
     const result = calculatePayslip(session);
-    expect(result.netProfit).toBe(2_095_069);
-    expect(targets(result)).toEqual([["p1", 3_869_534.5], ["p2", 3_916_534.5]]);
-    expect(transfers(result)).toEqual([["p2", "p1", 2_850_282, 14_252, 2_864_534]]);
+    // 2,095,069 - 5,000 - 14,300 = 2,075,769 -> 1,037,884.5 each. P1 still
+    // needs 2,822,000 + 1,037,884.5 - 1,000,000 = 2,859,884.5 -> 2,859,884.
+    expect(result.suggestedTransferFees).toBe(14_300);
+    expect(result.netProfit).toBe(2_075_769);
+    expect(targets(result)).toEqual([["p1", 3_859_884.5], ["p2", 3_906_884.5]]);
+    expect(transfers(result)).toEqual([["p2", "p1", 2_859_884, 14_300, 2_874_184]]);
     expect(result.unsettledBalances).toEqual([
       { memberId: "p2", amount: -0.5 },
       { memberId: "p1", amount: 0.5 },

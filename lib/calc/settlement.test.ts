@@ -17,7 +17,7 @@ function member(memberId: string, revenue: number, finalNet: number): MemberBrea
 }
 
 describe('settleBalancesDetailed', () => {
-  it('keeps matching a funded debtor after a creditor remainder cannot cover a fee', () => {
+  it('pays each creditor the full amount while the debtor pays the fees on top', () => {
     const result = settleBalancesDetailed(
       [
         member('debtor', 402, 0),
@@ -28,32 +28,15 @@ describe('settleBalancesDetailed', () => {
       0.005,
     );
 
+    // Fees are a shared cost the caller has already deducted from the targets;
+    // here they were not, so the last creditor is short by exactly the fees.
     expect(result.transfers).toEqual([
-      {
-        fromMemberId: 'debtor',
-        toMemberId: 'creditor-202',
-        netAmount: 200,
-        grossAmount: 201,
-        feeAmount: 1,
-      },
-      {
-        fromMemberId: 'debtor',
-        toMemberId: 'creditor-100-a',
-        netAmount: 99,
-        grossAmount: 100,
-        feeAmount: 1,
-      },
-      {
-        fromMemberId: 'debtor',
-        toMemberId: 'creditor-100-b',
-        netAmount: 99,
-        grossAmount: 100,
-        feeAmount: 1,
-      },
+      { fromMemberId: 'debtor', toMemberId: 'creditor-202', netAmount: 202, grossAmount: 204, feeAmount: 2 },
+      { fromMemberId: 'debtor', toMemberId: 'creditor-100-a', netAmount: 100, grossAmount: 101, feeAmount: 1 },
+      { fromMemberId: 'debtor', toMemberId: 'creditor-100-b', netAmount: 96, grossAmount: 97, feeAmount: 1 },
     ]);
     expect(result.unsettledBalances).toEqual([
-      { memberId: 'debtor', amount: -1 },
-      { memberId: 'creditor-202', amount: 1 },
+      { memberId: 'creditor-100-b', amount: 4 },
     ]);
   });
 
@@ -73,8 +56,8 @@ describe('settleBalancesDetailed', () => {
       {
         fromMemberId: 'debtor-1',
         toMemberId: 'creditor-1',
-        netAmount: 97,
-        grossAmount: 98,
+        netAmount: 98,
+        grossAmount: 99,
         feeAmount: 1,
       },
       {

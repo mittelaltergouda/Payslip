@@ -68,9 +68,11 @@ describe("itemized revenue and investment positions", () => {
       { id: "e", handle: "Escort", active: true, revenue: 0 },
     ], { taxEnabled: true, taxRate: 0.005, individualExpenses: [{ id: "x", memberId: "e", label: "Ammo", amount: 20_000 }] }));
 
-    // profit = 900k - 100k - 20k = 780k -> 390k each; Escort target 20k + 390k = 410k
-    expect(itemized.netProfit).toBe(780_000);
-    expect(itemized.members.map((m) => m.finalNet)).toEqual([490_000, 410_000]);
+    // profit = 900k - 100k - 20k - 2,045 service fee = 777,955 -> 388,977.5 each;
+    // Escort target 20k + 388,977.5 = 408,977.5 -> 408,977 + ceil(2,044.9) fee
+    expect(itemized.suggestedTransferFees).toBe(2_045);
+    expect(itemized.netProfit).toBe(777_955);
+    expect(itemized.members.map((m) => m.finalNet)).toEqual([488_977.5, 408_977.5]);
     expect(itemized.members).toEqual(scalar.members);
     expect(itemized.suggestedTransfers).toEqual(scalar.suggestedTransfers);
   });

@@ -12,13 +12,15 @@
  * 4. Continues until all balances are settled
  *
  * This approach minimizes the number of transfers required. If tax is enabled,
- * Star Citizen's sender-paid transfer fee is added on top of the amount owed.
+ * Star Citizen's sender-paid service fee is added on top of the amount: the
+ * recipient gets the full amount, the sender pays amount + fee. The fees are a
+ * shared session cost the caller has already deducted from the targets.
  *
  * @module lib/calc/settlement
  */
 
 import type { MemberBreakdown, PaidTransferInput, SettlementDetail, Transfer, UnsettledBalance } from '../types';
-import { fitTransferToBudget } from './tax';
+import { calculateGrossAmount, fitTransferToBudget } from './tax';
 
 // ============================================================================
 // BALANCE SETTLEMENT (Greedy Matching Algorithm)
@@ -73,19 +75,22 @@ export function settleBalancesDetailed(
     balance: m.finalNet - m.revenue,
   }));
 
+  // Service fees are a shared session cost (already deducted from profit), so
+  // a transfer moves the sender's total cost out and only the amount in.
   const balanceByMember = new Map(balances.map((balance) => [balance.memberId, balance]));
   for (const transfer of paidTransfers) {
     if (transfer.kind === "COST_CONTRIBUTION") {continue;}
-    const grossAmount = transfer.netAmount + transfer.feeAmount;
     const sender = balanceByMember.get(transfer.fromMemberId);
     const recipient = balanceByMember.get(transfer.toMemberId);
     if (sender && recipient) {
-      sender.balance += grossAmount;
-      recipient.balance -= transfer.kind === "SESSION_CASH" ? transfer.netAmount : grossAmount;
+      sender.balance += transfer.netAmount + transfer.feeAmount;
+      recipient.balance -= transfer.netAmount;
     }
   }
 
-  // Separate into debtors and creditors, filtering out zero balances
+  // Separate into debtors and creditors, filtering out zero balances.
+  // A debtor's balance is their total budget (amounts plus fees), a
+  // creditor's balance is the amount that still has to arrive.
   const debtors = balances
     .filter((b) => b.balance < -EPSILON)
     .map((b) => ({ ...b, balance: -b.balance })) // Convert to positive for easier math
@@ -106,73 +111,56 @@ export function settleBalancesDetailed(
     const debtor = debtors[debtorIdx];
     const creditor = creditors[creditorIdx];
 
-    // The unsettled amount is the sender's complete transfer budget. Fit the
-    // largest recipient amount plus its fee inside that budget.
-    const exactBudget = Math.min(debtor.balance, creditor.balance);
-    const transferBudget = Math.floor(exactBudget + Number.EPSILON);
+    // The largest whole amount the debtor can send with its fee on top ...
+    const debtorBudget = Math.floor(debtor.balance + Number.EPSILON);
+    const affordable = debtorBudget >= 1 ? fitTransferToBudget(debtorBudget, taxRate).netAmount : 0;
+    // ... and what the creditor still needs, in whole aUEC.
+    const needed = Math.floor(creditor.balance + Number.EPSILON);
+    const creditorLimited = needed <= affordable;
+    const netAmount = Math.min(needed, affordable);
 
-    if (transferBudget < 1) {
-      if (debtor.balance < creditor.balance) {
+    if (netAmount < 1) {
+      // A sub-minimum remainder on one side must not discard the still-funded
+      // opposite side; it may continue matching the next balance.
+      if (affordable < 1) {
         debtorIdx++;
-      } else if (creditor.balance < debtor.balance) {
-        creditorIdx++;
-      } else {
-        debtorIdx++;
+      }
+      if (needed < 1) {
         creditorIdx++;
       }
       continue;
     }
 
-    if (transferBudget > EPSILON) {
-      const { netAmount, grossAmount, feeAmount } = fitTransferToBudget(
-        transferBudget,
-        taxRate
-      );
+    const grossAmount = calculateGrossAmount(netAmount, taxRate);
+    const feeAmount = grossAmount - netAmount;
+    const exactBudget = creditorLimited ? creditor.balance : netAmount;
 
-      if (netAmount < 1) {
-        // A sub-minimum remainder on one side must not discard the still-funded
-        // opposite side; it may continue matching the next balance. Use strict
-        // ordering here: EPSILON is for zero classification, not tie-breaking.
-        if (debtor.balance < creditor.balance) {
-          debtorIdx++;
-        } else if (creditor.balance < debtor.balance) {
-          creditorIdx++;
-        } else {
-          debtorIdx++;
-          creditorIdx++;
-        }
-        continue;
-      }
+    transfers.push({
+      fromMemberId: debtor.memberId,
+      toMemberId: creditor.memberId,
+      netAmount,
+      grossAmount,
+      feeAmount,
+    });
+    details.push({
+      fromMemberId: debtor.memberId,
+      toMemberId: creditor.memberId,
+      netAmount,
+      grossAmount,
+      feeAmount,
+      exactBudget,
+      budgetAmount: netAmount,
+      roundingRemainder: exactBudget - netAmount,
+    });
 
-      transfers.push({
-        fromMemberId: debtor.memberId,
-        toMemberId: creditor.memberId,
-        netAmount,
-        grossAmount,
-        feeAmount,
-      });
-      details.push({
-        fromMemberId: debtor.memberId,
-        toMemberId: creditor.memberId,
-        netAmount,
-        grossAmount,
-        feeAmount,
-        exactBudget,
-        budgetAmount: transferBudget,
-        roundingRemainder: exactBudget - transferBudget,
-      });
-
-      // The fee consumes part of the creditor's gross entitlement. Both sides
-      // are settled by the sender's actual total balance reduction.
-      debtor.balance -= grossAmount;
-      creditor.balance -= grossAmount;
-    }
+    debtor.balance -= grossAmount;
+    creditor.balance -= netAmount;
 
     // Move to next debtor or creditor if their balance is settled
-    if (debtor.balance <= EPSILON) {
+    if (debtor.balance < 1 || !creditorLimited) {
       debtorIdx++;
     }
-    if (creditor.balance <= EPSILON) {
+    if (creditor.balance < 1) {
       creditorIdx++;
     }
   }

@@ -166,23 +166,25 @@ describe('Settlement/Transfer Generation', () => {
 
     expect(result.taxRateApplied).toBe(0.005); // Fixed tax rate: always 0.5%
 
-    // Fixed payouts apply only when profit covers them, so the debtor holds
-    // the session cash instead of owing money that never existed.
-    // saleRevenue = 2800 - 1500 = 1300, netProfit = 1300 = fixed 800 + 500
-    // Alice gets 800, Bob gets 500, Charlie gets remainder: 0
-    expect(result.netProfit).toBe(1300);
+    // saleRevenue = 2800 - 1500 = 1300. The 7 aUEC service fees of the two
+    // settlement transfers are a session cost, so 1293 profit remains and the
+    // fixed payouts (800 + 500) are scaled down to it.
+    expect(result.netProfit).toBe(1293);
+    expect(result.suggestedTransferFees).toBe(7);
+    expect(result.fixedAmountsStatus).toBe('SCALED_TO_PROFIT');
     const alice = result.members.find(m => m.memberId === 'member-1');
     const bob = result.members.find(m => m.memberId === 'member-2');
     const charlie = result.members.find(m => m.memberId === 'member-3');
 
-    // Fixed payouts stay fixed; fees fit inside Charlie's transfer budgets.
-    expect(alice?.finalNet).toBe(2300);
-    expect(bob?.finalNet).toBe(500);
+    expect(alice?.finalNet).toBeCloseTo(1500 + 800 * 1293 / 1300, 9);
+    expect(bob?.finalNet).toBeCloseTo(500 * 1293 / 1300, 9);
     expect(charlie?.finalNet).toBe(0);
 
-    // Balance: Alice 800 (creditor), Bob 500 (creditor), Charlie 0 - 1300 = -1300 (debtor)
-    // Charlie owes: 800 to Alice, 500 to Bob
-    expect(result.suggestedTransfers.length).toBe(2);
+    // Charlie holds all the cash and pays both amounts plus their fees.
+    expect(result.suggestedTransfers.map(t => [t.toMemberId, t.netAmount, t.grossAmount])).toEqual([
+      ['member-1', 795, 799],
+      ['member-2', 497, 500],
+    ]);
 
     // Each transfer budget includes the fee paid by the sender.
     result.suggestedTransfers.forEach(transfer => {

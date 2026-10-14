@@ -24,10 +24,12 @@ describe("settlement regression", () => {
       { fromMemberId: "d2", toMemberId: "c1", netAmount: 796, grossAmount: 800, feeAmount: 4 },
       { fromMemberId: "d1", toMemberId: "c1", netAmount: 199, grossAmount: 200, feeAmount: 1 },
     ]);
-    expect(result.unsettledBalances).toEqual([
-      { memberId: "d1", amount: -1 },
-      { memberId: "c2", amount: 1 },
-    ]);
+    // The 5 aUEC of fees reduce profit to 996, so the fixed payouts are scaled.
+    expect(result.netProfit).toBe(996);
+    // D1 keeps 1 aUEC: sending it would cost a fee of 1 on top.
+    expect(result.unsettledBalances?.map((b) => b.memberId)).toEqual(["d1", "c2"]);
+    expect(result.unsettledBalances?.[0].amount).toBe(-1);
+    expect(result.unsettledBalances?.[1].amount).toBeCloseTo(0.995, 3);
   });
 
   it("settles only the revenue actually held by members when a stale total override differs", () => {
@@ -78,19 +80,20 @@ describe("settlement regression", () => {
 
     const result = calculatePayslip(session);
 
-    expect(result.netProfit).toBe(2_095_069);
-    expect(result.members.map((member) => [member.memberId, member.profitShare, member.finalNet])).toEqual([
-      ["p1", 1_047_534.5, 3_869_534.5],
-      ["p2", 1_047_534.5, 3_916_534.5],
+    // 2,095,069 profit before fees − 19,300 service fee, shared equally.
+    expect(result.netProfit).toBe(2_075_769);
+    expect(result.members.map((member) => [member.memberId, member.profitShare, member.finalNet, member.serviceFeeShare])).toEqual([
+      ["p1", 1_037_884.5, 3_859_884.5, 9_650],
+      ["p2", 1_037_884.5, 3_906_884.5, 9_650],
     ]);
     expect(result.settlementDetails).toMatchObject([
       {
         fromMemberId: "p2",
         toMemberId: "p1",
-        netAmount: 3_850_282,
-        grossAmount: 3_869_534,
-        feeAmount: 19_252,
-        budgetAmount: 3_869_534,
+        netAmount: 3_859_884,
+        grossAmount: 3_879_184,
+        feeAmount: 19_300,
+        budgetAmount: 3_859_884,
         roundingRemainder: 0.5,
       },
     ]);
@@ -131,7 +134,7 @@ describe("settlement regression", () => {
     expect(result.members[0]).toMatchObject({ revenue: 1_000, investment: 300, finalNet: 650 });
   });
 
-  it("applies already-paid transfers as settlement progress without changing profit", () => {
+  it("applies already-paid transfers as settlement progress and shares their fee", () => {
     const result = calculatePayslip({
       name: "Partial settlement",
       type: "TRADING",
@@ -147,17 +150,20 @@ describe("settlement regression", () => {
       ],
     });
 
-    expect(result.netProfit).toBe(1_000);
+    // 1,000 − 1 paid fee − 2 suggested fee = 997 → 498.5 each. Crew got 99
+    // and still receives 399; Holder keeps 1,000 − 100 − 401 = 499.
+    expect(result.netProfit).toBe(997);
     expect(result.paidTransferFees).toBe(1);
+    expect(result.suggestedTransferFees).toBe(2);
     expect(result.settlementDetails).toMatchObject([
       {
         fromMemberId: "holder",
         toMemberId: "crew",
-        netAmount: 398,
-        grossAmount: 400,
+        netAmount: 399,
+        grossAmount: 401,
         feeAmount: 2,
-        budgetAmount: 400,
-        roundingRemainder: 0,
+        budgetAmount: 399,
+        roundingRemainder: 0.5,
       },
     ]);
   });
@@ -183,24 +189,30 @@ describe("settlement regression", () => {
       {
         fromMemberId: "iri",
         toMemberId: "avi",
-        netAmount: 2_098_347,
-        grossAmount: 2_108_839,
-        feeAmount: 10_492,
+        netAmount: 2_105_259,
+        grossAmount: 2_115_786,
+        feeAmount: 10_527,
       },
       {
         fromMemberId: "iri",
         toMemberId: "whitedragon",
-        netAmount: 521_073,
-        grossAmount: 523_679,
-        feeAmount: 2_606,
+        netAmount: 517_723,
+        grossAmount: 520_312,
+        feeAmount: 2_589,
       },
       {
         fromMemberId: "gouda",
         toMemberId: "whitedragon",
-        netAmount: 236_975,
-        grossAmount: 238_160,
-        feeAmount: 1_185,
+        netAmount: 240_536,
+        grossAmount: 241_739,
+        feeAmount: 1_203,
       },
     ]);
+    // All 14,319 aUEC of fees are shared: everyone bears a quarter.
+    expect(result.suggestedTransferFees).toBe(14_319);
+    expect(result.members.map((member) => member.serviceFeeShare)).toEqual([3_579.75, 3_579.75, 3_579.75, 3_579.75]);
+    // Avi and Whitedragon receive their whole target (whole aUEC).
+    expect(result.members.find((m) => m.memberId === "avi")?.finalNet).toBe(2_105_259.75);
+    expect(result.members.find((m) => m.memberId === "whitedragon")?.finalNet).toBe(758_259.75);
   });
 });

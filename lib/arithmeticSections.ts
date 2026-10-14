@@ -79,12 +79,19 @@ function profitSection(ctx: Ctx): ArithmeticSection {
       ? "Gemeinsame Kosten werden gleich auf ihre Teilnehmer verteilt und diesen erstattet."
       : "Shared costs are split equally among their participants and reimbursed to them."));
   }
-  const fees = (session.paidTransfers ?? [])
-    .filter((t) => t.kind === "SESSION_CASH" || t.kind === "COST_CONTRIBUTION")
-    .reduce((sum, t) => sum + t.feeAmount, 0);
+  // Service fees of every transfer are a shared cost, deducted before the split.
+  const paidFees = result.paidTransferFees ?? (session.paidTransfers ?? []).reduce((sum, t) => sum + t.feeAmount, 0);
+  const suggestedFees = result.suggestedTransferFees ?? result.suggestedTransfers.reduce((sum, t) => sum + t.feeAmount, 0);
+  const fees = paidFees + suggestedFees;
   if (fees > 0) {
-    const feeLabel = de ? "Bereits bezahlte Service Fees aus Vorschüssen und Kostenbeteiligungen" : "Service fees already paid on advances and cost contributions";
-    lines.push(calc(feeLabel, "", num(fees), `${feeLabel}: ${num(fees)}`));
+    const parts = [
+      ...(paidFees > 0 ? [`${num(paidFees)} ${de ? "bereits erfolgte Überweisungen" : "transfers already made"}`] : []),
+      ...(suggestedFees > 0 ? [`${num(suggestedFees)} ${de ? "vorgeschlagene Überweisungen" : "suggested transfers"}`] : []),
+    ];
+    lines.push(parts.length > 1 ? calc("Service Fees", parts.join(" + "), num(fees)) : calc("Service Fees", parts[0], "", `Service Fees: ${parts[0]}`, false, ""));
+    lines.push(note(de
+      ? "Die Service Fees aller Überweisungen sind gemeinsame Kosten: Sie mindern den Gewinn, bevor er verteilt wird. Der Empfänger bekommt immer den vollen Betrag."
+      : "The service fees of all transfers are a shared cost: they reduce profit before it is split. The recipient always gets the full amount."));
   }
   const label = result.netProfit < 0 ? (de ? "Ergebnis (Verlust)" : "Result (loss)") : (de ? "Gewinn" : "Profit");
   const feeTerm = fees > 0 ? ` − ${num(fees)}` : "";
@@ -170,21 +177,19 @@ function distributionSection(ctx: Ctx): ArithmeticSection {
   return section(de ? "2. Verteilung" : "2. Distribution", lines);
 }
 
+/** The sender's total cost went out, the amount arrived (fees are a shared cost). */
 function recordedTransfers(ctx: Ctx, memberId: string) {
   const paid = (ctx.session.paidTransfers ?? []).filter((t) => t.kind !== "COST_CONTRIBUTION");
   const outgoing = paid.filter((t) => t.fromMemberId === memberId).reduce((sum, t) => sum + t.netAmount + t.feeAmount, 0);
-  const received = paid.filter((t) => t.toMemberId === memberId);
-  // What actually arrived, and the settlement fees the recipient bears on top.
-  const incomingNet = received.reduce((sum, t) => sum + t.netAmount, 0);
-  const incomingFee = received.reduce((sum, t) => sum + (t.kind === "SESSION_CASH" ? 0 : t.feeAmount), 0);
-  return { outgoing, incomingNet, incomingFee, incoming: incomingNet + incomingFee };
+  const incoming = paid.filter((t) => t.toMemberId === memberId).reduce((sum, t) => sum + t.netAmount, 0);
+  return { outgoing, incoming };
 }
 
 function targetSection(ctx: Ctx): ArithmeticSection {
   const { result, de, num } = ctx;
   const lines = [note(de
-    ? "Ziel = eigene Investments + eigene Kosten + Anteil. Das steht jedem am Ende zu."
-    : "Target = own investments + own costs + share. This is what everyone ends up with.")];
+    ? "Ziel = eigene Investments + eigene Kosten + Anteil. Das steht jedem am Ende zu; der Anteil an den Service Fees steckt schon im Anteil."
+    : "Target = own investments + own costs + share. This is what everyone ends up with; their part of the service fees is already in the share.")];
   for (const m of result.members) {
     const funding = m.fundingAdjustment ?? 0;
     const fundingTerm = funding !== 0 ? ` ${signed(funding, num)} ${de ? "Kostenbeteiligung" : "cost contribution"}` : "";
@@ -199,25 +204,24 @@ function targetSection(ctx: Ctx): ArithmeticSection {
     ? "Abgleich mit dem Geld, das jeder gerade hält:"
     : "Compared with the money each player currently holds:"));
   for (const m of result.members) {
-    const { outgoing, incoming, incomingNet, incomingFee } = recordedTransfers(ctx, m.memberId);
+    const { outgoing, incoming } = recordedTransfers(ctx, m.memberId);
+    // A sender's part also pays the fees of their own transfers.
+    const feeIncluded = result.taxRateApplied > 0 ? (de ? " (inkl. Service Fee)" : " (incl. service fee)") : "";
     const remaining = m.finalNet - m.revenue + outgoing - incoming;
-    const feeBorne = incomingFee > 0
-      ? (de ? ` (+ ${num(incomingFee)} Service Fee, die ${m.handle} trägt)` : ` (+ ${num(incomingFee)} service fee borne by ${m.handle})`)
-      : "";
     const paid = outgoing || incoming
-      ? `, ${de ? "bereits gezahlt" : "already paid"} ${num(outgoing)}, ${de ? "bereits erhalten" : "already received"} ${num(incomingNet)}${feeBorne}`
+      ? `, ${de ? "bereits gezahlt" : "already paid"} ${num(outgoing)}, ${de ? "bereits erhalten" : "already received"} ${num(incoming)}`
       : "";
     const outcome = remaining > 0
       ? `${de ? "bekommt noch" : "still receives"} ${num(remaining)}`
       : remaining < 0
-        ? (de ? `gibt ${num(-remaining)} ab` : `pays out ${num(-remaining)}`)
+        ? (de ? `gibt ${num(-remaining)} ab${feeIncluded}` : `pays out ${num(-remaining)}${feeIncluded}`)
         : (de ? "ist ausgeglichen" : "is settled");
     const holds = `${de ? "hält" : "holds"} ${num(m.revenue)}${paid}`;
     lines.push(calc(m.handle, holds, outcome, `${m.handle} ${holds} → ${outcome}`, true, "→"));
-    if (remaining < 0 && incomingNet > 0) {
+    if (remaining < 0 && incoming > 0) {
       lines.push(note(de
-        ? `${m.handle} hat mehr erhalten, als ihm zusteht, und überweist ${num(-remaining)} zurück. Eine passend bemessene erste Überweisung hätte diese Rücküberweisung samt Service Fee gespart.`
-        : `${m.handle} received more than their due and pays ${num(-remaining)} back. A correctly sized first transfer would have saved this return transfer and its service fee.`));
+        ? `${m.handle} hat mehr erhalten als das eigene Ziel und überweist den Überschuss zurück. Eine passend bemessene erste Überweisung hätte diese Rücküberweisung samt Service Fee gespart.`
+        : `${m.handle} received more than their target and pays the surplus back. A correctly sized first transfer would have saved this return transfer and its service fee.`));
     }
   }
   return section(de ? "3. Ziel je Spieler" : "3. Target per player", lines);
@@ -230,15 +234,15 @@ function recordedSection(ctx: Ctx): ArithmeticSection | null {
   const kinds = {
     SETTLEMENT: {
       label: de ? "Ausgleich / Auszahlung" : "Settlement / payout",
-      rule: de ? "zählt als Teil der Auszahlung, die Service Fee trägt der Empfänger." : "counts toward the payout, the recipient bears the service fee.",
+      rule: de ? "zählt als Teil der Auszahlung. Die Service Fee ist gemeinsame Kosten und mindert den Gewinn." : "counts toward the payout. The service fee is a shared cost and reduces profit.",
     },
     SESSION_CASH: {
       label: de ? "Vorschuss aus Session-Geld" : "Advance from session cash",
-      rule: de ? "verschiebt nur, wer das Session-Geld hält. Die Service Fee mindert den Gewinn einmal." : "only moves who holds the session cash. The service fee reduces profit once.",
+      rule: de ? "verschiebt nur, wer das Session-Geld hält. Die Service Fee ist gemeinsame Kosten und mindert den Gewinn." : "only moves who holds the session cash. The service fee is a shared cost and reduces profit.",
     },
     COST_CONTRIBUTION: {
       label: de ? "Externe Kostenbeteiligung" : "External cost contribution",
-      rule: de ? "eigenes Geld für die Kosten eines anderen. Die Erstattung samt Service Fee geht an den Geldgeber." : "own money toward another player's costs. The reimbursement including the service fee goes to the funder.",
+      rule: de ? "eigenes Geld für die Kosten eines anderen. Der Geldgeber bekommt Betrag und Service Fee erstattet, die Fee mindert als gemeinsame Kosten den Gewinn." : "own money toward another player's costs. The funder is reimbursed amount and service fee; the fee is a shared cost and reduces profit.",
     },
   } as const;
   const lines = [note(de
@@ -265,8 +269,8 @@ function transferSection(ctx: Ctx): ArithmeticSection {
   if (result.taxRateApplied > 0) {
     const rate = num(result.taxRateApplied * 100);
     lines.push(note(de
-      ? `Service Fee = ${rate} % vom Betrag (kommt beim Empfänger an), aufgerundet. Betrag + Service Fee = Gesamtkosten passt ins Budget des Absenders.`
-      : `Service Fee = ${rate} % of the amount (what the recipient gets), rounded up. Amount + Service Fee = Total Cost fits the sender's budget.`));
+      ? `Service Fee = ${rate} % vom Betrag, aufgerundet. Der Empfänger bekommt den vollen Betrag, der Absender zahlt Betrag + Service Fee = Gesamtkosten. Die Fees sind im Gewinn schon als gemeinsame Kosten abgezogen.`
+      : `Service Fee = ${rate} % of the amount, rounded up. The recipient gets the full amount, the sender pays Amount + Service Fee = Total Cost. The fees are already deducted from profit as a shared cost.`));
   }
   lines.push(note(de
     ? "Überwiesen werden nur ganze aUEC. Bruchteile darunter bleiben einfach stehen."
@@ -277,9 +281,10 @@ function transferSection(ctx: Ctx): ArithmeticSection {
   for (const transfer of transfers) {
     lines.push(calc(`${name(transfer.fromMemberId)} → ${name(transfer.toMemberId)}`, `${amountTerm(de)} ${num(transfer.netAmount)} + Service Fee ${num(transfer.feeAmount)}`, `${totalCostTerm(de)} ${num(transfer.grossAmount)}`, undefined, true));
     if (isSettlementDetail(transfer) && transfer.exactBudget !== transfer.budgetAmount) {
+      const label = de ? "Betrag exakt" : "Exact amount";
       const expression = `${num(transfer.exactBudget)} → ${de ? "ganzzahlig" : "whole"} ${num(transfer.budgetAmount)}`;
       const remainder = `${de ? "Rest" : "remainder"} ${num(transfer.roundingRemainder)}`;
-      lines.push(calc("Budget", expression, remainder, `Budget ${expression}, ${remainder}`, false, ""));
+      lines.push(calc(label, expression, remainder, `${label} ${expression}, ${remainder}`, false, ""));
     }
   }
   return section(de ? "4. Überweisungen" : "4. Transfers", lines);

@@ -399,7 +399,7 @@ describe('ResultsDisplay - summary counts all service fees', () => {
     render(<ResultsDisplay session={session} result={calculatePayslip(session)} error={null} translations={translations.de} lang="de" />);
     const summary = screen.getByRole('status', { name: translations.de.summary });
     expect(summary).toHaveTextContent('Gewinn (Brutto)2.670.000 aUEC');
-    expect(summary).toHaveTextContent('Service Fees7.787 aUEC');
-    expect(summary).toHaveTextContent('Gewinn (Netto)2.662.213 aUEC');
+    expect(summary).toHaveTextContent('Service Fees7.781 aUEC');
+    expect(summary).toHaveTextContent('Gewinn (Netto)2.662.219 aUEC');
   });
 });

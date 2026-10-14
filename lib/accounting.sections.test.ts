@@ -37,15 +37,17 @@ describe("arithmetic explanation sections", () => {
     expect(text).toContain("Umsatz: P1 0 + P2 7.786.069 = 7.786.069");
     expect(text).toContain("Investments: P1 0 + P2 2.822.000 = 2.822.000");
     expect(text).toContain("Kosten: P1 2.822.000 + P2 47.000 = 2.869.000");
-    expect(text).toContain("Gewinn = 7.786.069 − 2.822.000 − 2.869.000 = 2.095.069");
-    expect(text).toContain("Gleich verteilt auf 2 aktive Spieler: 2.095.069 ÷ 2 = 1.047.534,5");
-    expect(text).toContain("P1: 0 Investment + 2.822.000 Kosten + 1.047.534,5 Anteil = 3.869.534,5");
-    expect(text).toContain("P2: 2.822.000 Investment + 47.000 Kosten + 1.047.534,5 Anteil = 3.916.534,5");
-    expect(text).toContain("P1 hält 0 → bekommt noch 3.869.534,5");
-    expect(text).toContain("P2 hält 7.786.069 → gibt 3.869.534,5 ab");
-    expect(text).toContain("P2 → P1: Betrag 3.850.282 + Service Fee 19.252 = Gesamtkosten 3.869.534");
-    expect(text).toContain("Budget 3.869.534,5 → ganzzahlig 3.869.534, Rest 0,5");
-    expect(text).toContain("Service Fee = 0,5 % vom Betrag (kommt beim Empfänger an), aufgerundet");
+    expect(text).toContain("Service Fees: 19.300 vorgeschlagene Überweisungen");
+    expect(text).toContain("Die Service Fees aller Überweisungen sind gemeinsame Kosten");
+    expect(text).toContain("Gewinn = 7.786.069 − 2.822.000 − 2.869.000 − 19.300 = 2.075.769");
+    expect(text).toContain("Gleich verteilt auf 2 aktive Spieler: 2.075.769 ÷ 2 = 1.037.884,5");
+    expect(text).toContain("P1: 0 Investment + 2.822.000 Kosten + 1.037.884,5 Anteil = 3.859.884,5");
+    expect(text).toContain("P2: 2.822.000 Investment + 47.000 Kosten + 1.037.884,5 Anteil = 3.906.884,5");
+    expect(text).toContain("P1 hält 0 → bekommt noch 3.859.884,5");
+    expect(text).toContain("P2 hält 7.786.069 → gibt 3.879.184,5 ab (inkl. Service Fee)");
+    expect(text).toContain("P2 → P1: Betrag 3.859.884 + Service Fee 19.300 = Gesamtkosten 3.879.184");
+    expect(text).toContain("Betrag exakt 3.859.884,5 → ganzzahlig 3.859.884, Rest 0,5");
+    expect(text).toContain("Service Fee = 0,5 % vom Betrag, aufgerundet. Der Empfänger bekommt den vollen Betrag");
     // Sub-aUEC rounding is explained by the budget line, not listed per player.
     expect(text).not.toContain("Rest P1");
     expect(text).not.toContain("Rest P2");
@@ -146,8 +148,9 @@ describe("arithmetic explanation sections", () => {
     const { sections, text } = explain(reported, "en");
 
     expect(sections.map((s) => s.title)).toEqual(["1. Profit", "2. Distribution", "3. Target per player", "4. Transfers"]);
-    expect(text).toContain("Profit = 7,786,069 − 2,822,000 − 2,869,000 = 2,095,069");
-    expect(text).toContain("P2 → P1: Amount 3,850,282 + Service Fee 19,252 = Total Cost 3,869,534");
+    expect(text).toContain("Profit = 7,786,069 − 2,822,000 − 2,869,000 − 19,300 = 2,075,769");
+    expect(text).toContain("P2 → P1: Amount 3,859,884 + Service Fee 19,300 = Total Cost 3,879,184");
+    expect(text).toContain("The service fees of all transfers are a shared cost");
   });
 });
 
@@ -169,15 +172,16 @@ describe("structured rows for tabular output", () => {
 
   it("splits calculations into label, expression and result", () => {
     const rows = explain(session).sections.flatMap((s) => s.rows);
-    expect(rows).toContainEqual({ text: "Gewinn = 1.000.000 − 0 − 0 = 1.000.000", label: "Gewinn", expression: "1.000.000 − 0 − 0", result: "1.000.000", emphasis: true });
-    expect(rows).toContainEqual(expect.objectContaining({ label: "A", expression: "1.000.000 × 50 %", result: "500.000" }));
+    expect(rows).toContainEqual({ text: "Service Fees: 500 bereits erfolgte Überweisungen + 1.994 vorgeschlagene Überweisungen = 2.494", label: "Service Fees", expression: "500 bereits erfolgte Überweisungen + 1.994 vorgeschlagene Überweisungen", result: "2.494" });
+    expect(rows).toContainEqual({ text: "Gewinn = 1.000.000 − 0 − 0 − 2.494 = 997.506", label: "Gewinn", expression: "1.000.000 − 0 − 0 − 2.494", result: "997.506", emphasis: true });
+    expect(rows).toContainEqual(expect.objectContaining({ label: "A", expression: "997.506 × 50 %", result: "498.753" }));
     expect(rows).toContainEqual(expect.objectContaining({ label: "A → B", expression: expect.stringMatching(/^Betrag [\d.]+ \+ Service Fee [\d.]+$/), result: expect.stringMatching(/^Gesamtkosten /) }));
   });
 
   it("marks outcomes and rounding with the right joiner and keeps notes label-free", () => {
     const rows = explain(session).sections.flatMap((s) => s.rows);
     const holds = rows.find((row) => row.expression?.startsWith("hält 1.000.000"));
-    expect(holds).toMatchObject({ label: "A", joiner: "→", result: expect.stringMatching(/^gibt .* ab$/) });
+    expect(holds).toMatchObject({ label: "A", joiner: "→", result: expect.stringMatching(/^gibt .* ab \(inkl\. Service Fee\)$/) });
     const notes = rows.filter((row) => !row.label);
     expect(notes.length).toBeGreaterThan(0);
     expect(notes.every((row) => row.result === undefined)).toBe(true);

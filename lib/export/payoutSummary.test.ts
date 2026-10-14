@@ -5,7 +5,7 @@ import { getMemberPayoutSummaries } from "./payoutSummary";
 
 const result: PayslipResult = {
   saleRevenue: 500_000,
-  netProfit: 500_000,
+  netProfit: 498_753,
   taxRateApplied: 0.005,
   members: [
     {
@@ -16,8 +16,9 @@ const result: PayslipResult = {
       expenses: 0,
       sharedExpenses: 0,
       individualExpenses: 0,
-      profitShare: 250_000,
-      finalNet: 750_000,
+      profitShare: 249_376.5,
+      serviceFeeShare: 623.5,
+      finalNet: 749_376.5,
     },
     {
       memberId: "player-2",
@@ -27,17 +28,18 @@ const result: PayslipResult = {
       expenses: 0,
       sharedExpenses: 0,
       individualExpenses: 0,
-      profitShare: 250_000,
-      finalNet: 250_000,
+      profitShare: 249_376.5,
+      serviceFeeShare: 623.5,
+      finalNet: 249_376.5,
     },
   ],
   suggestedTransfers: [
     {
       fromMemberId: "player-1",
       toMemberId: "player-2",
-      netAmount: 248_756,
-      feeAmount: 1_244,
-      grossAmount: 250_000,
+      netAmount: 249_376,
+      feeAmount: 1_247,
+      grossAmount: 250_623,
     },
   ],
 };
@@ -58,41 +60,37 @@ describe("getMemberPayoutSummaries", () => {
       ],
     });
 
-    expect(getMemberPayoutSummaries(residualResult)).toEqual([
-      {
-        memberId: "d1", handle: "D1", grossPayout: 0,
-        transferFeesDeducted: 0, netPayout: 1, unsettledAmount: -1,
-      },
-      {
-        memberId: "d2", handle: "D2", grossPayout: 0,
-        transferFeesDeducted: 0, netPayout: 0,
-      },
-      {
-        memberId: "c1", handle: "C1", grossPayout: 1_000,
-        transferFeesDeducted: 5, netPayout: 995,
-      },
-      {
-        memberId: "c2", handle: "C2", grossPayout: 1,
-        transferFeesDeducted: 0, netPayout: 0, unsettledAmount: 1,
-      },
+    // The 5 aUEC of fees reduce profit to 996 and scale the fixed payouts;
+    // C1 and C2 bear them in proportion (4.995 and 0.005).
+    const rows = getMemberPayoutSummaries(residualResult);
+    expect(rows.map((r) => [r.memberId, r.netPayout, r.unsettledAmount])).toEqual([
+      ["d1", 1, -1],
+      ["d2", 0, undefined],
+      ["c1", 995, undefined],
+      ["c2", 0, rows[3].unsettledAmount],
     ]);
+    expect(rows[3].unsettledAmount).toBeCloseTo(0.995, 3);
+    expect(rows[2].grossPayout).toBeCloseTo(1_000, 9);
+    expect(rows[2].transferFeesDeducted).toBeCloseTo(4.995, 3);
+    expect(rows[3].transferFeesDeducted).toBeCloseTo(0.005, 3);
+    expect(rows[0].transferFeesDeducted).toBe(0);
   });
 
-  it("deducts an in-budget transfer fee from the recipient payout", () => {
+  it("pays the recipient the whole amount and reports the member's fee share", () => {
     expect(getMemberPayoutSummaries(result)).toEqual([
       {
         memberId: "player-1",
         handle: "Player 1",
         grossPayout: 750_000,
-        transferFeesDeducted: 0,
-        netPayout: 750_000,
+        transferFeesDeducted: 623.5,
+        netPayout: 749_377,
       },
       {
         memberId: "player-2",
         handle: "Player 2",
         grossPayout: 250_000,
-        transferFeesDeducted: 1_244,
-        netPayout: 248_756,
+        transferFeesDeducted: 623.5,
+        netPayout: 249_376,
       },
     ]);
   });

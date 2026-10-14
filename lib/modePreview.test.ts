@@ -187,10 +187,11 @@ describe('calculateModePreviews', () => {
     expect(previews.PERCENT.result?.taxRateApplied).toBe(0.15);
     expect(previews.ADJUSTABLE.result?.taxRateApplied).toBe(0.15);
 
-    // Net profit should be the same for all modes
-    expect(previews.EQUAL.result?.netProfit).toBe(1000);
-    expect(previews.PERCENT.result?.netProfit).toBe(1000);
-    expect(previews.ADJUSTABLE.result?.netProfit).toBe(1000);
+    // Every mode deducts its own transfers' service fees from the same 1000
+    for (const mode of ['EQUAL', 'PERCENT', 'ADJUSTABLE'] as const) {
+      const result = previews[mode].result;
+      expect(result?.netProfit).toBe(1000 - (result?.suggestedTransferFees ?? 0));
+    }
 
     // Transfers should include the sender-paid transfer fee.
     expect(previews.EQUAL.result?.suggestedTransfers).toBeDefined();

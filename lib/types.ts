@@ -27,7 +27,7 @@ export type PaidTransferInput = {
    * derived from it in the editor; missing on older sessions (then feeAmount > 0).
    */
   feeIncluded?: boolean;
-  /** Legacy transfers default to SETTLEMENT (recipient bears fee). */
+  /** Legacy transfers default to SETTLEMENT. Every kind's fee is a shared session cost. */
   label?: string;
   kind?: "SETTLEMENT" | "SESSION_CASH" | "COST_CONTRIBUTION";
 };
@@ -88,6 +88,8 @@ export type MemberBreakdown = {
   sharedExpenses: number;
   individualExpenses: number;
   profitShare: number;
+  /** Part of all transfers' service fees this member bears (already inside profitShare). */
+  serviceFeeShare?: number;
   finalNet: number;
   fundingAdjustment?: number;
 };
@@ -119,7 +121,10 @@ export type PayslipResult = {
   members: MemberBreakdown[];
   suggestedTransfers: Transfer[];
   unsettledBalances?: UnsettledBalance[];
+  /** Service fees of transfers already made; a shared cost inside netProfit. */
   paidTransferFees?: number;
+  /** Service fees of the suggested transfers; a shared cost inside netProfit. */
+  suggestedTransferFees?: number;
   settlementDetails?: SettlementDetail[];
   /** ADJUSTABLE only: how fixed payouts/bonuses were treated (loss, low profit). */
   fixedAmountsStatus?: 'APPLIED' | 'SCALED_TO_PROFIT' | 'SUSPENDED_FOR_LOSS';

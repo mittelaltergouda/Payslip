@@ -81,7 +81,8 @@ describe("exact shares, whole-aUEC transfers", () => {
       expect(Number.isInteger(detail.netAmount)).toBe(true);
       expect(Number.isInteger(detail.feeAmount)).toBe(true);
       expect(Number.isInteger(detail.grossAmount)).toBe(true);
-      expect(detail.grossAmount).toBeLessThanOrEqual(detail.budgetAmount);
+      expect(detail.grossAmount).toBe(detail.netAmount + detail.feeAmount);
+      expect(detail.budgetAmount).toBe(detail.netAmount);
     }
     for (const transfer of result.suggestedTransfers) {
       expect(Number.isInteger(transfer.netAmount)).toBe(true);

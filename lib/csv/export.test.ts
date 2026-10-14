@@ -880,7 +880,7 @@ describe('generateCSV', () => {
 });
 
 describe('current transfer-budget export', () => {
-  it('exports recipient amount, fee, total budget, and recipient net payout consistently', () => {
+  it('exports amount, fee, total cost, the fee share and the full payout consistently', () => {
     const session = createTestSession({
       members: [
         { id: 'player-1', handle: 'Player 1', revenue: 1_000_000, investment: 500_000 },
@@ -892,25 +892,26 @@ describe('current transfer-budget export', () => {
         {
           memberId: 'player-1', handle: 'Player 1', revenue: 1_000_000,
           investment: 500_000, expenses: 0, sharedExpenses: 0,
-          individualExpenses: 0, profitShare: 250_000, finalNet: 750_000,
+          individualExpenses: 0, profitShare: 249_376.5, serviceFeeShare: 623.5, finalNet: 749_376.5,
         },
         {
           memberId: 'player-2', handle: 'Player 2', revenue: 0,
           investment: 0, expenses: 0, sharedExpenses: 0,
-          individualExpenses: 0, profitShare: 250_000, finalNet: 250_000,
+          individualExpenses: 0, profitShare: 249_376.5, serviceFeeShare: 623.5, finalNet: 249_376.5,
         },
       ],
       suggestedTransfers: [{
         fromMemberId: 'player-1', toMemberId: 'player-2',
-        netAmount: 248_756, feeAmount: 1_244, grossAmount: 250_000,
+        netAmount: 249_376, feeAmount: 1_247, grossAmount: 250_623,
       }],
     });
 
     const csv = generateCSV(session, result, { lang: 'de' });
 
-    expect(csv).toContain('Player 2;0;0;0;1.244;250.000;248.756');
+    // Both bear half of the fee; the recipient gets the whole amount.
+    expect(csv).toContain('Player 2;0;0;0;624;249.377;249.376');
     expect(csv).toContain(
-      'Player 1;Player 2;248.756;250.000;1.244'
+      'Player 1;Player 2;249.376;250.623;1.247'
     );
   });
 
