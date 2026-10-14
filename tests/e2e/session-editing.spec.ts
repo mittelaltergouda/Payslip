@@ -190,7 +190,8 @@ test.describe('Session Editing - Loading from History', () => {
       await page.waitForTimeout(500);
 
       // Look for toast notification
-      const toast = page.locator('[role="alert"], [class*="toast"]');
+      // The app's own toast; a bare [role="alert"] also matches Next.js' empty route announcer.
+      const toast = page.locator('.toast-item[role="alert"]');
       const isToastVisible = await toast.first().isVisible({ timeout: 3000 }).catch(() => false);
 
       if (isToastVisible) {

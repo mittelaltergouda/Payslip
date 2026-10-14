@@ -55,14 +55,15 @@ test.describe('Calculator - Happy Path', () => {
     await expect(page.getByText(/Payout/i).first()).toBeVisible();
 
     // Net profit equals total revenue (10,000) with no expenses/investments.
+    // Visible only: the collapsed arithmetic details repeat the same numbers.
     await expect(
-      page.getByText(grouped('10.000')).first()
+      page.getByText(grouped('10.000')).filter({ visible: true }).first()
     ).toBeVisible({ timeout: 5000 });
 
     // EQUAL split across the two active members -> each share is 5,000, which
     // is also the size of the single settlement transfer. Assert it appears.
     await expect(
-      page.getByText(grouped('5.000')).first()
+      page.getByText(grouped('5.000')).filter({ visible: true }).first()
     ).toBeVisible({ timeout: 5000 });
   });
 });

@@ -999,7 +999,8 @@ test.describe('Session Wizard - Results Calculation', () => {
     }
 
     // Look for currency indicator (aUEC)
-    const hasCurrency = await page.locator('text=/aUEC/i').first().isVisible({ timeout: 3000 }).catch(() => false);
+    // Visible only: the collapsed arithmetic details also mention aUEC.
+    const hasCurrency = await page.locator('text=/aUEC/i').filter({ visible: true }).first().isVisible({ timeout: 3000 }).catch(() => false);
     expect(hasCurrency).toBeTruthy();
   });
 
