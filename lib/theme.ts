@@ -114,4 +114,6 @@ export const SINISTER_TAGLINE_WORDS = {
  * paint, so unlocked users see no flash of the default design. Mirrors
  * parseThemePrefs; anything unexpected keeps the default theme.
  */
-export const THEME_BOOT_SCRIPT = `(function(){try{var p=JSON.parse(localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)})||"null");if(p&&p.unlocked===true&&p.theme==="sinister"){document.documentElement.dataset.theme="sinister";}}catch(e){}})();`;
+// A fixed literal, no interpolated values; the storage key must match THEME_STORAGE_KEY (tested).
+export const THEME_BOOT_SCRIPT =
+  '(function(){try{var p=JSON.parse(localStorage.getItem("sc-payslip-theme")||"null");if(p&&p.unlocked===true&&p.theme==="sinister"){document.documentElement.dataset.theme="sinister";}}catch(e){}})();';

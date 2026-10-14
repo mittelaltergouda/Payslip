@@ -94,6 +94,10 @@ describe('boot script', () => {
 
   const boot = () => new Function(THEME_BOOT_SCRIPT)();
 
+  it('reads the same storage key the app writes', () => {
+    expect(THEME_BOOT_SCRIPT).toContain(`localStorage.getItem("${THEME_STORAGE_KEY}")`);
+  });
+
   it('applies a stored, unlocked Sinister theme before the app renders', () => {
     localStorage.setItem(THEME_STORAGE_KEY, serializeThemePrefs({ unlocked: true, theme: 'sinister' }));
     boot();
