@@ -118,6 +118,8 @@ export type PayslipResult = {
   settlementDetails?: SettlementDetail[];
   /** ADJUSTABLE only: how fixed payouts/bonuses were treated (loss, low profit). */
   fixedAmountsStatus?: 'APPLIED' | 'SCALED_TO_PROFIT' | 'SUSPENDED_FOR_LOSS';
+  /** Transfers recorded as already paid; exports need them for final payouts. */
+  paidTransfers?: PaidTransferInput[];
 };
 
 // Zod schemas for localStorage session management

@@ -27,6 +27,28 @@ export function getMemberPayoutSummaries(
     (result.unsettledBalances ?? []).map((balance) => [balance.memberId, balance.amount])
   );
 
+  // Already paid transfers moved cash the same way settlement counts them:
+  // the sender paid net + fee, the recipient got net. A settlement fee is
+  // borne by the recipient; a session-cash fee is already shared in profit.
+  // Cost contributions were outside money and leave session holdings alone.
+  for (const transfer of result.paidTransfers ?? []) {
+    if (transfer.kind === "COST_CONTRIBUTION") {continue;}
+    projectedHoldingByMember.set(
+      transfer.fromMemberId,
+      (projectedHoldingByMember.get(transfer.fromMemberId) ?? 0) - transfer.netAmount - transfer.feeAmount
+    );
+    projectedHoldingByMember.set(
+      transfer.toMemberId,
+      (projectedHoldingByMember.get(transfer.toMemberId) ?? 0) + transfer.netAmount
+    );
+    if (transfer.kind !== "SESSION_CASH") {
+      feeByRecipient.set(
+        transfer.toMemberId,
+        (feeByRecipient.get(transfer.toMemberId) ?? 0) + transfer.feeAmount
+      );
+    }
+  }
+
   for (const transfer of result.suggestedTransfers) {
     feeByRecipient.set(
       transfer.toMemberId,

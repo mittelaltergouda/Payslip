@@ -179,6 +179,7 @@ export function calculatePayslip(session: SessionInput): PayslipResult {
     suggestedTransfers,
     unsettledBalances,
     paidTransferFees: normalized.paidTransfers.reduce((sum, transfer) => sum + transfer.feeAmount, 0),
+    paidTransfers: normalized.paidTransfers,
     settlementDetails,
     fixedAmountsStatus: getFixedAmountsStatus(
       netProfit,
