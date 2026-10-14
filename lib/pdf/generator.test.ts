@@ -30,6 +30,7 @@ vi.mock('jspdf', () => {
       setLineWidth = vi.fn();
       rect = vi.fn();
       roundedRect = vi.fn();
+      circle = vi.fn();
       line = vi.fn();
       addPage = vi.fn(() => { currentPage++; });
       text = vi.fn((content: string) => {
@@ -61,37 +62,70 @@ describe('generatePDF', () => {
     pageTextCalls = [];
   });
 
-  it('starts arithmetic detail on page two', () => {
+  // Cells of all autoTable calls, flattened to their text.
+  const tableTexts = () => vi.mocked(autoTable).mock.calls.flatMap(call =>
+    ((call[1]?.body ?? []) as unknown[][]).flatMap(row => row.map(cell =>
+      typeof cell === 'object' && cell !== null && 'content' in cell ? String((cell as { content: unknown }).content) : String(cell))));
+  const bodyOf = (index: number) => vi.mocked(autoTable).mock.calls[index][1]?.body as unknown[][];
+
+  it('puts the overview on page one and the calculation at the end', () => {
     const session: SessionInput = { name: 'Arithmetic', type: 'TRADING', distributionMode: 'EQUAL', members: [{ id: 'a', handle: 'A', revenue: 1000 }, { id: 'b', handle: 'B' }] };
     generatePDF(session, calculatePayslip(session), { lang: 'en' });
-    const pageOf = (text: string) => pageTextCalls.find(call => call.text.includes(text))?.page;
-    expect(pageOf('1. Profit')).toBe(2);
-    expect(pageOf('Profit = 1,000 - 0 - 0 = 1,000')).toBe(2);
-    expect(pageOf('A: 0 Investment + 0 costs + 500 share = 500')).toBe(2);
-    expect(pageOf('A -> B: Amount 500 + Service Fee 0 = Total Cost 500')).toBe(2);
+    const pageOf = (text: string) => pageTextCalls.find(call => call.text === text)?.page;
+    expect(pageOf('Session summary')).toBe(1);
+    expect(pageOf('Members & payouts')).toBe(1);
+    expect(pageOf('Suggested transfers')).toBe(1);
+    expect(pageOf('Calculation explained')).toBe(2);
+    expect(pageOf('Profit')).toBe(2);
+    // Overview tables first (members, transfers), then one table per calculation step.
+    const calls = vi.mocked(autoTable).mock.calls;
+    expect(calls[0][1]?.head?.[0]).toContain('Net payout');
+    expect(calls[1][1]?.head?.[0]).toEqual(['From', 'To', 'Amount', 'Service Fee', 'Total Cost']);
+    expect(bodyOf(2)).toContainEqual([
+      { content: 'Profit', styles: { fillColor: expect.any(Array) } },
+      { content: '1,000 - 0 - 0', styles: { fillColor: expect.any(Array) } },
+      { content: '= 1,000', styles: { fillColor: expect.any(Array) } },
+    ]);
+    expect(tableTexts()).toContain('0 Investment + 0 costs + 500 share');
+    expect(tableTexts()).toContain('Amount 500 + Service Fee 0');
+    expect(tableTexts()).toContain('= Total Cost 500');
   });
 
   it('only prints characters the built-in PDF font can show', () => {
     const session: SessionInput = { name: 'Loss', type: 'TRADING', distributionMode: 'EQUAL', members: [{ id: 'a', handle: 'A', revenue: 0, investment: 600 }, { id: 'b', handle: 'B' }] };
     generatePDF(session, calculatePayslip(session), { lang: 'de' });
     expect(pageTextCalls.filter(call => /[→−]/.test(call.text))).toEqual([]);
+    expect(tableTexts().filter(text => /[→−]/.test(text))).toEqual([]);
+    expect(tableTexts()).toContain('-> gibt 300 ab');
   });
 
-  it('breaks arithmetic words longer than a line instead of overflowing the page', () => {
+  it('puts long labels into table cells so they wrap instead of overflowing the page', () => {
     const longLabel = 'X'.repeat(150);
     const session: SessionInput = { name: 'Long', type: 'TRADING', distributionMode: 'EQUAL', members: [{ id: 'a', handle: 'A', revenues: [{ id: 'r1', label: longLabel, amount: 1000 }] }, { id: 'b', handle: 'B' }] };
     generatePDF(session, calculatePayslip(session), { lang: 'en' });
-    const pageTwo = pageTextCalls.filter(call => call.page === 2).map(call => call.text);
-    expect(pageTwo.filter(text => text.length > 105)).toEqual([]);
-    expect(pageTwo.join('').replace(/\s/g, '')).toContain(longLabel);
+    expect(textCalls.filter(text => text.includes(longLabel))).toEqual([]);
+    expect(tableTexts().some(text => text.includes(longLabel))).toBe(true);
   });
 
-  it('prints every arithmetic section title as its own line on page two', () => {
+  it('draws every calculation step with a numbered badge after the overview', () => {
     const session: SessionInput = { name: 'Arithmetic', type: 'TRADING', distributionMode: 'EQUAL', members: [{ id: 'a', handle: 'A', revenue: 1000 }, { id: 'b', handle: 'B' }] };
     generatePDF(session, calculatePayslip(session), { lang: 'de' });
-    for (const title of ['1. Gewinn', '2. Verteilung', '3. Ziel je Spieler', '4. Überweisungen']) {
-      expect(pageTextCalls.some(call => call.page === 2 && call.text === title)).toBe(true);
-    }
+    const pageTwo = pageTextCalls.filter(call => call.page === 2).map(call => call.text);
+    expect(pageTwo).toEqual(expect.arrayContaining(['1', 'Gewinn', '2', 'Verteilung', '3', 'Ziel je Spieler', '4', 'Überweisungen']));
+    expect(pageTwo.indexOf('Gewinn')).toBeLessThan(pageTwo.indexOf('Überweisungen'));
+  });
+
+  it('lists transfers already made on page one with the in-game columns', () => {
+    const session: SessionInput = {
+      name: 'Paid', type: 'TRADING', distributionMode: 'EQUAL', taxEnabled: true, taxRate: 0.005,
+      members: [{ id: 'a', handle: 'A', revenue: 200_000 }, { id: 'b', handle: 'B' }],
+      paidTransfers: [{ id: 't', label: 'Vorschuss', fromMemberId: 'a', toMemberId: 'b', netAmount: 100_000, feeAmount: 500, feeIncluded: true, kind: 'SETTLEMENT' }],
+    };
+    generatePDF(session, calculatePayslip(session), { lang: 'de' });
+    expect(pageTextCalls.find(call => call.text === 'Bereits erfolgte Überweisungen')?.page).toBe(1);
+    const recorded = vi.mocked(autoTable).mock.calls.find(call => (call[1]?.head?.[0] as string[] | undefined)?.includes('Art') && (call[1]?.head?.[0] as string[]).includes('Total Cost'));
+    expect(recorded?.[1]?.body).toEqual([['A', 'B', 'Ausgleich / Auszahlung · Vorschuss', '100.000', '500', '100.500']]);
+    expect(textCalls).not.toContain('Offene Restbeträge');
   });
 
   it('should generate a PDF blob from session and result data', () => {
@@ -753,7 +787,7 @@ describe('generatePDF', () => {
     ]);
   });
 
-  it('keeps tiny rounding residuals out of the result tables and only explains them', () => {
+  it('keeps tiny rounding residuals out of the PDF', () => {
     const session: SessionInput = {
       name: 'Minimum fee residual',
       type: 'TRADING',
@@ -773,7 +807,7 @@ describe('generatePDF', () => {
     expect(textCalls).not.toContain('Unsettled balances');
     const tables = vi.mocked(autoTable).mock.calls.map(call => JSON.stringify(call[1]?.body));
     expect(tables.some(body => body.includes('Excess retained'))).toBe(false);
-    expect(textCalls.some(text => text.includes('Residual D1'))).toBe(true);
+    expect(tableTexts().some(text => /Residual|Rest D1/.test(text))).toBe(false);
   });
 });
 

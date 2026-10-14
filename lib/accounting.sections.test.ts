@@ -46,8 +46,9 @@ describe("arithmetic explanation sections", () => {
     expect(text).toContain("P2 → P1: Amount 3.850.282 + Service Fee 19.252 = Total Cost 3.869.534");
     expect(text).toContain("Budget 3.869.534,5 → ganzzahlig 3.869.534, Rest 0,5");
     expect(text).toContain("Service Fee = 0,5 % vom Amount (kommt beim Empfänger an), aufgerundet");
-    expect(text).toContain("Rest P1: noch zu erhalten 0,5");
-    expect(text).toContain("Rest P2: Überschuss verblieben 0,5");
+    // Sub-aUEC rounding is explained by the budget line, not listed per player.
+    expect(text).not.toContain("Rest P1");
+    expect(text).not.toContain("Rest P2");
   });
 
   it("explains a loss and who pays from their own pocket", () => {
@@ -147,5 +148,46 @@ describe("arithmetic explanation sections", () => {
     expect(sections.map((s) => s.title)).toEqual(["1. Profit", "2. Distribution", "3. Target per player", "4. Transfers"]);
     expect(text).toContain("Profit = 7,786,069 − 2,822,000 − 2,869,000 = 2,095,069");
     expect(text).toContain("P2 → P1: Amount 3,850,282 + Service Fee 19,252 = Total Cost 3,869,534");
+  });
+});
+
+describe("structured rows for tabular output", () => {
+  const session: SessionInput = {
+    name: "Rows", type: "TRADING", distributionMode: "PERCENT", taxEnabled: true, taxRate: 0.005,
+    members: [
+      { id: "a", handle: "A", percentShare: 50, revenue: 1_000_000 },
+      { id: "b", handle: "B", percentShare: 50 },
+    ],
+    paidTransfers: [{ id: "t", fromMemberId: "a", toMemberId: "b", netAmount: 100_000, feeAmount: 500, feeIncluded: true, kind: "SETTLEMENT" }],
+  };
+
+  it("keeps the UI lines and the table rows identical", () => {
+    for (const section of explain(session).sections) {
+      expect(section.lines).toEqual(section.rows.map((row) => row.text));
+    }
+  });
+
+  it("splits calculations into label, expression and result", () => {
+    const rows = explain(session).sections.flatMap((s) => s.rows);
+    expect(rows).toContainEqual({ text: "Gewinn = 1.000.000 − 0 − 0 = 1.000.000", label: "Gewinn", expression: "1.000.000 − 0 − 0", result: "1.000.000", emphasis: true });
+    expect(rows).toContainEqual(expect.objectContaining({ label: "A", expression: "1.000.000 × 50 %", result: "500.000" }));
+    expect(rows).toContainEqual(expect.objectContaining({ label: "A → B", expression: expect.stringMatching(/^Amount [\d.]+ \+ Service Fee [\d.]+$/), result: expect.stringMatching(/^Total Cost /) }));
+  });
+
+  it("marks outcomes and rounding with the right joiner and keeps notes label-free", () => {
+    const rows = explain(session).sections.flatMap((s) => s.rows);
+    const holds = rows.find((row) => row.expression?.startsWith("hält 1.000.000"));
+    expect(holds).toMatchObject({ label: "A", joiner: "→", result: expect.stringMatching(/^gibt .* ab$/) });
+    const notes = rows.filter((row) => !row.label);
+    expect(notes.length).toBeGreaterThan(0);
+    expect(notes.every((row) => row.result === undefined)).toBe(true);
+  });
+
+  it("explains the fee rule before the transfers instead of after them", () => {
+    const transfers = explain(session).sections.at(-1)!;
+    const ruleIndex = transfers.lines.findIndex((line) => line.startsWith("Service Fee = 0,5 %"));
+    const firstTransfer = transfers.rows.findIndex((row) => row.label === "A → B");
+    expect(ruleIndex).toBeGreaterThanOrEqual(0);
+    expect(ruleIndex).toBeLessThan(firstTransfer);
   });
 });

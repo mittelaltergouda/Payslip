@@ -87,7 +87,7 @@ const mockResult: PayslipResult = {
 };
 
 describe('ResultsDisplay - Basic Rendering', () => {
-  it('does not warn about tiny rounding residuals, it only explains them in the calculation', () => {
+  it('does not show tiny rounding residuals', () => {
     render(
       <ResultsDisplay
         result={{
@@ -106,8 +106,7 @@ describe('ResultsDisplay - Basic Rendering', () => {
 
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.queryByText(/Unsettled balances/)).not.toBeInTheDocument();
-    expect(screen.getByText(/Residual Pilot: excess retained 1/)).toBeInTheDocument();
-    expect(screen.getByText(/Residual Escort: still to receive 1/)).toBeInTheDocument();
+    expect(screen.queryByText(/Residual|excess retained|still to receive/)).not.toBeInTheDocument();
   });
 
   it('should explain suspended fixed amounts on a loss session', () => {

@@ -3,10 +3,11 @@
 // ============================================================================
 
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import autoTable, { type RowInput, type UserOptions } from "jspdf-autotable";
 import type { SessionInput, PayslipResult } from "@/lib/types";
 import type { Lang } from "@/lib/i18n/translations";
 import { buildArithmeticSections } from "@/lib/accounting";
+import type { ArithmeticRow } from "@/lib/arithmeticSections";
 import { format } from "@/lib/format";
 import { getMemberPayoutSummaries } from "@/lib/export/payoutSummary";
 
@@ -28,6 +29,9 @@ const COLORS = {
   cyan: [18, 181, 178] as [number, number, number],
   green: [22, 128, 91] as [number, number, number],
   red: [190, 55, 55] as [number, number, number],
+  stepBand: [231, 246, 246] as [number, number, number],
+  noteFill: [250, 251, 252] as [number, number, number],
+  emphasisFill: [236, 248, 243] as [number, number, number],
   white: [255, 255, 255] as [number, number, number],
 };
 
@@ -65,6 +69,8 @@ const translations = {
     individual: "Individuell",
     allActive: "Alle aktiven Mitglieder",
     transfers: "Vorgeschlagene Überweisungen",
+    paidTransfers: "Bereits erfolgte Überweisungen",
+    paidKinds: { SETTLEMENT: "Ausgleich / Auszahlung", SESSION_CASH: "Vorschuss aus Session-Geld", COST_CONTRIBUTION: "Externe Kostenbeteiligung" },
     noTransfers: "Keine Überweisungen erforderlich.",
     from: "Von",
     to: "An",
@@ -107,6 +113,8 @@ const translations = {
     individual: "Individual",
     allActive: "All active members",
     transfers: "Suggested transfers",
+    paidTransfers: "Transfers already made",
+    paidKinds: { SETTLEMENT: "Settlement / payout", SESSION_CASH: "Advance from session cash", COST_CONTRIBUTION: "External cost contribution" },
     noTransfers: "No transfers required.",
     from: "From",
     to: "To",
@@ -145,33 +153,6 @@ function shareSetting(member: SessionInput["members"][number], session: SessionI
 // jsPDF's built-in Helvetica uses WinAnsi: "→" and "−" have no glyph there.
 function toWinAnsi(text: string): string {
   return text.replace(/→/g, "->").replace(/−/g, "-");
-}
-
-const ARITHMETIC_LINE_CHARS = 105;
-
-// Wraps by character count so it stays deterministic and works with the test
-// PDF adapter. Words longer than a line (e.g. labels without spaces) are split.
-function wrapPdfLine(line: string, maxChars: number): string[] {
-  const rows: string[] = [];
-  let row = "";
-  for (const word of line.split(" ")) {
-    const candidate = row ? `${row} ${word}` : word;
-    if (candidate.length <= maxChars) {
-      row = candidate;
-      continue;
-    }
-    if (row) {
-      rows.push(row);
-    }
-    let rest = word;
-    while (rest.length > maxChars) {
-      rows.push(rest.slice(0, maxChars));
-      rest = rest.slice(maxChars);
-    }
-    row = rest;
-  }
-  rows.push(row);
-  return rows;
 }
 
 export function generatePDF(
@@ -246,6 +227,61 @@ export function generatePDF(
     return 44;
   };
 
+  // Shared table look; tables that run onto a new page get the page header again.
+  const tableDefaults = {
+    theme: "plain" as const,
+    styles: { font: "helvetica", fontSize: 7.5, cellPadding: 2.2, textColor: COLORS.slate },
+    headStyles: { fillColor: COLORS.ink, textColor: COLORS.white, fontStyle: "bold" as const },
+    alternateRowStyles: { fillColor: COLORS.soft },
+    margin: { top: 44, left: margin, right: margin, bottom: 20 },
+    didDrawPage: (data: { pageNumber: number }) => {
+      if (data.pageNumber > 1) {
+        drawHeader();
+      }
+    },
+  };
+
+  /** Height a table will take, measured by laying it out on a scratch document. */
+  const measureTable = (options: Omit<UserOptions, "startY">): number => {
+    const probe = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" }) as jsPDFWithAutoTable;
+    autoTable(probe, { ...options, startY: 0, margin: { ...tableDefaults.margin, top: 0 }, didDrawPage: undefined });
+    return probe.lastAutoTable?.finalY ?? 0;
+  };
+
+  /** Step header of the calculation: tinted band with a numbered badge. */
+  const drawStepTitle = (title: string, y: number): number => {
+    const match = /^(\d+)\.\s*(.*)$/.exec(title);
+    const badge = match?.[1];
+    const text = match?.[2] ?? title;
+    doc.setFillColor(...COLORS.stepBand);
+    doc.roundedRect(margin, y, contentWidth, 8, 1.6, 1.6, "F");
+    doc.setFillColor(...COLORS.cyan);
+    doc.circle(margin + 4.5, y + 4, 2.7, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    setText(COLORS.white);
+    doc.text(badge ?? "\u2022", margin + 4.5, y + 5.1, { align: "center" });
+    doc.setFontSize(9.5);
+    setText(COLORS.ink);
+    doc.text(text, margin + 9.5, y + 5.4);
+    return y + 10;
+  };
+
+  /** Calculation rows as label | calculation | result, notes as a full-width hint. */
+  const arithmeticRow = (row: ArithmeticRow): RowInput => {
+    if (!row.label) {
+      return [{ content: toWinAnsi(row.text), colSpan: 3, styles: { fontStyle: "italic", textColor: COLORS.muted, fillColor: COLORS.noteFill } }];
+    }
+    const emphasis = row.emphasis ? { fillColor: COLORS.emphasisFill } : {};
+    const joiner = row.joiner ?? "=";
+    const result = row.result ? toWinAnsi(joiner ? `${joiner} ${row.result}` : row.result) : "";
+    return [
+      { content: toWinAnsi(row.label), styles: emphasis },
+      { content: toWinAnsi(row.expression ?? ""), styles: emphasis },
+      { content: result, styles: emphasis },
+    ];
+  };
+
   drawHeader();
 
   // Session configuration
@@ -264,7 +300,7 @@ export function generatePDF(
   doc.text(`${session.members.length} ${memberCountLabel}`, pageWidth - margin, y, { align: "right" });
 
   // Summary cards
-  y = drawSectionTitle(t.summary, 48);
+  y = drawSectionTitle(t.summary, 46);
   const summary = [
     [t.revenue, totalRevenue],
     [t.investment, totalInvestment],
@@ -275,7 +311,7 @@ export function generatePDF(
   ] as const;
   const cardGap = 3;
   const cardWidth = (contentWidth - cardGap * 2) / 3;
-  const cardHeight = 17;
+  const cardHeight = 13;
   summary.forEach(([label, value], index) => {
     const col = index % 3;
     const row = Math.floor(index / 3);
@@ -285,38 +321,17 @@ export function generatePDF(
     doc.setDrawColor(...COLORS.line);
     doc.roundedRect(x, cardY, cardWidth, cardHeight, 2, 2, "FD");
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
+    doc.setFontSize(7);
     setText(COLORS.muted);
-    doc.text(label, x + 3, cardY + 5);
+    doc.text(label, x + 3, cardY + 4.5);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     setText(label === t.netResult ? (value >= 0 ? COLORS.green : COLORS.red) : COLORS.ink);
-    doc.text(amount(value), x + 3, cardY + 12.5);
+    doc.text(amount(value), x + 3, cardY + 10.5);
   });
-  y += cardHeight * 2 + cardGap + 6;
-
-  // Arithmetic starts on page two, before potentially long tables.
-  doc.addPage();
-  drawHeader();
-  y = drawSectionTitle(lang === "de" ? "Rechnung nachvollziehen" : "Calculation explained", 44);
-  const arithmeticLines = buildArithmeticSections(session, result, lang).flatMap((section) => [
-    { text: section.title, isTitle: true },
-    ...section.lines.map((text) => ({ text, isTitle: false })),
-  ].map((entry) => ({ ...entry, text: toWinAnsi(entry.text) })));
-  for (const { text: line, isTitle } of arithmeticLines) {
-    doc.setFont("helvetica", isTitle ? "bold" : "normal");
-    doc.setFontSize(isTitle ? 9 : 8);
-    setText(isTitle ? COLORS.ink : COLORS.slate);
-    const rows = wrapPdfLine(line, ARITHMETIC_LINE_CHARS);
-    rows.forEach((row, index) => {
-      y = ensureSpace(y, 5);
-      doc.text(row, margin, y);
-      y += index === rows.length - 1 ? 7 : 5;
-    });
-  }
+  y += cardHeight * 2 + cardGap + 7;
 
   // Member table
-  y = ensureSpace(y, 35);
   y = drawSectionTitle(t.members, y);
   const showRole = session.members.some((member) => Boolean(member.role));
   const showShareSetting = session.distributionMode !== "EQUAL";
@@ -350,15 +365,12 @@ export function generatePDF(
   });
 
   autoTable(doc, {
+    ...tableDefaults,
     startY: y,
     head: [memberHead],
     body: memberRows,
-    theme: "plain",
     styles: { font: "helvetica", fontSize: 7.4, cellPadding: 2.2, textColor: COLORS.slate },
-    headStyles: { fillColor: COLORS.ink, textColor: COLORS.white, fontStyle: "bold" },
-    alternateRowStyles: { fillColor: COLORS.soft },
     columnStyles: { 0: { fontStyle: "bold", textColor: COLORS.ink } },
-    margin: { left: margin, right: margin, bottom: 20 },
   });
   y = (pdf.lastAutoTable?.finalY ?? y) + 8;
 
@@ -386,15 +398,40 @@ export function generatePDF(
       ]),
     ];
     autoTable(doc, {
+      ...tableDefaults,
       startY: y,
       head: [[t.kind, t.label, t.allocatedTo, t.amount]],
       body: expenseRows,
-      theme: "plain",
       styles: { font: "helvetica", fontSize: 7.5, cellPadding: 2.2, textColor: COLORS.slate },
-      headStyles: { fillColor: COLORS.ink, textColor: COLORS.white, fontStyle: "bold" },
-      alternateRowStyles: { fillColor: COLORS.soft },
       columnStyles: { 3: { halign: "right", fontStyle: "bold" } },
-      margin: { left: margin, right: margin, bottom: 20 },
+    });
+    y = (pdf.lastAutoTable?.finalY ?? y) + 8;
+  }
+
+  // Transfers already made (recorded by the crew)
+  const paidTransfers = session.paidTransfers ?? [];
+  if (paidTransfers.length > 0) {
+    y = ensureSpace(y, 30);
+    y = drawSectionTitle(t.paidTransfers, y);
+    const memberName = (id: string) => session.members.find((member) => member.id === id)?.handle || id;
+    autoTable(doc, {
+      ...tableDefaults,
+      startY: y,
+      head: [[t.from, t.to, t.kind, t.amountToSend, t.fee, t.totalCharged]],
+      body: paidTransfers.map((transfer) => [
+        memberName(transfer.fromMemberId),
+        memberName(transfer.toMemberId),
+        [t.paidKinds[transfer.kind ?? "SETTLEMENT"], transfer.label].filter(Boolean).join(" · "),
+        format(transfer.netAmount, lang),
+        format(transfer.feeAmount, lang),
+        format(transfer.netAmount + transfer.feeAmount, lang),
+      ]),
+      columnStyles: {
+        0: { fontStyle: "bold", textColor: COLORS.ink },
+        3: { halign: "right", fontStyle: "bold" },
+        4: { halign: "right" },
+        5: { halign: "right", fontStyle: "bold", textColor: COLORS.ink },
+      },
     });
     y = (pdf.lastAutoTable?.finalY ?? y) + 8;
   }
@@ -421,22 +458,45 @@ export function generatePDF(
       ];
     });
     autoTable(doc, {
+      ...tableDefaults,
       startY: y,
       head: [[t.from, t.to, t.amountToSend, t.fee, t.totalCharged]],
       body: transferRows,
-      theme: "plain",
       styles: { font: "helvetica", fontSize: 7.8, cellPadding: 2.4, textColor: COLORS.slate },
-      headStyles: { fillColor: COLORS.ink, textColor: COLORS.white, fontStyle: "bold" },
-      alternateRowStyles: { fillColor: COLORS.soft },
       columnStyles: {
         0: { fontStyle: "bold", textColor: COLORS.ink },
         2: { halign: "right", fontStyle: "bold" },
         3: { halign: "right" },
         4: { halign: "right", fontStyle: "bold", textColor: COLORS.ink },
       },
-      margin: { left: margin, right: margin, bottom: 20 },
     });
     y = (pdf.lastAutoTable?.finalY ?? y) + 8;
+  }
+
+  // Calculation explained: always at the end, starting on its own page.
+  doc.addPage();
+  drawHeader();
+  y = drawSectionTitle(lang === "de" ? "Rechnung nachvollziehen" : "Calculation explained", 44);
+  const stepTitleHeight = 10;
+  for (const step of buildArithmeticSections(session, result, lang)) {
+    const stepTable = {
+      ...tableDefaults,
+      body: step.rows.map(arithmeticRow),
+      styles: { ...tableDefaults.styles, fontSize: 7.8, cellPadding: { top: 1.5, bottom: 1.5, left: 2.4, right: 2.4 } },
+      alternateRowStyles: {},
+      columnStyles: {
+        0: { cellWidth: 44, fontStyle: "bold" as const, textColor: COLORS.ink },
+        2: { cellWidth: 42, halign: "right" as const, fontStyle: "bold" as const, textColor: COLORS.ink },
+      },
+    };
+    // Keep a step on one page when it fits on a page at all, so no single
+    // line is left alone at the top of the next page.
+    const stepHeight = stepTitleHeight + measureTable(stepTable);
+    const pageCapacity = pageHeight - 20 - 44;
+    y = ensureSpace(y, Math.min(stepHeight, pageCapacity));
+    y = drawStepTitle(toWinAnsi(step.title), y);
+    autoTable(doc, { ...stepTable, startY: y });
+    y = (pdf.lastAutoTable?.finalY ?? y) + 6;
   }
 
   // Footer on every page
