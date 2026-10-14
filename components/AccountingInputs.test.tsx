@@ -29,6 +29,16 @@ describe('accounting input and explanation UI', () => {
   fireEvent.click(screen.getByRole('button', { name: 'Remove transfer 1' }));
   expect(onChange.mock.calls.at(-1)?.[0]).toEqual([]);
  });
+ it('never lets sender and recipient of a recorded transfer be the same player', async () => {
+  const path = './PaidTransfersEditor';
+  const { PaidTransfersEditor } = await import(path);
+  const onChange = vi.fn();
+  render(<PaidTransfersEditor session={{ ...session, paidTransfers: [{ fromMemberId: 'a', toMemberId: 'b', netAmount: 100, feeAmount: 1 }] }} lang="en" onChange={onChange} />);
+  const toOptions = Array.from((screen.getByLabelText('Transfer to 1') as HTMLSelectElement).options).map(o => o.value);
+  expect(toOptions).not.toContain('a');
+  fireEvent.change(screen.getByLabelText('Transfer from 1'), { target: { value: 'b' } });
+  expect(onChange.mock.calls.at(-1)?.[0][0]).toMatchObject({ fromMemberId: 'b', toMemberId: 'a' });
+ });
  it('shows the complete arithmetic in an expandable section', () => {
   render(<ResultsDisplay session={session} result={calculatePayslip(session)} error={null} translations={{}} lang="en" />);
   const summary = screen.getByText('Calculation explained');
