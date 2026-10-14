@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { waitForAppReady } from './app-ready';
 
 /**
  * Session Management E2E Tests
@@ -47,6 +48,7 @@ test.describe('Session Management E2E Tests', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -535,6 +537,7 @@ test.describe('Session Management - Cross-Browser Verification', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test('Session management works on mobile viewports', async ({ page, viewport }) => {
@@ -590,6 +593,7 @@ test.describe('Session Management - Performance and Edge Cases', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test('Can handle rapid session saves', async ({ page }) => {

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { waitForAppReady } from './app-ready';
 
 /**
  * Session Editing E2E Tests
@@ -48,6 +49,7 @@ test.describe('Session Editing - Loading from History', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -73,61 +75,45 @@ test.describe('Session Editing - Loading from History', () => {
   });
 
   test('Session can be loaded from history via Ctrl+O', async ({ page }) => {
-    await page.waitForLoadState('networkidle');
+    // The editor keeps one current draft that auto-saves ~1s after every edit, so
+    // renaming it would also rename its history entry. To load a *different*
+    // entry, branch off a duplicate first and edit that instead.
+    const readSessions = () =>
+      page.evaluate(() => JSON.parse(localStorage.getItem('sc-payslip-sessions') || '[]'));
+    const sessionNameInput = page.locator('#session-name');
+    const revenueInput = page.locator('input[inputmode="numeric"]').filter({ visible: true }).first();
+    const historyEntry = (name: string) =>
+      page.locator('div.glass').filter({ has: page.getByRole('heading', { name, exact: true }) });
 
-    // Step 1: Create and save a session
+    // Step 1: Create and save session A
     const uniqueName = 'Load Test Session ' + Date.now();
-    const sessionNameInput = page.locator('input[type="text"]').first();
     await sessionNameInput.fill(uniqueName);
-    await page.waitForTimeout(300);
-
-    // Enter some revenue
-    const numericInputs = page.locator('input[inputmode="numeric"]');
-    const inputCount = await numericInputs.count();
-    for (let i = 0; i < inputCount; i++) {
-      const input = numericInputs.nth(i);
-      if (await input.isVisible({ timeout: 500 }).catch(() => false)) {
-        await input.fill('50000');
-        break;
-      }
-    }
-
-    // Save with Ctrl+S
+    await revenueInput.fill('50000');
     await page.keyboard.press('Control+KeyS');
-    await page.waitForTimeout(1000);
+    await expect
+      .poll(async () => (await readSessions()).map((s: any) => s.session.name))
+      .toContain(uniqueName);
 
-    // Step 2: Clear the form by changing session name
-    await sessionNameInput.fill('Different Session');
-    await page.waitForTimeout(300);
-
-    // Step 3: Open history with Ctrl+O
+    // Step 2: Duplicate A; the copy becomes the current draft
     await page.keyboard.press('Control+KeyO');
-    await page.waitForTimeout(500);
+    await historyEntry(uniqueName).getByRole('button', { name: /duplicate|duplizieren/i }).click();
+    await page.getByRole('dialog').getByRole('button', { name: /^(duplicate|duplizieren)$/i }).click();
+    await expect(sessionNameInput).toHaveValue(uniqueName + ' (Copy)');
 
-    // Step 4: Find the saved session (session name may be truncated or partial match)
-    const sessionItem = page.locator(`text=/Load Test Session/i`).first();
-    const isSessionVisible = await sessionItem.isVisible({ timeout: 5000 }).catch(() => false);
+    // Step 3: Edit the copy and wait until auto-save has persisted it
+    await sessionNameInput.fill('Different Session');
+    await revenueInput.fill('1234');
+    await expect
+      .poll(async () => (await readSessions()).map((s: any) => s.session.name).sort())
+      .toEqual(['Different Session', uniqueName].sort());
 
-    if (isSessionVisible) {
-      // Step 5: Click Load button
-      const loadButton = page.locator('button').filter({ hasText: /load|laden/i }).first();
-      if (await loadButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await loadButton.click();
-        await page.waitForTimeout(500);
+    // Step 4: Open history with Ctrl+O and load A
+    await page.keyboard.press('Control+KeyO');
+    await historyEntry(uniqueName).getByRole('button', { name: /^(load|laden)$/i }).click();
 
-        // Step 6: Verify session was loaded
-        const loadedName = await sessionNameInput.inputValue();
-        expect(loadedName).toContain('Load Test Session');
-      }
-    } else {
-      // If sidebar didn't open or session not found, verify via localStorage
-      const savedData = await page.evaluate(() => {
-        const data = localStorage.getItem('sc-payslip-sessions');
-        return data ? JSON.parse(data) : null;
-      });
-      expect(savedData).toBeTruthy();
-      expect(Array.isArray(savedData)).toBe(true);
-    }
+    // Step 5: A's name and revenue are back in the editor
+    await expect(sessionNameInput).toHaveValue(uniqueName);
+    await expect(revenueInput).toHaveValue(/^50[.,]?000$/);
   });
 
   test('Loading session closes history sidebar', async ({ page }) => {
@@ -232,6 +218,7 @@ test.describe('Session Editing - Editing Member Data', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -475,6 +462,7 @@ test.describe('Session Editing - Changing Distribution Modes', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -663,6 +651,7 @@ test.describe('Session Editing - Adding and Removing Members', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -853,6 +842,7 @@ test.describe('Session Editing - Saving Updates', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -1033,6 +1023,7 @@ test.describe('Session Editing - Mobile Viewport', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -1269,6 +1260,7 @@ test.describe('Session Editing - Edit and Load Workflow', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { waitForAppReady } from './app-ready';
 
 /**
  * Session Wizard E2E Tests
@@ -49,6 +50,7 @@ test.describe('Session Wizard - Initialization', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -171,6 +173,7 @@ test.describe('Session Wizard - Session Name Input', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -290,6 +293,7 @@ test.describe('Session Wizard - Session Type Selection', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -394,6 +398,7 @@ test.describe('Session Wizard - Distribution Mode Switching', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -525,6 +530,7 @@ test.describe('Session Wizard - Member Management', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -701,6 +707,7 @@ test.describe('Session Wizard - Revenue Input', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -896,6 +903,7 @@ test.describe('Session Wizard - Results Calculation', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -1062,6 +1070,7 @@ test.describe('Session Wizard - Mobile Viewport', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -1254,6 +1263,7 @@ test.describe('Session Wizard - Complete Flow', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {

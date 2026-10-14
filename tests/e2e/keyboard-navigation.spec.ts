@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { waitForAppReady } from './app-ready';
 
 /**
  * Keyboard Navigation E2E Tests
@@ -45,6 +46,7 @@ test.describe('Keyboard Navigation - Tab Order', () => {
 
     await page.goto('/');
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -213,6 +215,7 @@ test.describe('Keyboard Navigation - Arrow Keys and Radix UI', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test('Arrow keys navigate dropdown options', async ({ page }) => {
@@ -369,6 +372,7 @@ test.describe('Keyboard Navigation - Keyboard Shortcuts', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test('Ctrl+S saves the session', async ({ page }) => {
@@ -459,6 +463,7 @@ test.describe('Keyboard Navigation - Focus Management', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test('Focus trap works in modals and dialogs', async ({ page }) => {
@@ -556,6 +561,7 @@ test.describe('Keyboard Navigation - ARIA and Screen Reader Support', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test('Interactive elements have appropriate ARIA labels', async ({ page }) => {
@@ -660,6 +666,7 @@ test.describe('Keyboard Navigation - Cross-Browser Verification', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test('Keyboard navigation works on mobile viewports', async ({ page, viewport: _viewport }) => {
