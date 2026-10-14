@@ -338,3 +338,14 @@ export function parseFormattedInteger(str: string): number {
   if (isNaN(parsed)) {return 0;}
   return Math.trunc(parsed);
 }
+
+/**
+ * Amount as typed into the in-game wallet: whole aUEC, digits only, no
+ * thousand separators or decimals. Rounds like the displayed amount.
+ *
+ * @example
+ * formatPlainAmount(262687) // "262687"
+ */
+export function formatPlainAmount(amount: number): string {
+  return String(Math.max(0, Math.round(amount)));
+}

@@ -157,8 +157,9 @@ describe('TransfersList - Transfer Details', () => {
       />
     );
 
-    // Check for SVG arrow icons (there should be 2 transfers = 2 arrows)
-    const svgElements = container.querySelectorAll('svg');
+    // Check for SVG arrow icons (there should be 2 transfers = 2 arrows);
+    // the copy buttons carry their own icon.
+    const svgElements = Array.from(container.querySelectorAll('svg')).filter(svg => !svg.closest('button'));
     expect(svgElements.length).toBe(2);
 
     // Verify SVG attributes

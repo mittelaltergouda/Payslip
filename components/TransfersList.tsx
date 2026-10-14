@@ -3,6 +3,7 @@
 import type { Transfer, MemberInput } from "@/lib/types";
 import type { Lang } from "@/lib/i18n/translations";
 import { Avatar } from "@/components/ui/avatar";
+import { CopyAmountButton } from "./CopyAmountButton";
 
 /**
  * Format a number according to the specified language locale.
@@ -122,7 +123,14 @@ export function TransfersList({
                   </svg>
                   <Avatar name={to} size="sm" />
                 </div>
-                <span className="font-semibold">{net} {currency}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">{net} {currency}</span>
+                  <CopyAmountButton
+                    amount={tr.netAmount}
+                    label={`${t.copyAmount ?? "Copy amount"} ${from} → ${to}`}
+                    copiedLabel={t.copied ?? "Copied"}
+                  />
+                </div>
               </div>
               {tr.feeAmount > 0 && (
                 <p className="text-xs text-white/60">
