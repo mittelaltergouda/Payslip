@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { waitForAppReady } from './app-ready';
+import { dismissStorageNotice, waitForAppReady } from './app-ready';
 
 /**
  * Session Editing E2E Tests
@@ -84,6 +84,9 @@ test.describe('Session Editing - Loading from History', () => {
     const revenueInput = page.locator('input[inputmode="numeric"]').filter({ visible: true }).first();
     const historyEntry = (name: string) =>
       page.locator('div.glass').filter({ has: page.getByRole('heading', { name, exact: true }) });
+
+    // The fixed storage notice covers the history's buttons on small screens.
+    await dismissStorageNotice(page);
 
     // Step 1: Create and save session A
     const uniqueName = 'Load Test Session ' + Date.now();
