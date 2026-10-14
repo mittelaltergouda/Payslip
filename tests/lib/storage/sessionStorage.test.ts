@@ -463,6 +463,20 @@ describe('sessionStorage - importAll()', () => {
     expect(result.data?.count).toBe(1);
   });
 
+  it('should reject imported sessions with a 100% transfer fee rate', () => {
+    const sessions = [{
+      id: 'invalid-tax-rate',
+      session: createTestSession({ taxEnabled: true, taxRate: 1 }),
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+    }];
+
+    const result = sessionStorage.importAll(JSON.stringify(sessions));
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('No valid sessions found');
+  });
+
   it('should regenerate IDs for imported sessions to prevent conflicts', () => {
     const existingSession = createTestSession({ id: 'existing-id', name: 'Existing' });
     sessionStorage.save(existingSession);

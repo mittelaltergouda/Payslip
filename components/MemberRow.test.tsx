@@ -76,6 +76,7 @@ describe('MemberRow - Initial Rendering', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -101,6 +102,7 @@ describe('MemberRow - Initial Rendering', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole
             distributionMode="EQUAL"
@@ -125,6 +127,7 @@ describe('MemberRow - Initial Rendering', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -148,6 +151,7 @@ describe('MemberRow - Initial Rendering', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -173,6 +177,7 @@ describe('MemberRow - Initial Rendering', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -198,6 +203,7 @@ describe('MemberRow - Initial Rendering', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -224,6 +230,7 @@ describe('MemberRow - Initial Rendering', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -247,6 +254,7 @@ describe('MemberRow - Initial Rendering', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -272,6 +280,7 @@ describe('MemberRow - Initial Rendering', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -310,6 +319,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -331,11 +341,41 @@ describe('MemberRow - User Interactions', () => {
     expect(mockCallbacks.updateMember).toHaveBeenCalledWith('member-1', { handle: 'NewHandle' });
   });
 
+  it('should turn the single investment into labelled positions and pass the sum on', () => {
+    render(
+      <table>
+        <tbody>
+          <MemberRow
+            rowIndex={0}
+            member={sampleMember}
+            showRole={false}
+            distributionMode="EQUAL"
+            individualExpenses={[]}
+            resultMember={sampleResultMember}
+            feeByPayer={{}}
+            lang="en"
+            t={mockTranslationsEN}
+            format={mockFormat}
+            {...mockCallbacks}
+          />
+        </tbody>
+      </table>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add investment' }));
+
+    const [memberId, patch] = mockCallbacks.updateMember.mock.calls[0];
+    expect(memberId).toBe('member-1');
+    expect(patch.investments.map((item: { amount: number }) => item.amount)).toEqual([2000, 0]);
+    expect(patch.investment).toBe(2000);
+  });
+
   it('should call updateMember when role is changed', () => {
     render(
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole
             distributionMode="EQUAL"
@@ -362,6 +402,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -388,6 +429,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -414,6 +456,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="PERCENT"
@@ -440,6 +483,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="ADJUSTABLE"
@@ -466,6 +510,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="ADJUSTABLE"
@@ -492,6 +537,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -518,6 +564,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -544,6 +591,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -570,6 +618,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -597,6 +646,7 @@ describe('MemberRow - User Interactions', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -632,11 +682,12 @@ describe('MemberRow - Distribution Modes', () => {
     vi.clearAllMocks();
   });
 
-  it('should disable percent share input in EQUAL mode', () => {
+  it('should hide percent share input in EQUAL mode', () => {
     render(
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -652,8 +703,7 @@ describe('MemberRow - Distribution Modes', () => {
       </table>
     );
 
-    const percentInput = screen.getByDisplayValue('50');
-    expect(percentInput).toBeDisabled();
+    expect(screen.queryByDisplayValue('50')).not.toBeInTheDocument();
   });
 
   it('should enable percent share input in PERCENT mode', () => {
@@ -661,6 +711,7 @@ describe('MemberRow - Distribution Modes', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="PERCENT"
@@ -680,11 +731,12 @@ describe('MemberRow - Distribution Modes', () => {
     expect(percentInput).not.toBeDisabled();
   });
 
-  it('should disable fixed bonus input when not in ADJUSTABLE mode', () => {
+  it('should hide fixed bonus input when not in ADJUSTABLE mode', () => {
     render(
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -700,8 +752,7 @@ describe('MemberRow - Distribution Modes', () => {
       </table>
     );
 
-    const fixedBonusInput = screen.getByDisplayValue('100');
-    expect(fixedBonusInput).toBeDisabled();
+    expect(screen.queryByDisplayValue('100')).not.toBeInTheDocument();
   });
 
   it('should enable fixed bonus input in ADJUSTABLE mode', () => {
@@ -709,6 +760,7 @@ describe('MemberRow - Distribution Modes', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="ADJUSTABLE"
@@ -728,11 +780,12 @@ describe('MemberRow - Distribution Modes', () => {
     expect(fixedBonusInput).not.toBeDisabled();
   });
 
-  it('should disable fixed payout input when not in ADJUSTABLE mode', () => {
+  it('should hide fixed payout input when not in ADJUSTABLE mode', () => {
     render(
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="PERCENT"
@@ -748,8 +801,9 @@ describe('MemberRow - Distribution Modes', () => {
       </table>
     );
 
-    const fixedPayoutInput = screen.getByDisplayValue('5,000');
-    expect(fixedPayoutInput).toBeDisabled();
+    expect(screen.queryByDisplayValue('5,000')).not.toBeInTheDocument();
+    // PERCENT mode still shows the percent share
+    expect(screen.getByDisplayValue('50')).not.toBeDisabled();
   });
 
   it('should enable fixed payout input in ADJUSTABLE mode', () => {
@@ -757,6 +811,7 @@ describe('MemberRow - Distribution Modes', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="ADJUSTABLE"
@@ -800,6 +855,7 @@ describe('MemberRow - Edge Cases', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={memberWithoutRole}
             showRole
             distributionMode="EQUAL"
@@ -824,6 +880,7 @@ describe('MemberRow - Edge Cases', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -848,6 +905,7 @@ describe('MemberRow - Edge Cases', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -875,6 +933,7 @@ describe('MemberRow - Edge Cases', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"
@@ -903,6 +962,7 @@ describe('MemberRow - Edge Cases', () => {
       <table>
         <tbody>
           <MemberRow
+            rowIndex={0}
             member={sampleMember}
             showRole={false}
             distributionMode="EQUAL"

@@ -145,9 +145,10 @@ describe('calculatePayslip - EQUAL mode', () => {
     expect(alice?.profitShare).toBe(450);
     expect(bob?.profitShare).toBe(450);
 
-    // finalNet = investment + profitShare - expenses = 0 + 450 - 50 = 400
-    expect(alice?.finalNet).toBe(400);
-    expect(bob?.finalNet).toBe(400);
+    // Both funded 50 of the shared fuel and get it back: 50 + 450 = 500 each.
+    // Sum 1000 equals the revenue held.
+    expect(alice?.finalNet).toBe(500);
+    expect(bob?.finalNet).toBe(500);
   });
 
   it('should handle individual expenses in EQUAL mode', () => {
@@ -182,9 +183,9 @@ describe('calculatePayslip - EQUAL mode', () => {
     expect(alice?.profitShare).toBe(450);
     expect(bob?.profitShare).toBe(450);
 
-    // Alice: 0 + 450 - 100 = 350
-    // Bob: 0 + 450 - 0 = 450
-    expect(alice?.finalNet).toBe(350);
+    // The 100 expense is deducted once from profit, then reimbursed to Alice
+    // who paid it: Alice 100 + 450 = 550, Bob 450. Sum 1000 = revenue held.
+    expect(alice?.finalNet).toBe(550);
     expect(bob?.finalNet).toBe(450);
   });
 
@@ -196,7 +197,7 @@ describe('calculatePayslip - EQUAL mode', () => {
       totalRevenue: 1000,
       taxEnabled: false,
       members: [
-        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 0, investment: 1000 },
+        { id: 'member-1', handle: 'Alice', role: 'Member', active: true, revenue: 1000, investment: 1000 },
         { id: 'member-2', handle: 'Bob', role: 'Member', active: true, revenue: 0, investment: 0 }
       ]
     };

@@ -105,6 +105,14 @@ function distributeAdjustable(
     return [];
   }
 
+  const status = getFixedAmountsStatus(netProfit, activeMembers, 'ADJUSTABLE');
+  if (status === 'SUSPENDED_FOR_LOSS') {
+    return distributeLossWithoutFixedAmounts(netProfit, activeMembers);
+  }
+  if (status === 'SCALED_TO_PROFIT') {
+    return distributeScaledFixedAmounts(netProfit, activeMembers);
+  }
+
   const results: ProfitDistribution[] = [];
   let remainingProfit = netProfit;
 
@@ -138,18 +146,16 @@ function distributeAdjustable(
 
   // Step 3: Distribute remaining profit to pool members
   if (poolMembers.length > 0) {
-    // Check if any pool member has a percentShare set
-    // If so, use percentage-based distribution; otherwise use equal distribution
-    const hasPercentShares = poolMembers.some((m) => m.percentShare !== null);
+    // Use percentage-based distribution only when the percentages add up to
+    // something; all-zero percentages would otherwise make the pool vanish.
+    // Note: In ADJUSTABLE mode, percentShares don't need to sum to 100%
+    const totalPercent = poolMembers.reduce(
+      (sum, m) => sum + (m.percentShare ?? 0),
+      0
+    );
 
-    if (hasPercentShares) {
+    if (totalPercent > 0) {
       // Distribute by percentShare (for members without percentShare, treat as 0)
-      // Note: In ADJUSTABLE mode, percentShares don't need to sum to 100%
-      // Calculate total percent among pool members for proportional distribution
-      const totalPercent = poolMembers.reduce(
-        (sum, m) => sum + (m.percentShare ?? 0),
-        0
-      );
 
       for (const member of poolMembers) {
         const percentShare = member.percentShare ?? 0;
@@ -159,7 +165,7 @@ function distributeAdjustable(
         // Use proportional distribution based on each member's share of totalPercent
         let baseShare = 0;
         if (totalPercent > 0) {
-          baseShare = (poolAfterBonuses * percentShare) / totalPercent;
+          baseShare = poolAfterBonuses * (percentShare / totalPercent);
         }
 
         // Add fixed bonus on top of base share
@@ -185,9 +191,102 @@ function distributeAdjustable(
         });
       }
     }
+  } else if (poolAfterBonuses !== 0) {
+    // Everyone has a fixed payout: the remaining profit must not vanish,
+    // so it is shared equally among all active members.
+    const extra = poolAfterBonuses / results.length;
+    return results.map((r) => ({ ...r, profitShare: r.profitShare + extra }));
   }
 
   return results;
+}
+
+/**
+ * How ADJUSTABLE fixed payouts and fixed bonuses were treated.
+ * - APPLIED: profit covers all fixed amounts, they are paid first
+ * - SCALED_TO_PROFIT: profit is too small, fixed amounts are cut proportionally
+ * - SUSPENDED_FOR_LOSS: loss session, everyone bears the loss equally
+ */
+export type FixedAmountsStatus = 'APPLIED' | 'SCALED_TO_PROFIT' | 'SUSPENDED_FOR_LOSS';
+
+function totalFixedAmounts(activeMembers: NormalizedMember[]): number {
+  return activeMembers.reduce(
+    (sum, m) =>
+      sum + (m.fixedPayout !== null ? m.fixedPayout : (m.fixedBonus ?? 0)),
+    0
+  );
+}
+
+/**
+ * Returns the fixed-amount status for ADJUSTABLE sessions that use fixed
+ * payouts or bonuses, otherwise undefined.
+ */
+export function getFixedAmountsStatus(
+  netProfit: number,
+  activeMembers: NormalizedMember[],
+  mode: DistributionMode
+): FixedAmountsStatus | undefined {
+  const hasFixedAmounts = activeMembers.some(
+    (m) => m.fixedPayout !== null || (m.fixedBonus ?? 0) > 0
+  );
+  if (mode !== 'ADJUSTABLE' || !hasFixedAmounts) {
+    return undefined;
+  }
+  if (netProfit < 0) {
+    return 'SUSPENDED_FOR_LOSS';
+  }
+  return netProfit < totalFixedAmounts(activeMembers) ? 'SCALED_TO_PROFIT' : 'APPLIED';
+}
+
+/**
+ * Loss session: fixed payouts and bonuses pause. The loss follows the same key
+ * as profit: pool percentages if set, otherwise equal among pool members.
+ * Fixed-payout members get 0. Without any pool member, all active members
+ * share the loss equally so the money still adds up.
+ */
+function distributeLossWithoutFixedAmounts(
+  netProfit: number,
+  activeMembers: NormalizedMember[]
+): ProfitDistribution[] {
+  const poolMembers = activeMembers.filter((m) => m.fixedPayout === null);
+  if (poolMembers.length === 0) {
+    return distributeEqual(netProfit, activeMembers);
+  }
+
+  const totalPercent = poolMembers.reduce(
+    (sum, m) => sum + (m.percentShare ?? 0),
+    0
+  );
+  const poolShares =
+    totalPercent > 0
+      ? poolMembers.map((m) => ({
+          memberId: m.id,
+          profitShare: netProfit * ((m.percentShare ?? 0) / totalPercent),
+        }))
+      : distributeEqual(netProfit, poolMembers);
+  const fixedMembers = activeMembers
+    .filter((m) => m.fixedPayout !== null)
+    .map((m) => ({ memberId: m.id, profitShare: 0 }));
+
+  return [...fixedMembers, ...poolShares];
+}
+
+/**
+ * Profit below the sum of fixed amounts: every fixed payout and fixed bonus
+ * gets the same fraction of its amount, pool shares are 0.
+ */
+function distributeScaledFixedAmounts(
+  netProfit: number,
+  activeMembers: NormalizedMember[]
+): ProfitDistribution[] {
+  const fixedTotal = totalFixedAmounts(activeMembers);
+  const factor = fixedTotal > 0 ? netProfit / fixedTotal : 0;
+
+  return activeMembers.map((m) => ({
+    memberId: m.id,
+    profitShare:
+      (m.fixedPayout !== null ? m.fixedPayout : (m.fixedBonus ?? 0)) * factor,
+  }));
 }
 
 /**

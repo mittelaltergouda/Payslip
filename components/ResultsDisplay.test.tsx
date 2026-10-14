@@ -4,6 +4,7 @@ import '@testing-library/jest-dom';
 import { ResultsDisplay } from './ResultsDisplay';
 import type { PayslipResult, SessionInput } from '@/lib/types';
 import { translations } from '@/lib/i18n/translations';
+import { calculatePayslip } from '@/lib/calc';
 import { describe, it, expect, vi } from 'vitest';
 
 // Mock the ExportCSVButton component
@@ -87,6 +88,70 @@ const mockResult: PayslipResult = {
 };
 
 describe('ResultsDisplay - Basic Rendering', () => {
+  it('does not show tiny rounding residuals', () => {
+    render(
+      <ResultsDisplay
+        result={{
+          ...mockResult,
+          unsettledBalances: [
+            { memberId: 'm1', amount: -1 },
+            { memberId: 'm2', amount: 1 },
+          ],
+        }}
+        session={mockSession}
+        error={null}
+        translations={translations.en}
+        lang="en"
+      />
+    );
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Unsettled balances/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Residual|excess retained|still to receive/)).not.toBeInTheDocument();
+  });
+
+  it('should explain suspended fixed amounts on a loss session', () => {
+    render(
+      <ResultsDisplay
+        result={{ ...mockResult, fixedAmountsStatus: 'SUSPENDED_FOR_LOSS' }}
+        session={mockSession}
+        error={null}
+        translations={translations.de}
+        lang="de"
+      />
+    );
+
+    expect(screen.getByRole('note')).toHaveTextContent('Verlust-Session: Fixbeträge ausgesetzt');
+  });
+
+  it('should explain proportionally cut fixed amounts when profit is too small', () => {
+    render(
+      <ResultsDisplay
+        result={{ ...mockResult, fixedAmountsStatus: 'SCALED_TO_PROFIT' }}
+        session={mockSession}
+        error={null}
+        translations={translations.en}
+        lang="en"
+      />
+    );
+
+    expect(screen.getByRole('note')).toHaveTextContent('Fixed amounts reduced proportionally');
+  });
+
+  it('should show no fixed-amount note when fixed amounts were applied in full', () => {
+    render(
+      <ResultsDisplay
+        result={{ ...mockResult, fixedAmountsStatus: 'APPLIED' }}
+        session={mockSession}
+        error={null}
+        translations={translations.en}
+        lang="en"
+      />
+    );
+
+    expect(screen.queryByRole('note')).not.toBeInTheDocument();
+  });
+
   it('should render the results heading with German translations', () => {
     render(
       <ResultsDisplay
@@ -314,5 +379,27 @@ describe('ResultsDisplay - CSV Export Button', () => {
 
     // CSV button should not exist when result is null
     expect(screen.queryByTestId('export-csv-button')).not.toBeInTheDocument();
+  });
+});
+
+describe('ResultsDisplay - summary counts all service fees', () => {
+  it('includes fees of transfers already made in Service Fees and net profit', () => {
+    const session = {
+      name: 'SC Session', type: 'TRADING' as const, distributionMode: 'EQUAL' as const, taxEnabled: true, taxRate: 0.005,
+      members: [
+        { id: 'p1', handle: 'Player 1', revenue: 1_000_000, investment: 100_000 },
+        { id: 'p2', handle: 'Player 2', revenue: 2_000_000, investment: 200_000 },
+      ],
+      individualExpenses: [
+        { id: 'e1', memberId: 'p1', label: 'Kosten', amount: 10_000 },
+        { id: 'e2', memberId: 'p2', label: 'Kosten', amount: 20_000 },
+      ],
+      paidTransfers: [{ id: 't', fromMemberId: 'p2', toMemberId: 'p1', netAmount: 1_000_000, feeAmount: 5_000, feeIncluded: true, kind: 'SETTLEMENT' as const }],
+    };
+    render(<ResultsDisplay session={session} result={calculatePayslip(session)} error={null} translations={translations.de} lang="de" />);
+    const summary = screen.getByRole('status', { name: translations.de.summary });
+    expect(summary).toHaveTextContent('Gewinn (Brutto)2.670.000 aUEC');
+    expect(summary).toHaveTextContent('Service Fees7.781 aUEC');
+    expect(summary).toHaveTextContent('Gewinn (Netto)2.662.219 aUEC');
   });
 });

@@ -139,14 +139,16 @@ describe('distributeProfit - uneven splits and rounding', () => {
     expect((result.get('a') ?? 0) + (result.get('b') ?? 0)).toBe(1000);
   });
 
-  it('ADJUSTABLE with all members on fixedPayout leaves no pool to split', () => {
+  it('ADJUSTABLE with all members on fixedPayout shares the leftover equally', () => {
     const members = [
       member({ id: 'a', fixedPayout: 300 }),
       member({ id: 'b', fixedPayout: 400 }),
     ];
     const result = distributeProfit(1000, members, 'ADJUSTABLE');
-    expect(result.get('a')).toBe(300);
-    expect(result.get('b')).toBe(400);
+    // 1000 - 700 fixed = 300 left with no pool: 150 each on top, nothing vanishes
+    expect(result.get('a')).toBe(450);
+    expect(result.get('b')).toBe(550);
+    expect((result.get('a') ?? 0) + (result.get('b') ?? 0)).toBe(1000);
   });
 });
 
@@ -189,8 +191,8 @@ describe('settleBalances - direct', () => {
     });
   });
 
-  it('grosses up transfers with tax so the recipient nets the owed amount', () => {
-    // 5% transfer tax: to deliver 100 net the sender pays ceil(100/0.95)=106.
+  it('fits the recipient amount and sender-paid fee inside the transfer budget', () => {
+    // 5% transfer fee inside a total budget of 100.
     const transfers = settleBalances(
       [
         breakdown({ memberId: 'a', revenue: 0, finalNet: 100 }),
@@ -199,9 +201,9 @@ describe('settleBalances - direct', () => {
       0.05
     );
     expect(transfers).toHaveLength(1);
-    expect(transfers[0].netAmount).toBe(100);
-    expect(transfers[0].grossAmount).toBe(106);
-    expect(transfers[0].feeAmount).toBe(6);
+    expect(transfers[0].netAmount).toBe(95);
+    expect(transfers[0].grossAmount).toBe(100);
+    expect(transfers[0].feeAmount).toBe(5);
   });
 
   it('minimizes transfer count by greedily matching the largest debtor/creditor', () => {
@@ -272,16 +274,19 @@ describe('calculatePayslip - input validation guards', () => {
     ).toThrow(/negative amount/);
   });
 
-  it('rejects a tax rate above 1 (100%)', () => {
+  it('rejects a tax rate at or above 1 (100%)', () => {
+    expect(() =>
+      calculatePayslip({ ...base, taxEnabled: true, taxRate: 1 })
+    ).toThrow(/less than 1/);
     expect(() =>
       calculatePayslip({ ...base, taxEnabled: true, taxRate: 1.5 })
-    ).toThrow(/Tax rate must be between 0 and 1/);
+    ).toThrow(/less than 1/);
   });
 
   it('rejects a negative tax rate', () => {
     expect(() =>
       calculatePayslip({ ...base, taxEnabled: true, taxRate: -0.1 })
-    ).toThrow(/Tax rate must be between 0 and 1/);
+    ).toThrow(/non-negative/);
   });
 
   it('rejects an empty member handle', () => {

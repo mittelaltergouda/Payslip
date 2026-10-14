@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { dismissStorageNotice, waitForAppReady } from './app-ready';
 
 /**
  * Session Editing E2E Tests
@@ -48,6 +49,7 @@ test.describe('Session Editing - Loading from History', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -60,7 +62,7 @@ test.describe('Session Editing - Loading from History', () => {
       !error.includes('A tree hydrated but') &&
       !error.includes('Hydration failed') &&
       !error.includes('__nextjs_original-stack-frames') &&
-      !error.includes('500') &&  // Filter database connection errors (DATABASE_URL may not be set)
+      !error.includes('500') &&
       !error.includes('Internal Server Error') &&
       !error.includes('Failed to load resource') &&
       !error.includes('status of 500')
@@ -73,174 +75,48 @@ test.describe('Session Editing - Loading from History', () => {
   });
 
   test('Session can be loaded from history via Ctrl+O', async ({ page }) => {
-    await page.waitForLoadState('networkidle');
+    // The editor keeps one current draft that auto-saves ~1s after every edit, so
+    // renaming it would also rename its history entry. To load a *different*
+    // entry, branch off a duplicate first and edit that instead.
+    const readSessions = () =>
+      page.evaluate(() => JSON.parse(localStorage.getItem('sc-payslip-sessions') || '[]'));
+    const sessionNameInput = page.locator('#session-name');
+    const revenueInput = page.locator('input[inputmode="numeric"]').filter({ visible: true }).first();
+    const historyEntry = (name: string) =>
+      page.locator('div.glass').filter({ has: page.getByRole('heading', { name, exact: true }) });
 
-    // Step 1: Create and save a session
+    // The fixed storage notice covers the history's buttons on small screens.
+    await dismissStorageNotice(page);
+
+    // Step 1: Create and save session A
     const uniqueName = 'Load Test Session ' + Date.now();
-    const sessionNameInput = page.locator('input[type="text"]').first();
     await sessionNameInput.fill(uniqueName);
-    await page.waitForTimeout(300);
-
-    // Enter some revenue
-    const numericInputs = page.locator('input[inputmode="numeric"]');
-    const inputCount = await numericInputs.count();
-    for (let i = 0; i < inputCount; i++) {
-      const input = numericInputs.nth(i);
-      if (await input.isVisible({ timeout: 500 }).catch(() => false)) {
-        await input.fill('50000');
-        break;
-      }
-    }
-
-    // Save with Ctrl+S
+    await revenueInput.fill('50000');
     await page.keyboard.press('Control+KeyS');
-    await page.waitForTimeout(1000);
+    await expect
+      .poll(async () => (await readSessions()).map((s: any) => s.session.name))
+      .toContain(uniqueName);
 
-    // Step 2: Clear the form by changing session name
+    // Step 2: Duplicate A; the copy becomes the current draft
+    await page.keyboard.press('Control+KeyO');
+    await historyEntry(uniqueName).getByRole('button', { name: /duplicate|duplizieren/i }).click();
+    await page.getByRole('dialog').getByRole('button', { name: /^(duplicate|duplizieren)$/i }).click();
+    await expect(sessionNameInput).toHaveValue(uniqueName + ' (Copy)');
+
+    // Step 3: Edit the copy and wait until auto-save has persisted it
     await sessionNameInput.fill('Different Session');
-    await page.waitForTimeout(300);
+    await revenueInput.fill('1234');
+    await expect
+      .poll(async () => (await readSessions()).map((s: any) => s.session.name).sort())
+      .toEqual(['Different Session', uniqueName].sort());
 
-    // Step 3: Open history with Ctrl+O
+    // Step 4: Open history with Ctrl+O and load A
     await page.keyboard.press('Control+KeyO');
-    await page.waitForTimeout(500);
+    await historyEntry(uniqueName).getByRole('button', { name: /^(load|laden)$/i }).click();
 
-    // Step 4: Find the saved session (session name may be truncated or partial match)
-    const sessionItem = page.locator(`text=/Load Test Session/i`).first();
-    const isSessionVisible = await sessionItem.isVisible({ timeout: 5000 }).catch(() => false);
-
-    if (isSessionVisible) {
-      // Step 5: Click Load button
-      const loadButton = page.locator('button').filter({ hasText: /load|laden/i }).first();
-      if (await loadButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await loadButton.click();
-        await page.waitForTimeout(500);
-
-        // Step 6: Verify session was loaded
-        const loadedName = await sessionNameInput.inputValue();
-        expect(loadedName).toContain('Load Test Session');
-      }
-    } else {
-      // If sidebar didn't open or session not found, verify via localStorage
-      const savedData = await page.evaluate(() => {
-        const data = localStorage.getItem('sc-payslip-sessions');
-        return data ? JSON.parse(data) : null;
-      });
-      expect(savedData).toBeTruthy();
-      expect(Array.isArray(savedData)).toBe(true);
-    }
-  });
-
-  test('Session can be loaded from sessions page', async ({ page }) => {
-    await page.waitForLoadState('networkidle');
-
-    // Step 1: Create and save a session
-    const uniqueName = 'Sessions Page Load ' + Date.now();
-    const sessionNameInput = page.locator('input[type="text"]').first();
-    await sessionNameInput.fill(uniqueName);
-    await page.keyboard.press('Control+KeyS');
-    await page.waitForTimeout(1000);
-
-    // Step 2: Navigate to sessions page
-    const sessionsLink = page.locator('a[href="/sessions"]').first();
-    await sessionsLink.click();
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
-
-    // Step 3: Verify session appears in list (use partial match)
-    const sessionItem = page.locator(`text=/Sessions Page Load/i`).first();
-    const isSessionVisible = await sessionItem.isVisible({ timeout: 5000 }).catch(() => false);
-
-    if (isSessionVisible) {
-      // Step 4: Click on the session to load it
-      const sessionCard = sessionItem.locator('..').locator('..').first();
-      await sessionCard.click();
-      await page.waitForTimeout(1000);
-
-      // Step 5: Verify we're back on home page with session loaded
-      const currentUrl = page.url();
-      expect(currentUrl).not.toContain('/sessions');
-
-      // Step 6: Verify session name is loaded
-      const loadedSessionName = page.locator('input[type="text"]').first();
-      const loadedName = await loadedSessionName.inputValue();
-      expect(loadedName).toContain('Sessions Page Load');
-    } else {
-      // Session may be listed but with different rendering - just verify page works
-      await expect(page.locator('h1').first()).toBeVisible();
-    }
-  });
-
-  test('Session data is correctly restored after loading', async ({ page }) => {
-    await page.waitForLoadState('networkidle');
-
-    // Step 1: Create session with specific data
-    const uniqueName = 'Data Restore Test ' + Date.now();
-    const testRevenue = 75000;
-
-    const sessionNameInput = page.locator('input[type="text"]').first();
-    await sessionNameInput.fill(uniqueName);
-    await page.waitForTimeout(300);
-
-    // Enter specific revenue
-    const numericInputs = page.locator('input[inputmode="numeric"]');
-    const inputCount = await numericInputs.count();
-    for (let i = 0; i < inputCount; i++) {
-      const input = numericInputs.nth(i);
-      if (await input.isVisible({ timeout: 500 }).catch(() => false)) {
-        await input.fill(testRevenue.toString());
-        break;
-      }
-    }
-
-    await page.keyboard.press('Control+KeyS');
-    await page.waitForTimeout(1000);
-
-    // Step 2: Modify the form to different values
-    await sessionNameInput.fill('Temporary Name');
-    await page.waitForTimeout(300);
-
-    // Step 3: Load the saved session
-    await page.keyboard.press('Control+KeyO');
-    await page.waitForTimeout(500);
-
-    const sessionItem = page.locator(`text=/Data Restore Test/i`).first();
-    const isSessionVisible = await sessionItem.isVisible({ timeout: 5000 }).catch(() => false);
-
-    if (isSessionVisible) {
-      const loadButton = page.locator('button').filter({ hasText: /load|laden/i }).first();
-      if (await loadButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await loadButton.click();
-        await page.waitForTimeout(500);
-
-        // Step 4: Verify session data was restored
-        const loadedName = await sessionNameInput.inputValue();
-        expect(loadedName).toContain('Data Restore Test');
-
-        // Verify revenue was restored
-        for (let i = 0; i < inputCount; i++) {
-          const input = numericInputs.nth(i);
-          if (await input.isVisible({ timeout: 500 }).catch(() => false)) {
-            const value = await input.inputValue();
-            // Value may be formatted with separators
-            expect(parseInt(value.replace(/[,.\s]/g, ''))).toBe(testRevenue);
-            break;
-          }
-        }
-      }
-    } else {
-      // Verify session was saved correctly in localStorage
-      const savedData = await page.evaluate(() => {
-        const data = localStorage.getItem('sc-payslip-sessions');
-        return data ? JSON.parse(data) : null;
-      });
-
-      if (Array.isArray(savedData) && savedData.length > 0) {
-        const session = savedData.find((s: any) => s.session.name.includes('Data Restore Test'));
-        expect(session).toBeTruthy();
-        const revenues = session.session.members.map((m: any) => m.revenue);
-        expect(revenues).toContain(testRevenue);
-      }
-    }
+    // Step 5: A's name and revenue are back in the editor
+    await expect(sessionNameInput).toHaveValue(uniqueName);
+    await expect(revenueInput).toHaveValue(/^50[.,]?000$/);
   });
 
   test('Loading session closes history sidebar', async ({ page }) => {
@@ -303,7 +179,8 @@ test.describe('Session Editing - Loading from History', () => {
       await page.waitForTimeout(500);
 
       // Look for toast notification
-      const toast = page.locator('[role="alert"], [class*="toast"]');
+      // The app's own toast; a bare [role="alert"] also matches Next.js' empty route announcer.
+      const toast = page.locator('.toast-item[role="alert"]');
       const isToastVisible = await toast.first().isVisible({ timeout: 3000 }).catch(() => false);
 
       if (isToastVisible) {
@@ -344,6 +221,7 @@ test.describe('Session Editing - Editing Member Data', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -413,7 +291,7 @@ test.describe('Session Editing - Editing Member Data', () => {
     }
 
     // Page should render
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 
   test('Member revenue can be edited after loading session', async ({ page }) => {
@@ -473,7 +351,7 @@ test.describe('Session Editing - Editing Member Data', () => {
     }
 
     // Page should render
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 
   test('Multiple members can be edited in one session', async ({ page }) => {
@@ -515,6 +393,8 @@ test.describe('Session Editing - Editing Member Data', () => {
 
   test('Edited member data persists after save', async ({ page }) => {
     await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true }))
+      .toHaveAttribute('data-app-ready', 'true');
 
     // Create session and edit
     const uniqueName = 'Edit Persist Test ' + Date.now();
@@ -585,6 +465,7 @@ test.describe('Session Editing - Changing Distribution Modes', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -773,6 +654,7 @@ test.describe('Session Editing - Adding and Removing Members', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -796,40 +678,29 @@ test.describe('Session Editing - Adding and Removing Members', () => {
   test('New member can be added to existing session', async ({ page }) => {
     await page.waitForLoadState('networkidle');
 
-    // Create and save session
     const uniqueName = 'Add Member Test ' + Date.now();
     const sessionNameInput = page.locator('input[type="text"]').first();
     await sessionNameInput.fill(uniqueName);
     await page.keyboard.press('Control+KeyS');
-    await page.waitForTimeout(1000);
 
-    // Count initial members
-    const initialMemberCount = await page.locator('text=/Player|Spieler/i').count();
+    await expect.poll(() => page.evaluate(() => {
+      const data = localStorage.getItem('sc-payslip-sessions');
+      const sessions = data ? JSON.parse(data) : [];
+      return sessions[0]?.session.members.length ?? 0;
+    })).toBeGreaterThan(0);
 
-    // Add new member
-    const addButton = page.locator('button').filter({ hasText: /add.*member|mitglied.*hinzufügen|\+/i });
-    if (await addButton.first().isVisible({ timeout: 3000 }).catch(() => false)) {
-      await addButton.first().click({ force: true });
-      await page.waitForTimeout(500);
+    const addButton = page.getByRole('button', {
+      name: /\+ (Member|Mitglied)/i,
+    });
+    await expect(addButton).toBeVisible();
+    await addButton.click();
+    await page.keyboard.press('Control+KeyS');
 
-      // Verify member was added
-      const newMemberCount = await page.locator('text=/Player|Spieler/i').count();
-      expect(newMemberCount).toBeGreaterThan(initialMemberCount);
-
-      // Save and verify
-      await page.keyboard.press('Control+KeyS');
-      await page.waitForTimeout(1000);
-
-      const savedData = await page.evaluate(() => {
-        const data = localStorage.getItem('sc-payslip-sessions');
-        return data ? JSON.parse(data) : null;
-      });
-
-      if (Array.isArray(savedData) && savedData.length > 0) {
-        const latestSession = savedData[savedData.length - 1];
-        expect(latestSession.session.members.length).toBeGreaterThan(2);
-      }
-    }
+    await expect.poll(() => page.evaluate(() => {
+      const data = localStorage.getItem('sc-payslip-sessions');
+      const sessions = data ? JSON.parse(data) : [];
+      return sessions[0]?.session.members.length ?? 0;
+    })).toBeGreaterThan(2);
   });
 
   test('Member can be removed from existing session', async ({ page }) => {
@@ -974,6 +845,7 @@ test.describe('Session Editing - Saving Updates', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -1121,7 +993,7 @@ test.describe('Session Editing - Saving Updates', () => {
     await page.waitForTimeout(1500);
 
     // Page should still function
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
   });
 });
 
@@ -1154,6 +1026,7 @@ test.describe('Session Editing - Mobile Viewport', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -1350,7 +1223,7 @@ test.describe('Session Editing - Mobile Viewport', () => {
     await page.waitForTimeout(300);
 
     // Page should still be functional
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // Check for horizontal scroll (be lenient with mobile browsers)
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -1390,6 +1263,7 @@ test.describe('Session Editing - Edit and Load Workflow', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForLoadState('networkidle');
+    await waitForAppReady(page);
   });
 
   test.afterEach(async () => {
@@ -1492,101 +1366,4 @@ test.describe('Session Editing - Edit and Load Workflow', () => {
     expect(loadedName).toBe(modifiedName);
   });
 
-  test('Loading session replaces current unsaved changes', async ({ page }) => {
-    await page.waitForLoadState('networkidle');
-
-    // Create and save session A
-    const sessionAName = 'Session A ' + Date.now();
-    const sessionNameInput = page.locator('input[type="text"]').first();
-    await sessionNameInput.fill(sessionAName);
-    await page.keyboard.press('Control+KeyS');
-    await page.waitForTimeout(1000);
-
-    // Create session B (unsaved changes)
-    await sessionNameInput.fill('Session B Unsaved');
-    await page.waitForTimeout(300);
-
-    // Load session A
-    await page.keyboard.press('Control+KeyO');
-    await page.waitForTimeout(500);
-
-    const sessionItem = page.locator(`text=/Session A/i`).first();
-    const isSessionVisible = await sessionItem.isVisible({ timeout: 5000 }).catch(() => false);
-
-    if (isSessionVisible) {
-      const loadButton = page.locator('button').filter({ hasText: /load|laden/i }).first();
-      if (await loadButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await loadButton.click();
-        await page.waitForTimeout(500);
-
-        // Verify session A is loaded, not session B
-        const loadedName = await sessionNameInput.inputValue();
-        expect(loadedName).toContain('Session A');
-        expect(loadedName).not.toBe('Session B Unsaved');
-      }
-    } else {
-      // Verify session A was saved correctly
-      const savedData = await page.evaluate(() => {
-        const data = localStorage.getItem('sc-payslip-sessions');
-        return data ? JSON.parse(data) : null;
-      });
-
-      expect(savedData).toBeTruthy();
-      if (Array.isArray(savedData)) {
-        const sessionA = savedData.find((s: any) => s.session.name.includes('Session A'));
-        expect(sessionA).toBeTruthy();
-      }
-    }
-  });
-
-  test('Multiple sessions can be loaded and edited sequentially', async ({ page }) => {
-    await page.waitForLoadState('networkidle');
-
-    const sessionNameInput = page.locator('input[type="text"]').first();
-    const baseTime = Date.now();
-    const sessions = [
-      'Sequential Test 1 ' + baseTime,
-      'Sequential Test 2 ' + (baseTime + 1),
-    ];
-
-    // Create and save multiple sessions
-    for (const name of sessions) {
-      await sessionNameInput.fill(name);
-      await page.keyboard.press('Control+KeyS');
-      await page.waitForTimeout(500);
-    }
-
-    // Edit each session sequentially (without loading from history - just modify and save)
-    const editedSessions: string[] = [];
-    for (let i = 0; i < sessions.length; i++) {
-      const name = sessions[i];
-      const editedName = name + ' Edited';
-
-      // Fill the new name and save
-      await sessionNameInput.fill(editedName);
-      await page.keyboard.press('Control+KeyS');
-      await page.waitForTimeout(500);
-
-      editedSessions.push(editedName);
-    }
-
-    // Verify sessions were saved
-    const savedData = await page.evaluate(() => {
-      const data = localStorage.getItem('sc-payslip-sessions');
-      return data ? JSON.parse(data) : null;
-    });
-
-    expect(savedData).toBeTruthy();
-    expect(Array.isArray(savedData)).toBe(true);
-
-    if (Array.isArray(savedData)) {
-      // Verify we have sessions saved
-      expect(savedData.length).toBeGreaterThanOrEqual(2);
-
-      // Check that sequential edits created entries
-      const sessionNames = savedData.map((s: any) => s.session.name);
-      const hasMultipleSessions = sessionNames.length >= 2;
-      expect(hasMultipleSessions).toBeTruthy();
-    }
-  });
 });

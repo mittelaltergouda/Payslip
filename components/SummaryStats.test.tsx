@@ -95,7 +95,7 @@ describe('SummaryStats - Basic Rendering', () => {
     expect(screen.getByText('Investment')).toBeInTheDocument();
     expect(screen.getByText('Kosten')).toBeInTheDocument();
     expect(screen.getByText('Gewinn (Brutto)')).toBeInTheDocument();
-    expect(screen.getByText('Steuern (Fees)')).toBeInTheDocument();
+    expect(screen.getByText('Service Fees')).toBeInTheDocument();
     expect(screen.getByText('Gewinn (Netto)')).toBeInTheDocument();
   });
 
@@ -116,7 +116,7 @@ describe('SummaryStats - Basic Rendering', () => {
     expect(screen.getByText('Investment')).toBeInTheDocument();
     expect(screen.getByText('Expenses')).toBeInTheDocument();
     expect(screen.getByText('Profit (Gross)')).toBeInTheDocument();
-    expect(screen.getByText('Taxes (fees)')).toBeInTheDocument();
+    expect(screen.getByText('Service Fees')).toBeInTheDocument();
     expect(screen.getByText('Profit (Net)')).toBeInTheDocument();
   });
 });
@@ -212,13 +212,13 @@ describe('SummaryStats - Net Profit After Tax Calculation', () => {
       />
     );
 
-    // Find the net profit after tax element - it should have both text-neon and font-semibold classes
+    // Find the net profit after tax element - it should have both text-positive and font-semibold classes
     const netAfterTaxElements = screen.getAllByText(/11,295 aUEC/);
     const styledElement = netAfterTaxElements.find(el =>
-      el.className.includes('text-neon') && el.className.includes('font-semibold')
+      el.className.includes('text-positive') && el.className.includes('font-semibold')
     );
     expect(styledElement).toBeDefined();
-    expect(styledElement).toHaveClass('text-neon');
+    expect(styledElement).toHaveClass('text-positive');
     expect(styledElement).toHaveClass('font-semibold');
   });
 
@@ -256,7 +256,7 @@ describe('SummaryStats - Net Profit After Tax Calculation', () => {
 
     // netAfterTax = 5000 - 3000 - 1500 - 500 = 0
     const netAfterTaxElement = screen.getByText('0 aUEC');
-    expect(netAfterTaxElement).toHaveClass('text-neon'); // Zero is >= 0, so should be green
+    expect(netAfterTaxElement).toHaveClass('text-positive'); // Zero is >= 0, so it is shown as positive
     expect(netAfterTaxElement).toHaveClass('font-semibold');
   });
 });

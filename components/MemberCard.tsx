@@ -1,4 +1,7 @@
 "use client";
+import { MoneyItemsEditor } from "./MoneyItemsEditor";
+import { ExpenseItemsEditor } from "./ExpenseItemsEditor";
+import { distributionColumns } from "@/lib/accounting";
 
 import type { DistributionMode, IndividualExpenseInput, MemberBreakdown, MemberInput } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -69,7 +72,7 @@ interface MemberCardProps {
   /**
    * Callback to add a new individual expense for this member.
    */
-  addIndividualExpense: (memberId: string) => void;
+  addIndividualExpense: (memberId: string, init?: Partial<IndividualExpenseInput>) => void;
 
   /**
    * Callback to update an individual expense.
@@ -124,7 +127,7 @@ export function MemberCard({
   removeIndividualExpense
 }: MemberCardProps) {
   const exp = individualExpenses.filter((e) => e.memberId === member.id);
-  const expSum = exp.reduce((s, e) => s + e.amount, 0);
+  const columns = distributionColumns(distributionMode);
 
   return (
     <div className="glass p-4 space-y-4" role="article" aria-labelledby={`member-card-${member.id}`}>
@@ -169,118 +172,83 @@ export function MemberCard({
 
         <div>
           <label className="block text-xs text-white/60 mb-1" htmlFor={`revenue-${member.id}`}>{t.revenueLabel}</label>
-          <NumericInput
-            id={`revenue-${member.id}`}
-            value={member.revenue ?? 0}
-            onValueChange={(value) => updateMember(member.id!, { revenue: value })}
-            lang={lang}
-            aria-label={`${t.revenueLabel} ${t.for || "for"} ${member.handle}`}
-          />
+          <MoneyItemsEditor member={member} kind="revenue" lang={lang} variant="card" onChange={patch => updateMember(member.id!, patch)} />
         </div>
 
         <div>
           <label className="block text-xs text-white/60 mb-1" htmlFor={`investment-${member.id}`}>{t.investmentLabel}</label>
-          <NumericInput
-            id={`investment-${member.id}`}
-            value={member.investment ?? 0}
-            onValueChange={(value) => updateMember(member.id!, { investment: value })}
-            lang={lang}
-            aria-label={`${t.investmentLabel} ${t.for || "for"} ${member.handle}`}
-          />
+          <MoneyItemsEditor member={member} kind="investment" lang={lang} variant="card" onChange={patch => updateMember(member.id!, patch)} />
         </div>
       </div>
 
       {/* Expenses Section */}
       <div className="space-y-2 border-t border-white/10 pt-3" role="group" aria-labelledby={`expenses-${member.id}`}>
         <label id={`expenses-${member.id}`} className="block text-sm font-semibold text-white/80">{t.expensesLabel}</label>
-        {exp.map((e) => (
-          <div key={e.id} className="flex gap-2 items-center">
-            <Input
-              className="flex-1"
-              value={e.label}
-              onChange={(ev) => updateIndividualExpense(e.id!, { label: ev.target.value })}
-              aria-label={`${t.expensesLabel} ${t.label || "label"} ${t.for || "for"} ${member.handle}`}
-            />
-            <NumericInput
-              className="w-24"
-              value={e.amount}
-              onValueChange={(value) => updateIndividualExpense(e.id!, { amount: value })}
-              lang={lang}
-              aria-label={`${t.expensesLabel} ${t.amount || "amount"} ${t.for || "for"} ${member.handle}`}
-            />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-red-400 h-8 w-8 p-0"
-              onClick={() => removeIndividualExpense(e.id!)}
-              title={t.remove}
-              aria-label={`${t.remove} ${t.expensesLabel} ${t.for || "for"} ${member.handle}`}
-            >
-              🗑
-            </Button>
-          </div>
-        ))}
-        <Button
-          size="sm"
-          onClick={() => addIndividualExpense(member.id!)}
-          aria-label={`${t.addExpense} ${t.for || "for"} ${member.handle}`}
-        >
-          {t.addExpense}
-        </Button>
-        <div className="text-xs text-white/60" aria-label={`${t.total || "Total"} ${t.expensesLabel}`}>
-          Σ {format(expSum, lang)}
-        </div>
+        <ExpenseItemsEditor
+          memberId={member.id!}
+          handle={member.handle}
+          expenses={exp}
+          lang={lang}
+          t={t}
+          format={format}
+          addIndividualExpense={addIndividualExpense}
+          updateIndividualExpense={updateIndividualExpense}
+          removeIndividualExpense={removeIndividualExpense}
+          variant="card"
+        />
       </div>
 
-      {/* Distribution Settings Section */}
+      {/* Distribution Settings Section: only the inputs the mode actually uses */}
+      {(columns.percentShare || columns.fixedAmounts) && (
       <div className="space-y-3 border-t border-white/10 pt-3" role="group" aria-labelledby={`distribution-settings-${member.id}`}>
         <h4 id={`distribution-settings-${member.id}`} className="text-sm font-semibold text-white/80">{t.distributionSettings || "Distribution Settings"}</h4>
 
+        {columns.percentShare && (
         <div>
           <label className="block text-xs text-white/60 mb-1" htmlFor={`percent-share-${member.id}`}>{t.percentShare}</label>
           <NumericInput
             id={`percent-share-${member.id}`}
             value={member.percentShare ?? 0}
-            disabled={distributionMode === "EQUAL"}
             onValueChange={(value) =>
               updateMember(member.id!, { percentShare: value })
             }
             lang={lang}
             aria-label={`${t.percentShare} ${t.for || "for"} ${member.handle}`}
-            aria-disabled={distributionMode === "EQUAL"}
           />
         </div>
+        )}
 
+        {columns.fixedAmounts && (
         <div>
           <label className="block text-xs text-white/60 mb-1" htmlFor={`fixed-bonus-${member.id}`}>{t.fixedBonus}</label>
           <NumericInput
             id={`fixed-bonus-${member.id}`}
             value={(member as any).fixedBonus ?? 0}
-            disabled={distributionMode !== "ADJUSTABLE"}
             onValueChange={(value) =>
               updateMember(member.id!, { fixedBonus: value as any })
             }
             lang={lang}
             aria-label={`${t.fixedBonus} ${t.for || "for"} ${member.handle}`}
-            aria-disabled={distributionMode !== "ADJUSTABLE"}
           />
         </div>
+        )}
 
+        {columns.fixedAmounts && (
         <div>
           <label className="block text-xs text-white/60 mb-1" htmlFor={`fixed-payout-${member.id}`}>{t.fixedPayout}</label>
           <NumericInput
             id={`fixed-payout-${member.id}`}
             value={member.fixedPayout ?? 0}
-            disabled={distributionMode !== "ADJUSTABLE"}
             onValueChange={(value) =>
               updateMember(member.id!, { fixedPayout: value })
             }
             lang={lang}
             aria-label={`${t.fixedPayout} ${t.for || "for"} ${member.handle}`}
-            aria-disabled={distributionMode !== "ADJUSTABLE"}
           />
         </div>
+        )}
       </div>
+      )}
     </div>
   );
 }

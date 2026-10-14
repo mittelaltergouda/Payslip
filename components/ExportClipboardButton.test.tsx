@@ -313,6 +313,17 @@ describe('ExportClipboardButton - Clipboard Functionality', () => {
 
       expect(parsedData).toHaveProperty('session');
       expect(parsedData).toHaveProperty('result');
+      expect(parsedData).toHaveProperty('payouts');
+      expect(parsedData.payouts).toEqual([
+        {
+          memberId: '1', handle: 'Alice', grossPayout: 500,
+          transferFeesDeducted: 0, netPayout: 500,
+        },
+        {
+          memberId: '2', handle: 'Bob', grossPayout: 500,
+          transferFeesDeducted: 0, netPayout: 500,
+        },
+      ]);
       expect(parsedData).toHaveProperty('currency');
       expect(parsedData).toHaveProperty('exportedAt');
     });

@@ -48,6 +48,9 @@ const mockTranslationsDE = {
   cancel: 'Cancel',
   createdAt: 'Created',
   updatedAt: 'Updated',
+  draftHistoryTitle: 'Lokaler Verlauf',
+  draftHistoryHint: 'Lokale Entwürfe werden hier angezeigt',
+  currentDraftTag: 'Aktueller Entwurf',
 };
 
 const mockTranslationsEN = {
@@ -60,6 +63,9 @@ const mockTranslationsEN = {
   cancel: 'Cancel',
   createdAt: 'Created',
   updatedAt: 'Updated',
+  draftHistoryTitle: 'Local history',
+  draftHistoryHint: 'Local drafts appear here',
+  currentDraftTag: 'Current draft',
 };
 
 describe('SessionHistory - Initial Rendering', () => {

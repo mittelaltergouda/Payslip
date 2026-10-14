@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { SessionInput, PayslipResult } from "@/lib/types";
 import type { Lang } from "@/lib/i18n/translations";
+import { getMemberPayoutSummaries } from "@/lib/export/payoutSummary";
 
 /**
  * Props for the ExportClipboardButton component
@@ -95,6 +96,7 @@ export function ExportClipboardButton({
       const exportData = {
         session,
         result,
+        payouts: getMemberPayoutSummaries(result),
         currency,
         exportedAt: new Date().toISOString(),
       };

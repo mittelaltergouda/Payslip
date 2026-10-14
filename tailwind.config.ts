@@ -8,28 +8,32 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Themeable tokens: RGB channels from CSS variables (app/globals.css),
+        // so a theme only swaps the variables and opacity modifiers keep working.
         // Base palette
-        night: "#0b1021",
-        slate: "#1a2b3c",
-        neon: "#4de8e4",
-        aura: "#9b7bff",
-        sand: "#f5f0e6",
+        night: "rgb(var(--color-night) / <alpha-value>)",
+        slate: "rgb(var(--color-slate) / <alpha-value>)",
+        neon: "rgb(var(--color-neon) / <alpha-value>)",
+        aura: "rgb(var(--color-aura) / <alpha-value>)",
+        sand: "rgb(var(--color-sand) / <alpha-value>)",
+        // Positive amounts (profit); stays distinct from the accent in every theme.
+        positive: "rgb(var(--color-positive) / <alpha-value>)",
 
         // Semantic tokens - Surface
         surface: {
-          base: "#0b1021",      // night - main background
-          elevated: "#1a2b3c",  // slate - cards, modals
-          overlay: "#2a3b4c",   // lighter variant for overlays
-          muted: "#f5f0e6",     // sand - light surface variant
+          base: "rgb(var(--color-night) / <alpha-value>)",      // night - main background
+          elevated: "rgb(var(--color-slate) / <alpha-value>)",  // slate - cards, modals
+          overlay: "rgb(var(--color-overlay) / <alpha-value>)", // lighter variant for overlays
+          muted: "rgb(var(--color-sand) / <alpha-value>)",      // sand - light surface variant
         },
 
         // Semantic tokens - Interaction
         interaction: {
-          primary: "#4de8e4",        // neon - primary actions
-          "primary-hover": "#3dd8d4", // darker neon
-          secondary: "#9b7bff",      // aura - secondary actions
-          "secondary-hover": "#8b6bef", // darker aura
-          ghost: "rgba(77, 232, 228, 0.1)", // subtle interaction
+          primary: "rgb(var(--color-neon) / <alpha-value>)",                  // neon - primary actions
+          "primary-hover": "rgb(var(--color-neon-hover) / <alpha-value>)",    // darker neon
+          secondary: "rgb(var(--color-aura) / <alpha-value>)",                // aura - secondary actions
+          "secondary-hover": "rgb(var(--color-aura-hover) / <alpha-value>)",  // darker aura
+          ghost: "rgb(var(--color-neon) / 0.1)", // subtle interaction
           disabled: "#6b7280",       // gray for disabled state
         },
 
@@ -47,24 +51,25 @@ const config: Config = {
 
         // Semantic tokens - Text
         text: {
-          primary: "#f5f0e6",        // sand - main text
+          primary: "rgb(var(--color-sand) / <alpha-value>)",   // sand - main text
           secondary: "#9ca3af",      // gray - secondary text
           muted: "#6b7280",          // darker gray - muted text
-          inverse: "#0b1021",        // night - text on light backgrounds
-          accent: "#4de8e4",         // neon - accent text/links
+          inverse: "rgb(var(--color-on-neon) / <alpha-value>)", // text on primary (neon) backgrounds
+          accent: "rgb(var(--color-neon) / <alpha-value>)",   // neon - accent text/links
         },
 
         // Semantic tokens - Border
         border: {
           default: "rgba(156, 163, 175, 0.2)", // subtle borders
-          hover: "rgba(77, 232, 228, 0.4)",    // interactive borders
-          focus: "#4de8e4",                    // focus ring
+          hover: "rgb(var(--color-neon) / 0.4)", // interactive borders
+          focus: "rgb(var(--color-neon) / <alpha-value>)", // focus ring
           error: "#ef4444",                    // error state borders
         },
       },
       fontFamily: {
         display: ["var(--font-display)", "sans-serif"],
-        body: ["var(--font-body)", "ui-sans-serif", "system-ui"]
+        body: ["var(--font-body)", "ui-sans-serif", "system-ui"],
+        mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"]
       },
       // Transition utilities
       transitionDuration: {

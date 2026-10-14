@@ -11,11 +11,11 @@
 - Generates detailed payslip-style receipts with breakdown
 - Computes settlement transfers with tax gross-up (fee adjustment)
 - Manages multi-member revenue and expense tracking
-- Creates shareable read-only session links for transparency
+- Saves and exports sessions locally in the visitor's browser
 
 **What it doesn't do:**
 - Doesn't integrate with Star Citizen game servers (calculations only)
-- Doesn't persist data automatically (you control session storage)
+- Doesn't send or persist session data on an application server
 - Isn't a real-time ledger system (designed for end-of-session settlements)
 
 ## Core Capabilities
@@ -24,7 +24,7 @@
 ✅ Three distribution modes: EQUAL, PERCENT, ADJUSTABLE
 ✅ Tax gross-up calculations for transfers
 ✅ Payslip generation & detailed breakdown
-✅ Shareable read-only session links
+✅ Local session history and file exports
 ✅ Schema validation for data integrity
 
 ## Quick Start
@@ -35,14 +35,14 @@ npm install && npm run dev
 
 Build for production: `npm run build`
 
-**Demo**: [payslip.cheesy.cloud](https://payslip.cheesy.cloud/) (Cloudflare Access — email login) • deploy details in [DEPLOYMENT.md](./DEPLOYMENT.md)
+**Demo**: [payslip.cheesy.cloud](https://payslip.cheesy.cloud/) • deploy details in [DEPLOYMENT.md](./DEPLOYMENT.md)
 
 ## Operational Info
 
 - **Code Review**: GitHub Copilot assistance
 - **CI/CD**: GitHub Actions (build + unit tests, Playwright E2E) + CodeQL scanning
 - **Deployment**: Next.js standalone build — see [DEPLOYMENT.md](./DEPLOYMENT.md)
-- **Database**: SQLite (dev/local) via Prisma ORM; Postgres for serverless deploy (see DEPLOYMENT.md)
+- **Data model**: browser `localStorage`; no application API or database
 - **Dependency Monitoring**: Dependabot integration
 
 Verify setup: `npm run check`
@@ -66,4 +66,4 @@ Verify setup: `npm run check`
 
 **Project Status**: Alpha (Active Development)
 **License**: MIT
-**Tech Stack**: Next.js 16 • React 18 • TypeScript • Prisma • Zod
+**Tech Stack**: Next.js 16 • React 18 • TypeScript • Zod

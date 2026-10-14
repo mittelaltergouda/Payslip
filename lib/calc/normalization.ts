@@ -40,6 +40,11 @@ function generateMemberId(index: number): string {
   return `member-${index + 1}`;
 }
 
+function totalItems(items: MemberInput["revenues"] | MemberInput["investments"]): number | null {
+  if (!items) {return null;}
+  return items.reduce((sum, item) => sum + item.amount, 0);
+}
+
 /**
  * Normalizes a single member input by applying default values to all optional fields.
  *
@@ -66,8 +71,8 @@ export function normalizeMember(
     handle: member.handle.trim(),
     role: member.role ?? '',
     active: member.active ?? true,
-    revenue: member.revenue ?? 0,
-    investment: member.investment ?? 0,
+    revenue: totalItems(member.revenues) ?? member.revenue ?? 0,
+    investment: totalItems(member.investments) ?? member.investment ?? 0,
     percentShare: member.percentShare ?? null,
     fixedBonus: member.fixedBonus ?? null,
     fixedPayout: member.fixedPayout ?? null,
@@ -115,5 +120,6 @@ export function normalizeSessionInput(
     members: normalizeMembers(session.members),
     sharedExpenses: session.sharedExpenses ?? [],
     individualExpenses: session.individualExpenses ?? [],
+    paidTransfers: session.paidTransfers ?? [],
   };
 }

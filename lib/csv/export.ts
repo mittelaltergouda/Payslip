@@ -8,6 +8,7 @@
 import type { SessionInput, PayslipResult } from "@/lib/types";
 import type { Lang } from "@/lib/i18n/translations";
 import { format } from "@/lib/format";
+import { getMemberPayoutSummaries } from "@/lib/export/payoutSummary";
 
 /**
  * CSV generation options for customizing output format and styling.
@@ -42,15 +43,15 @@ const csvTranslations = {
     revenue: "Umsatz",
     investment: "Investment",
     expenses: "Ausgaben",
-    taxes: "Steuern",
+    transferFees: "Service Fees",
     profitShare: "Gewinnanteil",
     netPayout: "Netto Auszahlung",
     settlementTransfers: "Überweisungen",
     from: "Von",
     to: "An",
-    netAmount: "Netto Betrag",
-    grossAmount: "Brutto Betrag",
-    fee: "Gebühr",
+    netAmount: "Betrag",
+    grossAmount: "Gesamtkosten",
+    fee: "Service Fee",
     noTransfers: "Keine Überweisungen erforderlich",
   },
   en: {
@@ -63,15 +64,15 @@ const csvTranslations = {
     revenue: "Revenue",
     investment: "Investment",
     expenses: "Expenses",
-    taxes: "Taxes",
+    transferFees: "Service Fees",
     profitShare: "Profit Share",
     netPayout: "Net Payout",
     settlementTransfers: "Settlement Transfers",
     from: "From",
     to: "To",
-    netAmount: "Net Amount",
-    grossAmount: "Gross Amount",
-    fee: "Fee",
+    netAmount: "Amount",
+    grossAmount: "Total Cost",
+    fee: "Service Fee",
     noTransfers: "No transfers required",
   },
 };
@@ -194,12 +195,9 @@ export function generateCSV(
     }
   );
 
-  // Calculate fees per member for display
-  const feeByPayer: Record<string, number> = {};
-  result.suggestedTransfers.forEach((transfer) => {
-    feeByPayer[transfer.fromMemberId] =
-      (feeByPayer[transfer.fromMemberId] || 0) + transfer.feeAmount;
-  });
+  const payoutByMember = new Map(
+    getMemberPayoutSummaries(result).map((payout) => [payout.memberId, payout])
+  );
 
   // Build CSV rows
   const rows: (string | number | undefined | null)[][] = [];
@@ -222,22 +220,23 @@ export function generateCSV(
     t.revenue,
     t.investment,
     t.expenses,
-    t.taxes,
+    t.transferFees,
     t.profitShare,
     t.netPayout,
   ]);
 
   // Add member rows
   for (const member of result.members) {
-    const taxes = feeByPayer[member.memberId] ?? 0;
-    const netAfterFees = member.finalNet - taxes;
+    const payout = payoutByMember.get(member.memberId);
+    const transferFees = payout?.transferFeesDeducted ?? 0;
+    const netAfterFees = payout?.netPayout ?? member.finalNet;
 
     rows.push([
       member.handle,
       format(member.revenue, lang),
       format(member.investment, lang),
       format(member.expenses, lang),
-      format(taxes, lang),
+      format(transferFees, lang),
       format(member.profitShare, lang),
       format(netAfterFees, lang),
     ]);

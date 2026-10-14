@@ -6,6 +6,7 @@ import { MemberRow } from "./MemberRow";
 import { MemberCard } from "./MemberCard";
 import { Button } from "@/components/ui/button";
 import { useColumnEnterNavigation } from "@/hooks/useColumnEnterNavigation";
+import { distributionColumns } from "@/lib/accounting";
 
 type Lang = "de" | "en";
 
@@ -63,7 +64,7 @@ interface MembersTableProps {
   /** Callback to remove a member */
   removeMember: (id: string) => void;
   /** Callback to add an individual expense for a member */
-  addIndividualExpense: (memberId: string) => void;
+  addIndividualExpense: (memberId: string, init?: Partial<IndividualExpenseInput>) => void;
   /** Callback to update an individual expense */
   updateIndividualExpense: (id: string, patch: Partial<IndividualExpenseInput>) => void;
   /** Callback to remove an individual expense */
@@ -90,6 +91,8 @@ export function MembersTable({
   removeIndividualExpense,
   onOpenPresetManager
 }: MembersTableProps) {
+  const columns = distributionColumns(distributionMode);
+
   // Pre-compute member lookup Map to eliminate O(n²) find() calls
   const resultMemberMap = useMemo(() => {
     if (!result?.members) {return new Map();}
@@ -160,9 +163,9 @@ export function MembersTable({
               <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.revenueLabel}</th>
               <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.investmentLabel}</th>
               <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.expensesLabel}</th>
-              <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.percentShare}</th>
-              <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.fixedBonus}</th>
-              <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.fixedPayout}</th>
+              {columns.percentShare && <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.percentShare}</th>}
+              {columns.fixedAmounts && <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.fixedBonus}</th>}
+              {columns.fixedAmounts && <th scope="col" className="py-3 px-3 text-left transition-colors duration-200">{t.fixedPayout}</th>}
               <th scope="col" />
             </tr>
           </thead>
