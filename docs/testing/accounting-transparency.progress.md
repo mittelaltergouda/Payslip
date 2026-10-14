@@ -1,5 +1,25 @@
 # Accounting transparency implementation progress
 
+## HANDOFF 2026-10-14 (night) — START HERE TOMORROW
+
+Branch `feat/accounting-transparency` is pushed to GitHub (Marco: always push; PR/merge/close/deploy still need his explicit OK). Unit suite last fully green at 1888/1888 before the review fixes; every fix since then was run against its affected test files (all green), tsc clean, eslint 0 errors.
+
+Done: tasks 1-4 (cost reimbursement bug, itemized positions, recorded transfers, plain-language arithmetic in UI + PDF page 2), plus fixes found on the way (see sections below).
+
+Task 5 (t_d14cbb17) IN PROGRESS:
+- PR reconciliation DONE: #97 head (cb18544) is an ancestor of #98; #98 head (645d098) IS our branch base. Our branch contains both PRs fully, no conflicts. Proposal (needs Marco's OK): open one PR from this branch, then close #97 and #98.
+- Production build on a458892: green (Turbopack, throwaway copy in the session scratchpad with hard-linked node_modules, because the worktree's node_modules symlink is rejected by Turbopack).
+- Independent review (code-reviewer agent) DONE, no CRITICAL. Fixed, each red test first, pushed:
+  - 29c4d7a HIGH: PDF/CSV/clipboard payouts ignored recorded transfers (A->B 300 showed 800/200 instead of 500/500).
+  - 80acf96 MEDIUM: duplicate-member-ID check in calculation broke legacy sessions; now only with recorded transfers.
+  - 3853ef5 MEDIUM: ADJUSTABLE with everyone on fixed payouts dropped the leftover profit; now shared equally among active members (MY rule choice; old coverage test re-derived 300/400 -> 450/550). Tell Marco.
+  - 5dcb4e2 MEDIUM: recorded-transfer editor allowed sender == recipient; now prevented.
+  - Not fixed (LOW): recorded transfer amounts not checked for integers; PDF wraps only at spaces (very long labels overflow) and maps only → and − for WinAnsi; MoneyItemsEditor rows lose data-nav-* keyboard attributes once positions exist.
+- E2E: full Playwright run (1035 tests, 5 browsers, workers=2) was started against a458892, i.e. BEFORE the review fixes; it was at 556/1035 when the session ended. Output: session scratchpad `e2e-run1.txt` (may be gone tomorrow). Tomorrow: rebuild a throwaway copy from current HEAD, `next start -p 3000` (port 3000 is free; live runs on 58412), `npx playwright test --reporter=line --workers=2`, then separate real failures from outdated tests (never weaken tests). Expect ~60+ min on 2 GB RAM.
+- Security (Dependabot, 42 open alerts on master): live and branch use next 16.3.1, which has CRITICAL RCE advisories (Image Optimization API with AVIF, fixed in 16.3.3; next/og fixed in 16.3.6). App does not use next/image or next/og, but /_next/image is active (HTTP 400, not 404). Plan: bump next to 16.3.6 (released 2026-09-22, older than 2 weeks) in the lockfile, rebuild, rerun unit + E2E, push. Do the npm install in a throwaway copy or carefully: the worktree's node_modules is a symlink to /root/sc-payslip/node_modules (shared with the main checkout). Live only changes with a deployment (needs Marco's OK).
+
+Still open after task 5: task 6 (t_e560197e) separate test URL (e.g. payslip-test.cheesy.cloud), Cloudflare steps for Marco, live switch only after his OK, rollback possible.
+
 ## Status 2026-10-13 (Claude Code) — supersedes older sections below
 
 - Commits: c966812 (WIP snapshot), 1e065cc + dbb31de (new core tests), fb695e8 (15 legacy expense tests realigned).
