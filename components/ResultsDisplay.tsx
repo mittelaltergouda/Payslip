@@ -8,7 +8,6 @@ import { ExportPDFButton } from "./ExportPDFButton";
 import { ExportClipboardButton } from "./ExportClipboardButton";
 import { ExportCSVButton } from "./ExportCSVButton";
 import { buildArithmeticSections } from "@/lib/accounting";
-import { format } from "@/lib/format";
 
 
 /**
@@ -113,26 +112,6 @@ export function ResultsDisplay({
         >
           {result.fixedAmountsStatus === "SUSPENDED_FOR_LOSS" ? t.fixedAmountsSuspended : t.fixedAmountsScaled}
         </p>
-      )}
-
-      {result && (result.unsettledBalances?.length ?? 0) > 0 && (
-        <div
-          role="alert"
-          className="rounded-xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-100"
-        >
-          <p className="font-semibold">{t.unsettledBalances}</p>
-          <ul className="mt-2 list-disc space-y-1 pl-5">
-            {result.unsettledBalances?.map((balance) => {
-              const member = result.members.find((candidate) => candidate.memberId === balance.memberId);
-              const label = balance.amount > 0 ? t.stillToReceive : t.excessRetained;
-              return (
-                <li key={balance.memberId}>
-                  {member?.handle ?? balance.memberId}: {label} {format(Math.abs(balance.amount), lang)} {currency}.
-                </li>
-              );
-            })}
-          </ul>
-        </div>
       )}
 
       {result && <details className="rounded-xl border border-white/10 p-4"><summary className="cursor-pointer font-semibold">{lang === "de" ? "Rechnung nachvollziehen" : "Calculation explained"}</summary><div className="mt-3 space-y-4 text-sm break-words">{buildArithmeticSections(session, result, lang).map((section) => <section key={section.title}><h4 className="font-semibold">{section.title}</h4><ul className="mt-1 space-y-1">{section.lines.map((line, index) => <li key={index}>{line}</li>)}</ul></section>)}</div></details>}

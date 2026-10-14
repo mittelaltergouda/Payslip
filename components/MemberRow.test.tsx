@@ -682,7 +682,7 @@ describe('MemberRow - Distribution Modes', () => {
     vi.clearAllMocks();
   });
 
-  it('should disable percent share input in EQUAL mode', () => {
+  it('should hide percent share input in EQUAL mode', () => {
     render(
       <table>
         <tbody>
@@ -703,8 +703,7 @@ describe('MemberRow - Distribution Modes', () => {
       </table>
     );
 
-    const percentInput = screen.getByDisplayValue('50');
-    expect(percentInput).toBeDisabled();
+    expect(screen.queryByDisplayValue('50')).not.toBeInTheDocument();
   });
 
   it('should enable percent share input in PERCENT mode', () => {
@@ -732,7 +731,7 @@ describe('MemberRow - Distribution Modes', () => {
     expect(percentInput).not.toBeDisabled();
   });
 
-  it('should disable fixed bonus input when not in ADJUSTABLE mode', () => {
+  it('should hide fixed bonus input when not in ADJUSTABLE mode', () => {
     render(
       <table>
         <tbody>
@@ -753,8 +752,7 @@ describe('MemberRow - Distribution Modes', () => {
       </table>
     );
 
-    const fixedBonusInput = screen.getByDisplayValue('100');
-    expect(fixedBonusInput).toBeDisabled();
+    expect(screen.queryByDisplayValue('100')).not.toBeInTheDocument();
   });
 
   it('should enable fixed bonus input in ADJUSTABLE mode', () => {
@@ -782,7 +780,7 @@ describe('MemberRow - Distribution Modes', () => {
     expect(fixedBonusInput).not.toBeDisabled();
   });
 
-  it('should disable fixed payout input when not in ADJUSTABLE mode', () => {
+  it('should hide fixed payout input when not in ADJUSTABLE mode', () => {
     render(
       <table>
         <tbody>
@@ -803,8 +801,9 @@ describe('MemberRow - Distribution Modes', () => {
       </table>
     );
 
-    const fixedPayoutInput = screen.getByDisplayValue('5,000');
-    expect(fixedPayoutInput).toBeDisabled();
+    expect(screen.queryByDisplayValue('5,000')).not.toBeInTheDocument();
+    // PERCENT mode still shows the percent share
+    expect(screen.getByDisplayValue('50')).not.toBeDisabled();
   });
 
   it('should enable fixed payout input in ADJUSTABLE mode', () => {

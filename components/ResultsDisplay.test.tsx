@@ -87,7 +87,7 @@ const mockResult: PayslipResult = {
 };
 
 describe('ResultsDisplay - Basic Rendering', () => {
-  it('should warn about balances that cannot be transferred after fees', () => {
+  it('does not warn about tiny rounding residuals, it only explains them in the calculation', () => {
     render(
       <ResultsDisplay
         result={{
@@ -104,9 +104,10 @@ describe('ResultsDisplay - Basic Rendering', () => {
       />
     );
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Unsettled balances');
-    expect(screen.getByText('Pilot: excess retained 1 aUEC.')).toBeInTheDocument();
-    expect(screen.getByText('Escort: still to receive 1 aUEC.')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Unsettled balances/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Residual Pilot: excess retained 1/)).toBeInTheDocument();
+    expect(screen.getByText(/Residual Escort: still to receive 1/)).toBeInTheDocument();
   });
 
   it('should explain suspended fixed amounts on a loss session', () => {

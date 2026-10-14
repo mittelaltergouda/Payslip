@@ -22,6 +22,11 @@ export type PaidTransferInput = {
   toMemberId: string;
   netAmount: number;
   feeAmount: number;
+  /**
+   * Whether the in-game service fee was paid on top of netAmount. feeAmount is
+   * derived from it in the editor; missing on older sessions (then feeAmount > 0).
+   */
+  feeIncluded?: boolean;
   /** Legacy transfers default to SETTLEMENT (recipient bears fee). */
   label?: string;
   kind?: "SETTLEMENT" | "SESSION_CASH" | "COST_CONTRIBUTION";
@@ -159,6 +164,7 @@ const paidTransferInputSchema = z.object({
   toMemberId: z.string(),
   netAmount: moneySchema,
   feeAmount: moneySchema,
+  feeIncluded: z.boolean().optional(),
   label: z.string().optional(),
   kind: z.enum(["SETTLEMENT", "SESSION_CASH", "COST_CONTRIBUTION"]).optional(),
 });

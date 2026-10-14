@@ -29,6 +29,7 @@ import { DuplicateSessionDialog } from "./DuplicateSessionDialog";
 import { Button } from "./ui/button";
 import { FormField } from "./ui/form-field";
 import type { PresetMember } from "@/lib/types";
+import { SERVICE_FEE_RATE } from "@/lib/calc/tax";
 
 
 const rndId = () =>
@@ -36,7 +37,7 @@ const rndId = () =>
     ? crypto.randomUUID()
     : `id-${Math.random().toString(16).slice(2)}`;
 
-const taxFixed = 0.005;
+const taxFixed = SERVICE_FEE_RATE;
 
 function format(amount: number, lang: Lang) {
   return Math.round(amount).toLocaleString(lang === "de" ? "de-DE" : "en-US");
@@ -312,12 +313,12 @@ export function SessionWizard({ initialLang = "de" }: Props) {
     });
   };
 
-  const addIndividualExpense = (memberId: string) => {
+  const addIndividualExpense = (memberId: string, init?: Partial<IndividualExpenseInput>) => {
     setSession((prev) => ({
       ...prev,
       individualExpenses: [
         ...(prev.individualExpenses ?? []),
-        { id: rndId(), memberId, label: t.expenses, amount: 0 }
+        { id: rndId(), memberId, label: t.expenses, amount: 0, ...init }
       ]
     }));
   };

@@ -43,9 +43,9 @@ describe("arithmetic explanation sections", () => {
     expect(text).toContain("P2: 2.822.000 Investment + 47.000 Kosten + 1.047.534,5 Anteil = 3.916.534,5");
     expect(text).toContain("P1 hält 0 → bekommt noch 3.869.534,5");
     expect(text).toContain("P2 hält 7.786.069 → gibt 3.869.534,5 ab");
-    expect(text).toContain("P2 → P1: 3.850.282 kommen an + 19.252 Gebühr = 3.869.534 Belastung");
+    expect(text).toContain("P2 → P1: Amount 3.850.282 + Service Fee 19.252 = Total Cost 3.869.534");
     expect(text).toContain("Budget 3.869.534,5 → ganzzahlig 3.869.534, Rest 0,5");
-    expect(text).toContain("Gebühr = 0,5 % vom ankommenden Betrag, aufgerundet, mindestens 1");
+    expect(text).toContain("Service Fee = 0,5 % vom Amount (kommt beim Empfänger an), aufgerundet");
     expect(text).toContain("Rest P1: noch zu erhalten 0,5");
     expect(text).toContain("Rest P2: Überschuss verblieben 0,5");
   });
@@ -68,7 +68,7 @@ describe("arithmetic explanation sections", () => {
     expect(text).toContain("A: 600 Investment + 0 Kosten − 300 Anteil = 300");
     expect(text).toContain("B: 0 Investment + 0 Kosten − 300 Anteil = -300");
     expect(text).toContain("B zahlt 300 aus eigener Tasche");
-    expect(text).toContain("B → A: 300 kommen an + 0 Gebühr = 300 Belastung");
+    expect(text).toContain("B → A: Amount 300 + Service Fee 0 = Total Cost 300");
   });
 
   it("explains suspended and proportionally cut fixed amounts", () => {
@@ -137,7 +137,7 @@ describe("arithmetic explanation sections", () => {
     });
 
     expect(sections.map((s) => s.title)).toContain("Bereits erfolgte Überweisungen");
-    expect(text).toContain("Vorschuss aus Session-Geld (Vorschuss): A → B 99 + 1 Gebühr = 100");
+    expect(text).toContain("Vorschuss aus Session-Geld (Vorschuss): A → B: Amount 99 + Service Fee 1 = Total Cost 100");
     expect(text).not.toMatch(/SESSION_CASH|SETTLEMENT|COST_CONTRIBUTION/);
   });
 
@@ -146,6 +146,6 @@ describe("arithmetic explanation sections", () => {
 
     expect(sections.map((s) => s.title)).toEqual(["1. Profit", "2. Distribution", "3. Target per player", "4. Transfers"]);
     expect(text).toContain("Profit = 7,786,069 − 2,822,000 − 2,869,000 = 2,095,069");
-    expect(text).toContain("P2 → P1: 3,850,282 arrives + 19,252 fee = 3,869,534 charged");
+    expect(text).toContain("P2 → P1: Amount 3,850,282 + Service Fee 19,252 = Total Cost 3,869,534");
   });
 });

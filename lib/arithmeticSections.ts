@@ -53,7 +53,7 @@ function profitSection(ctx: Ctx): ArithmeticSection {
     .filter((t) => t.kind === "SESSION_CASH" || t.kind === "COST_CONTRIBUTION")
     .reduce((sum, t) => sum + t.feeAmount, 0);
   if (fees > 0) {
-    lines.push(`${de ? "Bereits bezahlte Gebühren aus Vorschüssen und Kostenbeteiligungen" : "Fees already paid on advances and cost contributions"}: ${num(fees)}`);
+    lines.push(`${de ? "Bereits bezahlte Service Fees aus Vorschüssen und Kostenbeteiligungen" : "Service fees already paid on advances and cost contributions"}: ${num(fees)}`);
   }
   const label = result.netProfit < 0 ? (de ? "Ergebnis (Verlust)" : "Result (loss)") : (de ? "Gewinn" : "Profit");
   const feeTerm = fees > 0 ? ` − ${num(fees)}` : "";
@@ -178,15 +178,15 @@ function recordedSection(ctx: Ctx): ArithmeticSection | null {
   const kinds = {
     SETTLEMENT: {
       label: de ? "Ausgleich / Auszahlung" : "Settlement / payout",
-      rule: de ? "zählt als Teil der Auszahlung, die Gebühr trägt der Empfänger." : "counts toward the payout, the recipient bears the fee.",
+      rule: de ? "zählt als Teil der Auszahlung, die Service Fee trägt der Empfänger." : "counts toward the payout, the recipient bears the service fee.",
     },
     SESSION_CASH: {
       label: de ? "Vorschuss aus Session-Geld" : "Advance from session cash",
-      rule: de ? "verschiebt nur, wer das Session-Geld hält. Die Gebühr mindert den Gewinn einmal." : "only moves who holds the session cash. The fee reduces profit once.",
+      rule: de ? "verschiebt nur, wer das Session-Geld hält. Die Service Fee mindert den Gewinn einmal." : "only moves who holds the session cash. The service fee reduces profit once.",
     },
     COST_CONTRIBUTION: {
       label: de ? "Externe Kostenbeteiligung" : "External cost contribution",
-      rule: de ? "eigenes Geld für die Kosten eines anderen. Die Erstattung samt Gebühr geht an den Geldgeber." : "own money toward another player's costs. The reimbursement including the fee goes to the funder.",
+      rule: de ? "eigenes Geld für die Kosten eines anderen. Die Erstattung samt Service Fee geht an den Geldgeber." : "own money toward another player's costs. The reimbursement including the service fee goes to the funder.",
     },
   } as const;
   const lines = [de
@@ -195,7 +195,7 @@ function recordedSection(ctx: Ctx): ArithmeticSection | null {
   for (const t of paid) {
     const kind = kinds[t.kind ?? "SETTLEMENT"];
     const label = t.label ? ` (${t.label})` : "";
-    lines.push(`${kind.label}${label}: ${name(t.fromMemberId)} → ${name(t.toMemberId)} ${num(t.netAmount)} + ${num(t.feeAmount)} ${de ? "Gebühr" : "fee"} = ${num(t.netAmount + t.feeAmount)}`);
+    lines.push(`${kind.label}${label}: ${name(t.fromMemberId)} → ${name(t.toMemberId)}: Amount ${num(t.netAmount)} + Service Fee ${num(t.feeAmount)} = Total Cost ${num(t.netAmount + t.feeAmount)}`);
   }
   for (const kind of new Set(paid.map((t) => t.kind ?? "SETTLEMENT"))) {
     lines.push(`${kinds[kind].label}: ${kinds[kind].rule}`);
@@ -212,7 +212,7 @@ function transferSection(ctx: Ctx): ArithmeticSection {
     lines.push(de ? "Keine Überweisungen nötig." : "No transfers needed.");
   }
   for (const transfer of transfers) {
-    lines.push(`${name(transfer.fromMemberId)} → ${name(transfer.toMemberId)}: ${num(transfer.netAmount)} ${de ? "kommen an" : "arrives"} + ${num(transfer.feeAmount)} ${de ? "Gebühr" : "fee"} = ${num(transfer.grossAmount)} ${de ? "Belastung" : "charged"}`);
+    lines.push(`${name(transfer.fromMemberId)} → ${name(transfer.toMemberId)}: Amount ${num(transfer.netAmount)} + Service Fee ${num(transfer.feeAmount)} = Total Cost ${num(transfer.grossAmount)}`);
     if (isSettlementDetail(transfer) && transfer.exactBudget !== transfer.budgetAmount) {
       lines.push(`Budget ${num(transfer.exactBudget)} → ${de ? "ganzzahlig" : "whole"} ${num(transfer.budgetAmount)}, ${de ? "Rest" : "remainder"} ${num(transfer.roundingRemainder)}`);
     }
@@ -220,8 +220,8 @@ function transferSection(ctx: Ctx): ArithmeticSection {
   if (result.taxRateApplied > 0) {
     const rate = num(result.taxRateApplied * 100);
     lines.push(de
-      ? `Gebühr = ${rate} % vom ankommenden Betrag, aufgerundet, mindestens 1. Ankommender Betrag + Gebühr passen ins Budget des Absenders.`
-      : `Fee = ${rate} % of the arriving amount, rounded up, at least 1. Arriving amount + fee fit the sender's budget.`);
+      ? `Service Fee = ${rate} % vom Amount (kommt beim Empfänger an), aufgerundet. Amount + Service Fee = Total Cost passt ins Budget des Absenders.`
+      : `Service Fee = ${rate} % of the amount (what the recipient gets), rounded up. Amount + Service Fee = Total Cost fits the sender's budget.`);
   }
   lines.push(de
     ? "Überwiesen werden nur ganze aUEC. Was darunter liegt, bleibt als Rest offen."

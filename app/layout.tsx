@@ -21,7 +21,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "SC Payslip",
-  description: "Teilt Profite, Kosten und Steuern fair auf  Star Citizen ready."
+  description: "Teilt Profite, Kosten und Service Fees fair auf  Star Citizen ready."
 };
 
 // Request-specific CSP nonces require server rendering for every page request.

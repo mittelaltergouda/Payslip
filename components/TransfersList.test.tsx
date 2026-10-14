@@ -192,8 +192,8 @@ describe('TransfersList - Transfer Details', () => {
       />
     );
 
-    expect(screen.getByText('Fee: 5 aUEC · Total charged: 1,005 aUEC')).toBeInTheDocument();
-    expect(screen.getByText('Fee: 3 aUEC · Total charged: 503 aUEC')).toBeInTheDocument();
+    expect(screen.getByText('Service Fee: 5 aUEC · Total Cost: 1,005 aUEC')).toBeInTheDocument();
+    expect(screen.getByText('Service Fee: 3 aUEC · Total Cost: 503 aUEC')).toBeInTheDocument();
   });
 
   it('should display fee when feeAmount is greater than 0', () => {
@@ -271,7 +271,7 @@ describe('TransfersList - Number Formatting', () => {
 
     // German locale uses periods as thousand separators
     expect(screen.getByText(/^10\.000 aUEC$/)).toBeInTheDocument();
-    expect(screen.getByText(/Gesamtbelastung: 10\.050 aUEC/)).toBeInTheDocument();
+    expect(screen.getByText(/Total Cost: 10\.050 aUEC/)).toBeInTheDocument();
   });
 
   it('should format numbers with English locale', () => {
@@ -296,7 +296,7 @@ describe('TransfersList - Number Formatting', () => {
 
     // English locale uses commas as thousand separators
     expect(screen.getByText(/^10,000 aUEC$/)).toBeInTheDocument();
-    expect(screen.getByText(/Total charged: 10,050 aUEC/)).toBeInTheDocument();
+    expect(screen.getByText(/Total Cost: 10,050 aUEC/)).toBeInTheDocument();
   });
 
   it('should round numbers correctly', () => {
@@ -321,7 +321,7 @@ describe('TransfersList - Number Formatting', () => {
 
     // Numbers should be rounded to nearest integer
     expect(screen.getByText(/^1,001 aUEC$/)).toBeInTheDocument();
-    expect(screen.getByText(/Total charged: 1,005 aUEC/)).toBeInTheDocument();
+    expect(screen.getByText(/Total Cost: 1,005 aUEC/)).toBeInTheDocument();
     expect(screen.getByText(/Fee: 5 aUEC/)).toBeInTheDocument();
   });
 });
@@ -472,6 +472,6 @@ describe('TransfersList - Edge Cases', () => {
     );
 
     expect(screen.getByText(/^9,999,999 aUEC$/)).toBeInTheDocument();
-    expect(screen.getByText(/Total charged: 10,000,000 aUEC/)).toBeInTheDocument();
+    expect(screen.getByText(/Total Cost: 10,000,000 aUEC/)).toBeInTheDocument();
   });
 });

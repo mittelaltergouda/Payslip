@@ -43,21 +43,16 @@ const csvTranslations = {
     revenue: "Umsatz",
     investment: "Investment",
     expenses: "Ausgaben",
-    transferFees: "Transfergebühren",
+    transferFees: "Service Fees",
     profitShare: "Gewinnanteil",
     netPayout: "Netto Auszahlung",
     settlementTransfers: "Überweisungen",
     from: "Von",
     to: "An",
-    netAmount: "Überweisungsbetrag",
-    grossAmount: "Gesamtbelastung",
-    fee: "Gebühr",
+    netAmount: "Amount",
+    grossAmount: "Total Cost",
+    fee: "Service Fee",
     noTransfers: "Keine Überweisungen erforderlich",
-    unsettledBalances: "Offene Restbeträge",
-    status: "Status",
-    amount: "Betrag",
-    stillToReceive: "Noch zu erhalten",
-    excessRetained: "Überschuss verblieben",
   },
   en: {
     exportTitle: "SC Payslip Export",
@@ -69,21 +64,16 @@ const csvTranslations = {
     revenue: "Revenue",
     investment: "Investment",
     expenses: "Expenses",
-    transferFees: "Transfer Fees",
+    transferFees: "Service Fees",
     profitShare: "Profit Share",
     netPayout: "Net Payout",
     settlementTransfers: "Settlement Transfers",
     from: "From",
     to: "To",
-    netAmount: "Amount to Send",
-    grossAmount: "Total Charged",
-    fee: "Fee",
+    netAmount: "Amount",
+    grossAmount: "Total Cost",
+    fee: "Service Fee",
     noTransfers: "No transfers required",
-    unsettledBalances: "Unsettled balances",
-    status: "Status",
-    amount: "Amount",
-    stillToReceive: "Still to receive",
-    excessRetained: "Excess retained",
   },
 };
 
@@ -282,20 +272,6 @@ export function generateCSV(
         format(transfer.netAmount, lang),
         format(transfer.grossAmount, lang),
         format(transfer.feeAmount, lang),
-      ]);
-    }
-  }
-
-  if ((result.unsettledBalances?.length ?? 0) > 0) {
-    rows.push([]);
-    rows.push([t.unsettledBalances]);
-    rows.push([t.handle, t.status, t.amount]);
-    for (const balance of result.unsettledBalances ?? []) {
-      const member = result.members.find((candidate) => candidate.memberId === balance.memberId);
-      rows.push([
-        member?.handle ?? balance.memberId,
-        balance.amount > 0 ? t.stillToReceive : t.excessRetained,
-        format(Math.abs(balance.amount), lang),
       ]);
     }
   }

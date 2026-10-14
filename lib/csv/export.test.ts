@@ -168,7 +168,7 @@ describe('generateCSV', () => {
 
     // English CSV should use comma delimiter
     // Check that the member header row uses commas
-    expect(csv).toContain('Handle,Revenue,Investment,Expenses,Transfer Fees,Profit Share,Net Payout');
+    expect(csv).toContain('Handle,Revenue,Investment,Expenses,Service Fees,Profit Share,Net Payout');
   });
 
   it('should use semicolon as delimiter for German', () => {
@@ -179,7 +179,7 @@ describe('generateCSV', () => {
 
     // German CSV should use semicolon delimiter
     // Check that the member header row uses semicolons
-    expect(csv).toContain('Handle;Umsatz;Investment;Ausgaben;Transfergebühren;Gewinnanteil;Netto Auszahlung');
+    expect(csv).toContain('Handle;Umsatz;Investment;Ausgaben;Service Fees;Gewinnanteil;Netto Auszahlung');
   });
 
   it('should use English translations by default', () => {
@@ -443,9 +443,7 @@ describe('generateCSV', () => {
     // Should contain transfer table headers
     expect(csv).toContain('From');
     expect(csv).toContain('To');
-    expect(csv).toContain('Amount to Send');
-    expect(csv).toContain('Total Charged');
-    expect(csv).toContain('Fee');
+    expect(csv).toContain('From,To,Amount,Total Cost,Service Fee');
 
     // Should contain member handles in transfer
     expect(csv).toContain('Alice');
@@ -476,9 +474,7 @@ describe('generateCSV', () => {
 
     expect(csv).toContain('Von');
     expect(csv).toContain('An');
-    expect(csv).toContain('Überweisungsbetrag');
-    expect(csv).toContain('Gesamtbelastung');
-    expect(csv).toContain('Gebühr');
+    expect(csv).toContain('Von;An;Amount;Total Cost;Service Fee');
   });
 
   it('should handle multiple transfers', () => {
@@ -751,7 +747,7 @@ describe('generateCSV', () => {
     const csv = generateCSV(session, result);
 
     // CSV should identify the deducted amounts as transfer fees.
-    expect(csv).toContain('Transfer Fees');
+    expect(csv).toContain('Service Fees');
   });
 
   it('should handle zero values correctly', () => {
@@ -918,7 +914,7 @@ describe('current transfer-budget export', () => {
     );
   });
 
-  it('should disclose balances that cannot be transferred after fees', () => {
+  it('should not list tiny rounding residuals as a separate section', () => {
     const session: SessionInput = {
       name: 'Minimum fee residual',
       type: 'TRADING',
@@ -934,10 +930,9 @@ describe('current transfer-budget export', () => {
     };
     const csv = generateCSV(session, calculatePayslip(session), { lang: 'en' });
 
-    expect(csv).toContain('Transfer Fees');
-    expect(csv).toContain('Unsettled balances');
-    expect(csv).toContain('D1,Excess retained,1');
-    expect(csv).toContain('C2,Still to receive,1');
+    expect(csv).toContain('Service Fees');
+    expect(csv).not.toContain('Unsettled balances');
+    expect(csv).not.toContain('Excess retained');
   });
 });
 

@@ -26,7 +26,7 @@ import {
 export type { SessionInput, PayslipResult, MemberBreakdown, Transfer } from '../types';
 
 // Re-export utility functions for testing and external use
-export { applyTransferTaxes, calculateGrossAmount, calculateFeeAmount } from './tax';
+export { applyTransferTaxes, calculateGrossAmount, calculateFeeAmount, calculateServiceFee, SERVICE_FEE_RATE } from './tax';
 
 // ============================================================================
 // MAIN CALCULATION ORCHESTRATOR

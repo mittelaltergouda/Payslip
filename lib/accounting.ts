@@ -1,4 +1,5 @@
-import type { PayslipResult, SessionInput, MemberInput } from "./types";
+import type { PayslipResult, SessionInput, MemberInput, PaidTransferInput, DistributionMode } from "./types";
+import { calculateServiceFee } from "./calc/tax";
 import { buildArithmeticSections } from "./arithmeticSections";
 import type { Lang } from "./i18n/translations";
 
@@ -13,4 +14,22 @@ export type { ArithmeticSection } from "./arithmeticSections";
 /** Shared by UI and PDF: the sections as a flat list, each title followed by its lines. */
 export function buildArithmeticExplanation(session: SessionInput, result: PayslipResult, lang: Lang): string[] {
   return buildArithmeticSections(session, result, lang).flatMap((section) => [section.title, ...section.lines]);
+}
+
+/** Older sessions stored only the fee amount; a recorded fee means it was paid. */
+export function isServiceFeeIncluded(transfer: Pick<PaidTransferInput, "feeAmount" | "feeIncluded">): boolean {
+  return transfer.feeIncluded ?? transfer.feeAmount > 0;
+}
+
+/**
+ * Amount and fee of a recorded transfer. Same rule as for suggested transfers:
+ * the service fee is charged on top of the amount entered in the game.
+ */
+export function withServiceFee(netAmount: number, feeIncluded: boolean, taxRate: number): Pick<PaidTransferInput, "netAmount" | "feeAmount" | "feeIncluded"> {
+  return { netAmount, feeIncluded, feeAmount: feeIncluded ? calculateServiceFee(netAmount, taxRate) : 0 };
+}
+
+/** Distribution inputs that are only shown where the mode actually uses them. */
+export function distributionColumns(mode: DistributionMode): { percentShare: boolean; fixedAmounts: boolean } {
+  return { percentShare: mode !== "EQUAL", fixedAmounts: mode === "ADJUSTABLE" };
 }

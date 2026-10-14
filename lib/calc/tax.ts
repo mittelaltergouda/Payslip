@@ -86,6 +86,23 @@ export function applyTransferTaxes(
   });
 }
 
+/** Star Citizen's in-game service fee on wallet transfers (0.5 %). */
+export const SERVICE_FEE_RATE = 0.005;
+
+/**
+ * Service fee the sender pays on top of the amount entered in the game.
+ * Same rule as for suggested transfers: rate of the amount, rounded up to whole aUEC.
+ *
+ * @param netAmount - The amount entered in the game (what the recipient gets)
+ * @param taxRate - Fee rate as decimal (0-1)
+ */
+export function calculateServiceFee(
+  netAmount: number,
+  taxRate: number
+): number {
+  return calculateGrossAmount(netAmount, taxRate) - netAmount;
+}
+
 /**
  * Calculates the sender's total balance reduction for a transfer.
  *

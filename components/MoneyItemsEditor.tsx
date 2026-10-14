@@ -19,9 +19,9 @@ type Props = {
 };
 
 /**
- * Revenue/investment editor that mirrors the expense editor next to it:
- * labelled positions with amount and remove button, a full add button and a Σ line.
- * Without positions the member's single amount stays directly editable.
+ * Revenue/investment editor, same pattern as the expense editor next to it:
+ * the single amount is directly editable, the add button splits it into
+ * labelled positions with amount and remove button, followed by a Σ line.
  */
 export function MoneyItemsEditor({ member, kind, lang, onChange, rowIndex, variant = "row" }: Props) {
   const field = kind === "revenue" ? "revenues" : "investments";
@@ -39,7 +39,7 @@ export function MoneyItemsEditor({ member, kind, lang, onChange, rowIndex, varia
   const addLabel = `+ ${title}`;
 
   return (
-    <div className={card ? "space-y-2" : "flex flex-col gap-1 min-w-[220px]"} role="group" aria-label={`${title} ${member.handle}`}>
+    <div className={card ? "space-y-2" : "flex flex-col gap-2 min-w-[220px]"} role="group" aria-label={`${title} ${member.handle}`}>
       {!items && (
         <NumericInput
           className={card ? undefined : "input w-full"}
@@ -54,13 +54,13 @@ export function MoneyItemsEditor({ member, kind, lang, onChange, rowIndex, varia
       {items?.map((item, index) => (
         <div key={item.id ?? index} className="flex gap-2 items-center">
           <LabelInput
-            className={card ? "flex-1" : "input flex-1"}
+            className={card ? "flex-1" : "input min-w-0 flex-1"}
             aria-label={`${kind} label ${index + 1}`}
             value={item.label}
             onChange={e => update(items.map((row, i) => i === index ? { ...row, label: e.target.value } : row))}
           />
           <NumericInput
-            className={card ? "w-24" : "input w-24"}
+            className={card ? "w-24" : "input w-28"}
             lang={lang}
             data-nav-col={index === 0 ? kind : undefined}
             data-nav-row={index === 0 ? rowIndex : undefined}
@@ -73,7 +73,7 @@ export function MoneyItemsEditor({ member, kind, lang, onChange, rowIndex, varia
               🗑
             </Button>
           ) : (
-            <button type="button" className="text-red-400 text-xl leading-none" aria-label={`Remove ${kind} ${index + 1}`} onClick={() => update(items.filter((_, i) => i !== index))}>
+            <button type="button" className="text-red-400" aria-label={`Remove ${kind} ${index + 1}`} onClick={() => update(items.filter((_, i) => i !== index))}>
               🗑
             </button>
           )}
@@ -82,7 +82,7 @@ export function MoneyItemsEditor({ member, kind, lang, onChange, rowIndex, varia
       {card ? (
         <Button size="sm" aria-label={`Add ${kind}`} onClick={add}>{addLabel}</Button>
       ) : (
-        <button type="button" className="btn text-xs" aria-label={`Add ${kind}`} onClick={add}>{addLabel}</button>
+        <button type="button" className="btn text-xs self-start" aria-label={`Add ${kind}`} onClick={add}>{addLabel}</button>
       )}
       <div className="text-xs text-white/60">Σ {format(memberAmount(member, kind), lang)}</div>
     </div>

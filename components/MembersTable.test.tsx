@@ -171,7 +171,7 @@ describe('MembersTable - Initial Rendering', () => {
         individualExpenses={sampleIndividualExpenses}
         result={sampleResult}
         showRole={false}
-        distributionMode="EQUAL"
+        distributionMode="ADJUSTABLE"
         feeByPayer={{}}
         lang="en"
         t={mockTranslationsEN}
@@ -192,6 +192,36 @@ describe('MembersTable - Initial Rendering', () => {
     expect(screen.queryByText('Taxes')).not.toBeInTheDocument();
     expect(screen.queryByText('Profit Share')).not.toBeInTheDocument();
     expect(screen.queryByText('Net After Fees')).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['EQUAL', [], ['% Share', 'Fixed Bonus', 'Fixed Payout']],
+    ['PERCENT', ['% Share'], ['Fixed Bonus', 'Fixed Payout']],
+    ['ADJUSTABLE', ['% Share', 'Fixed Bonus', 'Fixed Payout'], []],
+  ] as const)('shows only the distribution columns usable in %s mode', (mode, shown, hidden) => {
+    render(
+      <MembersTable
+        members={sampleMembers}
+        individualExpenses={sampleIndividualExpenses}
+        result={sampleResult}
+        showRole={false}
+        distributionMode={mode}
+        feeByPayer={{}}
+        lang="en"
+        t={mockTranslationsEN}
+        format={mockFormat}
+        {...mockCallbacks}
+      />
+    );
+
+    for (const name of shown) {
+      expect(screen.getByRole('columnheader', { name })).toBeInTheDocument();
+    }
+    for (const name of hidden) {
+      expect(screen.queryByRole('columnheader', { name })).not.toBeInTheDocument();
+      // mobile cards hide the same inputs
+      expect(screen.queryByText(name)).not.toBeInTheDocument();
+    }
   });
 
   it('should render role column header when showRole is true', () => {

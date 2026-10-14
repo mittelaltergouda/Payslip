@@ -38,16 +38,16 @@ const translations = {
     equal: "Gleich",
     percent: "Prozentual",
     adjustable: "Anpassbar",
-    transferTax: "Transfergebühr",
+    transferTax: "Service Fee",
     enabled: "Aktiv",
     disabled: "Deaktiviert",
     summary: "Gesamtübersicht",
     revenue: "Umsatz",
     investment: "Investment",
     expenses: "Kosten",
-    grossResult: "Ergebnis vor Gebühren",
-    fees: "Transfergebühren",
-    netResult: "Ergebnis nach Gebühren",
+    grossResult: "Ergebnis vor Service Fees",
+    fees: "Service Fees",
+    netResult: "Ergebnis nach Service Fees",
     members: "Mitglieder & Auszahlungen",
     member: "Mitglied",
     memberPlural: "Mitglieder",
@@ -68,13 +68,9 @@ const translations = {
     noTransfers: "Keine Überweisungen erforderlich.",
     from: "Von",
     to: "An",
-    amountToSend: "Überweisungsbetrag",
-    fee: "Gebühr",
-    totalCharged: "Gesamtbelastung",
-    unsettledBalances: "Offene Restbeträge",
-    status: "Status",
-    stillToReceive: "Noch zu erhalten",
-    excessRetained: "Überschuss verblieben",
+    amountToSend: "Amount",
+    fee: "Service Fee",
+    totalCharged: "Total Cost",
     page: "Seite",
     of: "von",
   },
@@ -84,16 +80,16 @@ const translations = {
     equal: "Equal",
     percent: "Percentage",
     adjustable: "Adjustable",
-    transferTax: "Transfer fee",
+    transferTax: "Service Fee",
     enabled: "Enabled",
     disabled: "Disabled",
     summary: "Session summary",
     revenue: "Revenue",
     investment: "Investment",
     expenses: "Expenses",
-    grossResult: "Result before fees",
-    fees: "Transfer fees",
-    netResult: "Result after fees",
+    grossResult: "Result before service fees",
+    fees: "Service Fees",
+    netResult: "Result after service fees",
     members: "Members & payouts",
     member: "member",
     memberPlural: "members",
@@ -114,13 +110,9 @@ const translations = {
     noTransfers: "No transfers required.",
     from: "From",
     to: "To",
-    amountToSend: "Amount to send",
-    fee: "Fee",
-    totalCharged: "Total charged",
-    unsettledBalances: "Unsettled balances",
-    status: "Status",
-    stillToReceive: "Still to receive",
-    excessRetained: "Excess retained",
+    amountToSend: "Amount",
+    fee: "Service Fee",
+    totalCharged: "Total Cost",
     page: "Page",
     of: "of",
   },
@@ -445,33 +437,6 @@ export function generatePDF(
       margin: { left: margin, right: margin, bottom: 20 },
     });
     y = (pdf.lastAutoTable?.finalY ?? y) + 8;
-  }
-
-  if ((result.unsettledBalances?.length ?? 0) > 0) {
-    y = ensureSpace(y, 30);
-    y = drawSectionTitle(t.unsettledBalances, y);
-    const residualRows = (result.unsettledBalances ?? []).map((balance) => {
-      const member = result.members.find((candidate) => candidate.memberId === balance.memberId);
-      return [
-        member?.handle ?? balance.memberId,
-        balance.amount > 0 ? t.stillToReceive : t.excessRetained,
-        format(Math.abs(balance.amount), lang),
-      ];
-    });
-    autoTable(doc, {
-      startY: y,
-      head: [[t.handle, t.status, t.amount]],
-      body: residualRows,
-      theme: "plain",
-      styles: { font: "helvetica", fontSize: 7.8, cellPadding: 2.4, textColor: COLORS.slate },
-      headStyles: { fillColor: COLORS.red, textColor: COLORS.white, fontStyle: "bold" },
-      alternateRowStyles: { fillColor: COLORS.soft },
-      columnStyles: {
-        0: { fontStyle: "bold", textColor: COLORS.ink },
-        2: { halign: "right", fontStyle: "bold" },
-      },
-      margin: { left: margin, right: margin, bottom: 20 },
-    });
   }
 
   // Footer on every page

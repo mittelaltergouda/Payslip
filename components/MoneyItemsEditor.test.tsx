@@ -12,7 +12,7 @@ const itemized: MemberInput = {
   ],
 };
 
-describe('MoneyItemsEditor layout mirrors the expense editor', () => {
+describe('MoneyItemsEditor layout matches the expense editor', () => {
   it('shows the Σ total even before any position exists', () => {
     render(<MoneyItemsEditor member={member} kind="revenue" lang="en" onChange={vi.fn()} />);
     expect(screen.getByText('Σ 1,500')).toBeInTheDocument();
@@ -23,13 +23,13 @@ describe('MoneyItemsEditor layout mirrors the expense editor', () => {
     expect(screen.getByText('Σ 5.000')).toBeInTheDocument();
   });
 
-  it('keeps the add button as a full-width column entry below the positions, like expenses', () => {
+  it('keeps a small add button below the positions, like expenses', () => {
     render(<MoneyItemsEditor member={itemized} kind="revenue" lang="de" onChange={vi.fn()} />);
     const group = screen.getByRole('group', { name: 'Umsatz Pilot' });
     expect(group).toHaveClass('flex', 'flex-col');
     const add = within(group).getByRole('button', { name: 'Add revenue' });
     expect(add).toHaveTextContent('+ Umsatz');
-    expect(add).toHaveClass('btn', 'text-xs');
+    expect(add).toHaveClass('btn', 'text-xs', 'self-start');
     const children = Array.from(group.children);
     expect(children.indexOf(add)).toBe(children.length - 2);
   });
@@ -37,8 +37,8 @@ describe('MoneyItemsEditor layout mirrors the expense editor', () => {
   it('uses the expense styling for position rows in the table', () => {
     render(<MoneyItemsEditor member={itemized} kind="revenue" lang="en" onChange={vi.fn()} />);
     expect(screen.getByLabelText('revenue label 1')).toHaveClass('input', 'flex-1');
-    expect(screen.getByLabelText('revenue amount 1')).toHaveClass('input', 'w-24');
-    expect(screen.getByRole('button', { name: 'Remove revenue 1' })).toHaveClass('text-red-400', 'text-xl');
+    expect(screen.getByLabelText('revenue amount 1')).toHaveClass('input', 'w-28');
+    expect(screen.getByRole('button', { name: 'Remove revenue 1' })).toHaveClass('text-red-400');
   });
 
   it('renders the mobile card variant with the same controls and behaviour', () => {

@@ -36,8 +36,8 @@ describe('accounting validation and explanation', () => {
     const session = { ...base, taxEnabled: true, taxRate: 0.005, paidTransfers: [{ fromMemberId: 'a', toMemberId: 'b', netAmount: 99, feeAmount: 1 }] };
     const lines = buildArithmeticExplanation(session, calculatePayslip(session), 'en');
     expect(lines.join('\n')).toContain('Profit = 1,000 − 0 − 0 = 1,000');
-    expect(lines.join('\n')).toContain('Settlement / payout: A → B 99 + 1 fee = 100');
-    expect(lines.join('\n')).toContain('A → B: 398 arrives + 2 fee = 400 charged');
+    expect(lines.join('\n')).toContain('Settlement / payout: A → B: Amount 99 + Service Fee 1 = Total Cost 100');
+    expect(lines.join('\n')).toContain('A → B: Amount 398 + Service Fee 2 = Total Cost 400');
     expect(lines.join('\n')).toContain('held before these transfers');
   });
 
@@ -52,8 +52,8 @@ describe('accounting validation and explanation', () => {
     const text = buildArithmeticExplanation(session, calculatePayslip(session), 'en').join('\n');
     // profit = 1000 - 300 - 1 (fee) = 699 -> 349.5 each; B funded 100 + 1 fee
     expect(text).toContain('Profit = 1,000 − 300 − 0 − 1 = 699');
-    expect(text).toContain('External cost contribution: B → A 100 + 1 fee = 101');
-    expect(text).toContain('The reimbursement including the fee goes to the funder');
+    expect(text).toContain('External cost contribution: B → A: Amount 100 + Service Fee 1 = Total Cost 101');
+    expect(text).toContain('The reimbursement including the service fee goes to the funder');
     expect(text).toContain('B: 0 Investment + 0 costs + 101 cost contribution + 349.5 share = 450.5');
     expect(text).toContain('A: 300 Investment + 0 costs − 100 cost contribution + 349.5 share = 549.5');
   });

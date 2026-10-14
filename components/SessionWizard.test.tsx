@@ -131,7 +131,7 @@ describe('SessionWizard - Initial Rendering', () => {
     renderWithToast(<SessionWizard />);
 
     const taxCheckbox = screen.getByRole('checkbox', {
-      name: /Transfer Tax berücksichtigen/i
+      name: /Service Fee berücksichtigen/i
     });
     expect(taxCheckbox).toBeChecked();
   });
@@ -219,17 +219,23 @@ describe('SessionWizard - Distribution Mode', () => {
     expect(percentInputs.length).toBeGreaterThan(0);
   });
 
-  it('should disable percent share inputs in EQUAL mode', () => {
-    renderWithToast(<SessionWizard />);
+  it('should hide percent share and fixed amount columns in EQUAL mode', () => {
+    const { container } = renderWithToast(<SessionWizard />);
 
-    const allInputs = screen.getAllByRole('textbox');
-    const percentShareInputs = allInputs.slice(-6);
+    expect(screen.queryByRole('columnheader', { name: 'Anteil %' })).not.toBeInTheDocument();
+    expect(container.querySelector('input[data-nav-col="percentShare"]')).toBeNull();
+    expect(container.querySelector('input[data-nav-col="fixedPayout"]')).toBeNull();
+  });
 
-    const disabledPercentInputs = percentShareInputs.filter(input =>
-      (input as HTMLInputElement).disabled
-    );
+  it('should show only the percent share column in PERCENT mode', () => {
+    const { container } = renderWithToast(<SessionWizard />);
 
-    expect(disabledPercentInputs.length).toBeGreaterThan(0);
+    selectDistributionMode('Prozent');
+
+    expect(screen.getByRole('columnheader', { name: 'Anteil %' })).toBeInTheDocument();
+    expect(container.querySelectorAll('input[data-nav-col="percentShare"]').length).toBeGreaterThan(0);
+    expect(container.querySelector('input[data-nav-col="fixedBonus"]')).toBeNull();
+    expect(container.querySelector('input[data-nav-col="fixedPayout"]')).toBeNull();
   });
 
   it('should enable fixed payout inputs only in ADJUSTABLE mode', () => {
@@ -519,7 +525,7 @@ describe('SessionWizard - Tax Toggle', () => {
     renderWithToast(<SessionWizard />);
 
     const taxCheckbox = screen.getByRole('checkbox', {
-      name: /Transfer Tax berücksichtigen/i
+      name: /Service Fee berücksichtigen/i
     }) as HTMLInputElement;
 
     expect(taxCheckbox.checked).toBe(true);
@@ -533,7 +539,7 @@ describe('SessionWizard - Tax Toggle', () => {
     renderWithToast(<SessionWizard />);
 
     const taxCheckbox = screen.getByRole('checkbox', {
-      name: /Transfer Tax berücksichtigen/i
+      name: /Service Fee berücksichtigen/i
     }) as HTMLInputElement;
 
     fireEvent.click(taxCheckbox);
@@ -576,7 +582,7 @@ describe('SessionWizard - Reset Functionality', () => {
     renderWithToast(<SessionWizard />);
 
     const taxCheckbox = screen.getByRole('checkbox', {
-      name: /Transfer Tax berücksichtigen/i
+      name: /Service Fee berücksichtigen/i
     }) as HTMLInputElement;
 
     fireEvent.click(taxCheckbox);
@@ -805,7 +811,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
       const checkboxes = screen.getAllByRole('checkbox').filter(checkbox => {
         const label = (checkbox as HTMLInputElement).getAttribute('aria-label');
-        return !label || (!label.includes('Transfer Tax') && !label.includes('Rollen'));
+        return !label || (!label.includes('Service Fee') && !label.includes('Rollen'));
       });
 
       checkboxes.forEach(checkbox => {
@@ -1054,7 +1060,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       renderWithToast(<SessionWizard />);
 
       const taxCheckbox = screen.getByRole('checkbox', {
-        name: /Transfer Tax berücksichtigen/i
+        name: /Service Fee berücksichtigen/i
       });
 
       for (let i = 0; i < 5; i++) {
@@ -1163,7 +1169,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       selectDistributionMode('Prozent');
 
       const taxCheckbox = screen.getByRole('checkbox', {
-        name: /Transfer Tax berücksichtigen/i
+        name: /Service Fee berücksichtigen/i
       });
       fireEvent.click(taxCheckbox);
 

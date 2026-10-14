@@ -68,7 +68,7 @@ describe('generatePDF', () => {
     expect(pageOf('1. Profit')).toBe(2);
     expect(pageOf('Profit = 1,000 - 0 - 0 = 1,000')).toBe(2);
     expect(pageOf('A: 0 Investment + 0 costs + 500 share = 500')).toBe(2);
-    expect(pageOf('A -> B: 500 arrives + 0 fee = 500 charged')).toBe(2);
+    expect(pageOf('A -> B: Amount 500 + Service Fee 0 = Total Cost 500')).toBe(2);
   });
 
   it('only prints characters the built-in PDF font can show', () => {
@@ -753,7 +753,7 @@ describe('generatePDF', () => {
     ]);
   });
 
-  it('should disclose balances that cannot be transferred after fees', () => {
+  it('keeps tiny rounding residuals out of the result tables and only explains them', () => {
     const session: SessionInput = {
       name: 'Minimum fee residual',
       type: 'TRADING',
@@ -770,10 +770,10 @@ describe('generatePDF', () => {
 
     generatePDF(session, calculatePayslip(session), { lang: 'en' });
 
-    expect(textCalls).toContain('Unsettled balances');
-    const residualTable = vi.mocked(autoTable).mock.calls.at(-1)?.[1];
-    expect(residualTable?.body).toContainEqual(['D1', 'Excess retained', '1']);
-    expect(residualTable?.body).toContainEqual(['C2', 'Still to receive', '1']);
+    expect(textCalls).not.toContain('Unsettled balances');
+    const tables = vi.mocked(autoTable).mock.calls.map(call => JSON.stringify(call[1]?.body));
+    expect(tables.some(body => body.includes('Excess retained'))).toBe(false);
+    expect(textCalls.some(text => text.includes('Residual D1'))).toBe(true);
   });
 });
 
