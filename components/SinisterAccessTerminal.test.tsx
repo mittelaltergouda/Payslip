@@ -38,6 +38,24 @@ describe('SinisterAccessTerminal', () => {
   });
 });
 
+describe('SinisterAccessTerminal when already unlocked', () => {
+  it('offers to revoke the access instead of asking for the code', () => {
+    const onLock = vi.fn();
+    const onOpenChange = vi.fn();
+    render(<SinisterAccessTerminal open lang="de" unlocked onOpenChange={onOpenChange} onUnlock={vi.fn()} onLock={onLock} />);
+    expect(screen.getByRole('status')).toHaveTextContent('ZUGANG AKTIV');
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Zugang entfernen' }));
+    expect(onLock).toHaveBeenCalledTimes(1);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it('labels the revoke button in English', () => {
+    render(<SinisterAccessTerminal open lang="en" unlocked onOpenChange={vi.fn()} onUnlock={vi.fn()} onLock={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Revoke access' })).toBeInTheDocument();
+  });
+});
+
 describe('ThemeSwitcher', () => {
   it('offers Standard and Sinister as radio buttons', () => {
     const onThemeChange = vi.fn();

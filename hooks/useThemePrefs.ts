@@ -83,6 +83,9 @@ export function useThemePrefs(onKonami?: () => void) {
     [update]
   );
 
+  /** Revokes the unlock: back to the default design, switch hidden again. */
+  const lock = useCallback(() => update(DEFAULT_THEME_PREFS), [update]);
+
   const current = prefs ?? DEFAULT_THEME_PREFS;
-  return { unlocked: current.unlocked, theme: current.theme, unlock, setTheme };
+  return { unlocked: current.unlocked, theme: current.theme, unlock, lock, setTheme };
 }

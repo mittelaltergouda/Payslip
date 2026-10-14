@@ -71,7 +71,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
   const [lang, setLang] = useState<Lang>(initialLang);
   const [terminalOpen, setTerminalOpen] = useState(false);
   const openTerminal = useCallback(() => setTerminalOpen(true), []);
-  const { unlocked: themeUnlocked, theme, unlock: unlockTheme, setTheme } = useThemePrefs(openTerminal);
+  const { unlocked: themeUnlocked, theme, unlock: unlockTheme, lock: lockTheme, setTheme } = useThemePrefs(openTerminal);
   const titleTaps = useRef<number[]>([]);
   const handleTitleTap = () => {
     const { taps, open } = registerTitleTap(titleTaps.current, Date.now());
@@ -416,7 +416,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
           <LanguageSwitcher lang={lang} onLangChange={setLang} />
         </div>
       </div>
-      <SinisterAccessTerminal open={terminalOpen} lang={lang} onOpenChange={setTerminalOpen} onUnlock={unlockTheme} />
+      <SinisterAccessTerminal open={terminalOpen} lang={lang} unlocked={themeUnlocked} onOpenChange={setTerminalOpen} onUnlock={unlockTheme} onLock={lockTheme} />
 
       {/* Session name and management controls */}
       <div className="glass p-6 space-y-4" role="region" aria-label={t.sessionSettings || "Session Settings"}>

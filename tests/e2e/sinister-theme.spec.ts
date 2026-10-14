@@ -49,4 +49,30 @@ test.describe('Hidden Sinister theme', () => {
     await expect(html).not.toHaveAttribute('data-theme', 'sinister');
     await expect(themeSwitch).toBeVisible();
   });
+
+  test('an unlocked user can revoke the access in the terminal', async ({ page }) => {
+    await page.evaluate(() => localStorage.setItem('sc-payslip-theme', JSON.stringify({ unlocked: true, theme: 'sinister' })));
+    await page.reload();
+    await waitForAppReady(page);
+    const html = page.locator('html');
+    const themeSwitch = page.getByRole('radiogroup', { name: 'Design' });
+    await expect(html).toHaveAttribute('data-theme', 'sinister');
+    await expect(themeSwitch).toBeVisible();
+
+    const title = page.getByText('SC Payslip', { exact: true }).first();
+    for (let i = 0; i < 5; i++) {
+      await title.click();
+    }
+    const terminal = page.getByRole('dialog');
+    await expect(terminal).toContainText('ZUGANG AKTIV');
+    await terminal.getByRole('button', { name: 'Zugang entfernen' }).click();
+    await expect(terminal).toBeHidden();
+
+    await expect(html).not.toHaveAttribute('data-theme', 'sinister');
+    await expect(themeSwitch).toHaveCount(0);
+    await page.reload();
+    await waitForAppReady(page);
+    await expect(html).not.toHaveAttribute('data-theme', 'sinister');
+    await expect(themeSwitch).toHaveCount(0);
+  });
 });

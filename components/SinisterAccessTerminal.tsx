@@ -17,20 +17,26 @@ const TEXT = {
   de: {
     title: "Sinister Terminal",
     description: "Gesicherter Zugang. Bitte Kennung eingeben.",
+    descriptionActive: "Gesicherter Zugang.",
     prompt: "ZUGANGSKENNUNG",
     submit: "Bestätigen",
     denied: "ZUGRIFF VERWEIGERT",
     hint: "Nur wer dazugehört, kennt die Kennung.",
     granted: "ZUGANG GEWÄHRT. Willkommen bei Sinister Incorporated.",
+    active: "ZUGANG AKTIV. Das Sinister-Design ist freigeschaltet.",
+    lock: "Zugang entfernen",
   },
   en: {
     title: "Sinister terminal",
     description: "Secured access. Enter your identifier.",
+    descriptionActive: "Secured access.",
     prompt: "ACCESS CODE",
     submit: "Confirm",
     denied: "ACCESS DENIED",
     hint: "Only those who belong know the code.",
     granted: "ACCESS GRANTED. Welcome to Sinister Incorporated.",
+    active: "ACCESS ACTIVE. The Sinister design is unlocked.",
+    lock: "Revoke access",
   },
 } as const;
 
@@ -40,12 +46,15 @@ export const GRANTED_DELAY_MS = 1800;
 export interface SinisterAccessTerminalProps {
   open: boolean;
   lang: Lang;
+  /** Already unlocked: the terminal offers to revoke the access instead of asking for the code. */
+  unlocked?: boolean;
   onOpenChange: (open: boolean) => void;
   onUnlock: () => void;
+  onLock?: () => void;
 }
 
-/** Hidden access prompt; the right code unlocks the Sinister theme. */
-export function SinisterAccessTerminal({ open, lang, onOpenChange, onUnlock }: SinisterAccessTerminalProps) {
+/** Hidden access prompt; the right code unlocks the Sinister theme, and an unlocked user can revoke it here. */
+export function SinisterAccessTerminal({ open, lang, unlocked = false, onOpenChange, onUnlock, onLock }: SinisterAccessTerminalProps) {
   const t = TEXT[lang];
   const [code, setCode] = useState("");
   const [attempts, setAttempts] = useState(0);
@@ -90,8 +99,22 @@ export function SinisterAccessTerminal({ open, lang, onOpenChange, onUnlock }: S
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg border border-red-700/50 bg-black font-mono text-red-100">
         <DialogTitle className="font-mono text-sm uppercase tracking-widest text-red-400">{t.title}</DialogTitle>
-        <DialogDescription className="font-mono text-xs text-white/60">{t.description}</DialogDescription>
-        {status === "granted" ? (
+        <DialogDescription className="font-mono text-xs text-white/60">{unlocked && status !== "granted" ? t.descriptionActive : t.description}</DialogDescription>
+        {unlocked && status !== "granted" ? (
+          <div className="space-y-3">
+            <p role="status" className="text-sm text-red-300">&gt; {t.active}</p>
+            <button
+              type="button"
+              onClick={() => {
+                onLock?.();
+                onOpenChange(false);
+              }}
+              className="rounded-md border border-white/20 px-3 py-1 text-xs uppercase tracking-wider text-white/70 hover:bg-white/10"
+            >
+              {t.lock}
+            </button>
+          </div>
+        ) : status === "granted" ? (
           <div role="status" className="space-y-3">
             <pre aria-hidden="true" className="overflow-x-auto whitespace-pre font-mono text-[10px] leading-[1.15] text-red-500">{BANNER}</pre>
             <p className="text-sm text-red-300">&gt; {t.granted}</p>

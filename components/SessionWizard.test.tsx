@@ -1816,6 +1816,25 @@ describe('SessionWizard - hidden Sinister theme', () => {
     expect(screen.getByRole('radiogroup', { name: 'Design' })).toBeInTheDocument();
   });
 
+  it('revokes the access from the terminal: switch gone, default design, stored as locked', async () => {
+    window.localStorage.setItem('sc-payslip-theme', JSON.stringify({ unlocked: true, theme: 'sinister' }));
+    renderWithToast(<SessionWizard />);
+    expect(await screen.findByRole('radiogroup', { name: 'Design' })).toBeInTheDocument();
+    await waitFor(() => expect(document.documentElement.dataset.theme).toBe('sinister'));
+
+    const title = screen.getByText('SC Payslip', { selector: 'p' });
+    for (let i = 0; i < 5; i++) {fireEvent.click(title);}
+    fireEvent.click(screen.getByRole('button', { name: 'Zugang entfernen' }));
+
+    await waitFor(() => expect(screen.queryByRole('radiogroup', { name: 'Design' })).not.toBeInTheDocument());
+    expect(document.documentElement.dataset.theme).toBeUndefined();
+    expect(JSON.parse(window.localStorage.getItem('sc-payslip-theme') ?? '{}')).toEqual({ unlocked: false, theme: 'default' });
+
+    // Locked again: the terminal asks for the code once more.
+    for (let i = 0; i < 5; i++) {fireEvent.click(title);}
+    expect(screen.getByRole('textbox', { name: 'ZUGANGSKENNUNG' })).toBeInTheDocument();
+  });
+
   it('remembers an earlier unlock', async () => {
     window.localStorage.setItem('sc-payslip-theme', JSON.stringify({ unlocked: true, theme: 'default' }));
     renderWithToast(<SessionWizard />);
