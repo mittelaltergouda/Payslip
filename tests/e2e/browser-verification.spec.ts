@@ -70,7 +70,11 @@ test.describe('SessionWizard Browser Verification', () => {
     ).toBeVisible({ timeout: 10_000 });
 
     // Check that the exact app name is present
-    const appName = await page.getByText('SC Payslip', { exact: true }).textContent();
+    // Scoped to the calculator: the SEO intro above it repeats the app name.
+    const appName = await page
+      .getByRole('main', { name: 'SC Payslip', exact: true })
+      .getByText('SC Payslip', { exact: true })
+      .textContent();
     expect(appName).toContain('SC Payslip');
 
     // Verify key elements are present (distribution mode button - now a custom dropdown)
