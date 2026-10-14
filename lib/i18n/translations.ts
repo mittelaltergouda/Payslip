@@ -38,6 +38,8 @@ export type Lang = "de" | "en";
 export const translations: Record<Lang, Record<string, string>> = {
   de: {
     appName: "SC Payslip",
+    themeLabel: "Design",
+    themeDefault: "Standard",
     heroSubtitle: "Profite und Kosten crew-weise erfassen, fair verteilen und die SC Service Fee berücksichtigen.",
     sessionSettings: "Session Einstellungen",
     distribution: "Verteilungsmodus",
@@ -138,6 +140,8 @@ export const translations: Record<Lang, Record<string, string>> = {
   },
   en: {
     appName: "SC Payslip",
+    themeLabel: "Design",
+    themeDefault: "Standard",
     heroSubtitle: "Track profits and costs per crew, split fairly, and account for the SC service fee.",
     sessionSettings: "Session Settings",
     distribution: "Distribution Mode",

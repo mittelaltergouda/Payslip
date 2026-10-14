@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { calculatePayslip } from "@/lib/calc";
 import type { DistributionMode, IndividualExpenseInput, MemberInput, SessionInput, SavedSession } from "@/lib/types";
 import { calculateModePreviews } from "@/lib/modePreview";
@@ -30,6 +30,11 @@ import { Button } from "./ui/button";
 import { FormField } from "./ui/form-field";
 import type { PresetMember } from "@/lib/types";
 import { SERVICE_FEE_RATE } from "@/lib/calc/tax";
+import { registerTitleTap } from "@/lib/theme";
+import { useThemePrefs } from "@/hooks/useThemePrefs";
+import { ThemeSwitcher } from "./ThemeSwitcher";
+import { SinisterAccessTerminal } from "./SinisterAccessTerminal";
+import { SinisterTagline } from "./SinisterTagline";
 
 
 const rndId = () =>
@@ -64,6 +69,17 @@ type Props = { initialLang?: Lang };
 
 export function SessionWizard({ initialLang = "de" }: Props) {
   const [lang, setLang] = useState<Lang>(initialLang);
+  const [terminalOpen, setTerminalOpen] = useState(false);
+  const openTerminal = useCallback(() => setTerminalOpen(true), []);
+  const { unlocked: themeUnlocked, theme, unlock: unlockTheme, setTheme } = useThemePrefs(openTerminal);
+  const titleTaps = useRef<number[]>([]);
+  const handleTitleTap = () => {
+    const { taps, open } = registerTitleTap(titleTaps.current, Date.now());
+    titleTaps.current = taps;
+    if (open) {
+      setTerminalOpen(true);
+    }
+  };
   const t = translations[lang];
   const [session, setSession] = useState<SessionInput>(buildInitialSession);
   const updateSession = setSession;
@@ -371,14 +387,36 @@ export function SessionWizard({ initialLang = "de" }: Props) {
       aria-label={t.appName}
       data-app-ready={isAppReady ? "true" : "false"}
     >
-      {/* Header with app name and language switcher */}
+      {/* Header with app name, language switcher and (once unlocked) theme switch */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <p className="text-sm uppercase text-neon/80 font-semibold">{t.appName}</p>
-          <p className="text-white/70 max-w-2xl text-sm">{t.heroSubtitle}</p>
+          {/* Tapping the title five times opens the hidden access terminal. */}
+          <p
+            className="text-sm uppercase text-neon/80 font-semibold sinister-glitch select-none"
+            data-text={t.appName}
+            onClick={handleTitleTap}
+          >
+            {t.appName}
+          </p>
+          {theme === "sinister" ? (
+            <SinisterTagline lang={lang} />
+          ) : (
+            <p className="text-white/70 max-w-2xl text-sm">{t.heroSubtitle}</p>
+          )}
         </div>
-        <LanguageSwitcher lang={lang} onLangChange={setLang} />
+        <div className="flex items-center gap-2 flex-wrap">
+          {themeUnlocked && (
+            <ThemeSwitcher
+              theme={theme}
+              onThemeChange={setTheme}
+              label={t.themeLabel}
+              defaultLabel={t.themeDefault}
+            />
+          )}
+          <LanguageSwitcher lang={lang} onLangChange={setLang} />
+        </div>
       </div>
+      <SinisterAccessTerminal open={terminalOpen} lang={lang} onOpenChange={setTerminalOpen} onUnlock={unlockTheme} />
 
       {/* Session name and management controls */}
       <div className="glass p-6 space-y-4" role="region" aria-label={t.sessionSettings || "Session Settings"}>

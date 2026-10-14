@@ -1770,3 +1770,56 @@ let fetchMock: ReturnType<typeof vi.fn>;
     });
   });
 });
+
+describe('SessionWizard - hidden Sinister theme', () => {
+  afterEach(() => {
+    window.localStorage.removeItem('sc-payslip-theme');
+    delete document.documentElement.dataset.theme;
+  });
+
+  it('shows no theme switch to regular users', () => {
+    renderWithToast(<SessionWizard />);
+    expect(screen.queryByRole('radiogroup', { name: 'Design' })).not.toBeInTheDocument();
+    expect(document.documentElement.dataset.theme).toBeUndefined();
+  });
+
+  it('opens the access terminal after five quick taps on the title', () => {
+    renderWithToast(<SessionWizard />);
+    const title = screen.getByText('SC Payslip', { selector: 'p' });
+    for (let i = 0; i < 4; i++) {fireEvent.click(title);}
+    expect(screen.queryByText('Sinister Terminal')).not.toBeInTheDocument();
+    fireEvent.click(title);
+    expect(screen.getByText('Sinister Terminal')).toBeInTheDocument();
+  });
+
+  it('opens the access terminal with the Konami code', () => {
+    renderWithToast(<SessionWizard />);
+    for (const key of ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a']) {
+      fireEvent.keyDown(window, { key });
+    }
+    expect(screen.getByText('Sinister Terminal')).toBeInTheDocument();
+  });
+
+  it('unlocks the theme with the code and shows the switch next to DE/EN', async () => {
+    renderWithToast(<SessionWizard />);
+    const title = screen.getByText('SC Payslip', { selector: 'p' });
+    for (let i = 0; i < 5; i++) {fireEvent.click(title);}
+    fireEvent.change(screen.getByRole('textbox', { name: 'ZUGANGSKENNUNG' }), { target: { value: 'S1NISTER' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Bestätigen' }));
+    await waitFor(() => expect(screen.getByRole('radiogroup', { name: 'Design' })).toBeInTheDocument(), { timeout: 3000 });
+    expect(screen.getByRole('radio', { name: 'Sinister' })).toBeChecked();
+    expect(document.documentElement.dataset.theme).toBe('sinister');
+    expect(JSON.parse(window.localStorage.getItem('sc-payslip-theme') ?? '{}')).toEqual({ unlocked: true, theme: 'sinister' });
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Standard' }));
+    expect(document.documentElement.dataset.theme).toBeUndefined();
+    expect(screen.getByRole('radiogroup', { name: 'Design' })).toBeInTheDocument();
+  });
+
+  it('remembers an earlier unlock', async () => {
+    window.localStorage.setItem('sc-payslip-theme', JSON.stringify({ unlocked: true, theme: 'default' }));
+    renderWithToast(<SessionWizard />);
+    expect(await screen.findByRole('radiogroup', { name: 'Design' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Standard' })).toBeChecked();
+  });
+});

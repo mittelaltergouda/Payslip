@@ -120,7 +120,7 @@ export function SummaryStats({
         <span className="text-white/70">{t.taxesLabel}</span>
         <span>{format(totalFees, lang)} {currency}</span>
         <span className="text-white/70">{t.netProfitLabel}</span>
-        <span className={netAfterTax >= 0 ? "text-neon font-semibold" : "text-red-400 font-semibold"}>
+        <span className={netAfterTax >= 0 ? "text-positive font-semibold" : "text-red-400 font-semibold"}>
           {format(netAfterTax, lang)} {currency}
         </span>
       </div>
