@@ -267,3 +267,30 @@ describe('middleware - local-only public mode', () => {
     expect(response.cookies.get('csrf-token')).toBeUndefined();
   });
 });
+
+describe('middleware - test deployments stay out of search engines', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('asks crawlers not to index or follow when SC_PAYSLIP_NOINDEX=1', () => {
+    vi.stubEnv('SC_PAYSLIP_NOINDEX', '1');
+    const response = middleware(new NextRequest(new Request('http://localhost:3000/')));
+
+    expect(response.headers.get('X-Robots-Tag')).toBe('noindex, nofollow');
+  });
+
+  it('leaves production indexable when the flag is absent', () => {
+    vi.stubEnv('SC_PAYSLIP_NOINDEX', '');
+    const response = middleware(new NextRequest(new Request('http://localhost:3000/')));
+
+    expect(response.headers.get('X-Robots-Tag')).toBeNull();
+  });
+
+  it('only reacts to the exact value 1', () => {
+    vi.stubEnv('SC_PAYSLIP_NOINDEX', 'true');
+    const response = middleware(new NextRequest(new Request('http://localhost:3000/')));
+
+    expect(response.headers.get('X-Robots-Tag')).toBeNull();
+  });
+});

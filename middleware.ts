@@ -49,6 +49,12 @@ export function middleware(request: NextRequest) {
   response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
 
+  // Test deployments (e.g. payslip-test) are public but must stay out of search
+  // engines. Only the systemd unit of the test instance sets this flag.
+  if (process.env.SC_PAYSLIP_NOINDEX === "1") {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
+
   return response;
 }
 
