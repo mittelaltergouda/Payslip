@@ -33,13 +33,13 @@ export function PaidTransfersEditor({ session, lang, onChange }: Props) {
           <option value="SESSION_CASH">{de ? "Vorschuss aus Session-Geld" : "Advance from session cash"}</option>
           <option value="COST_CONTRIBUTION">{de ? "Externe Kostenbeteiligung" : "External cost contribution"}</option>
         </select></label>
-        <label>Amount<NumericInput lang={lang} aria-label={`Transfer amount ${index + 1}`} value={row.netAmount} onValueChange={value => setFee(index, value, feeIncluded)} /></label>
+        <label>{de ? "Betrag" : "Amount"}<NumericInput lang={lang} aria-label={`Transfer amount ${index + 1}`} value={row.netAmount} onValueChange={value => setFee(index, value, feeIncluded)} /></label>
         <label className="flex items-center gap-2 md:pt-6">
           <input type="checkbox" aria-label={`Transfer service fee ${index + 1}`} checked={feeIncluded} onChange={e => setFee(index, row.netAmount, e.target.checked)} />
           <span className="text-sm text-white/80">{de ? `${ratePercent} % Service Fee berücksichtigen` : `Include ${ratePercent} % service fee`}</span>
         </label>
         <p className="text-sm text-white/80 md:col-span-2 self-center" aria-label={`Transfer total cost ${index + 1}`}>
-          Service Fee: {format(row.feeAmount, lang)} {currency} · Total Cost: <span className="font-semibold">{format(row.netAmount + row.feeAmount, lang)} {currency}</span>
+          Service Fee: {format(row.feeAmount, lang)} {currency} · {de ? "Gesamtkosten" : "Total Cost"}: <span className="font-semibold">{format(row.netAmount + row.feeAmount, lang)} {currency}</span>
         </p>
         <button className="btn" aria-label={`Remove transfer ${index + 1}`} onClick={() => onChange(rows.filter((_, i) => i !== index))}>{de ? "Entfernen" : "Remove"}</button>
       </div>;

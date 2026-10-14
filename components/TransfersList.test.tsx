@@ -272,7 +272,7 @@ describe('TransfersList - Number Formatting', () => {
 
     // German locale uses periods as thousand separators
     expect(screen.getByText(/^10\.000 aUEC$/)).toBeInTheDocument();
-    expect(screen.getByText(/Total Cost: 10\.050 aUEC/)).toBeInTheDocument();
+    expect(screen.getByText(/Gesamtkosten: 10\.050 aUEC/)).toBeInTheDocument();
   });
 
   it('should format numbers with English locale', () => {

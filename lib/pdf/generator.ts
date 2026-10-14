@@ -6,7 +6,7 @@ import jsPDF from "jspdf";
 import autoTable, { type RowInput, type UserOptions } from "jspdf-autotable";
 import type { SessionInput, PayslipResult } from "@/lib/types";
 import type { Lang } from "@/lib/i18n/translations";
-import { buildArithmeticSections } from "@/lib/accounting";
+import { buildArithmeticSections, sessionTotals } from "@/lib/accounting";
 import type { ArithmeticRow } from "@/lib/arithmeticSections";
 import { format } from "@/lib/format";
 import { getMemberPayoutSummaries } from "@/lib/export/payoutSummary";
@@ -74,9 +74,9 @@ const translations = {
     noTransfers: "Keine Überweisungen erforderlich.",
     from: "Von",
     to: "An",
-    amountToSend: "Amount",
+    amountToSend: "Betrag",
     fee: "Service Fee",
-    totalCharged: "Total Cost",
+    totalCharged: "Gesamtkosten",
     page: "Seite",
     of: "von",
   },
@@ -169,11 +169,9 @@ export function generatePDF(
   const margin = 16;
   const contentWidth = pageWidth - margin * 2;
 
-  const totalRevenue = result.members.reduce((sum, member) => sum + member.revenue, 0);
-  const totalInvestment = result.members.reduce((sum, member) => sum + member.investment, 0);
-  const totalExpenses = result.members.reduce((sum, member) => sum + member.expenses, 0);
-  const totalFees = result.suggestedTransfers.reduce((sum, transfer) => sum + transfer.feeAmount, 0);
-  const netResult = result.netProfit - totalFees;
+  const totals = sessionTotals(session, result);
+  const { revenue: totalRevenue, investment: totalInvestment, expenses: totalExpenses, serviceFees: totalFees } = totals;
+  const netResult = totals.netProfit;
   const payouts = new Map(
     getMemberPayoutSummaries(result).map((payout) => [payout.memberId, payout])
   );
@@ -305,7 +303,7 @@ export function generatePDF(
     [t.revenue, totalRevenue],
     [t.investment, totalInvestment],
     [t.expenses, totalExpenses],
-    [t.grossResult, result.netProfit],
+    [t.grossResult, totals.grossProfit],
     [t.fees, totalFees],
     [t.netResult, netResult],
   ] as const;

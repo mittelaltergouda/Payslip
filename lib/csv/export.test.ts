@@ -474,7 +474,7 @@ describe('generateCSV', () => {
 
     expect(csv).toContain('Von');
     expect(csv).toContain('An');
-    expect(csv).toContain('Von;An;Amount;Total Cost;Service Fee');
+    expect(csv).toContain('Von;An;Betrag;Gesamtkosten;Service Fee');
   });
 
   it('should handle multiple transfers', () => {

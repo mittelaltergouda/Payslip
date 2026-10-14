@@ -19,10 +19,10 @@ describe('PaidTransfersEditor service fee', () => {
 
   it('uses the in-game wording and shows service fee and total cost', () => {
     render(<PaidTransfersEditor session={{ ...base, paidTransfers: [transfer()] }} lang="de" onChange={vi.fn()} />);
-    expect(screen.getByText('Amount')).toBeInTheDocument();
+    expect(screen.getByText('Betrag')).toBeInTheDocument();
     expect(screen.getByLabelText('Transfer service fee 1')).toBeChecked();
     expect(screen.getByText('0,5 % Service Fee berücksichtigen')).toBeInTheDocument();
-    expect(screen.getByLabelText('Transfer total cost 1')).toHaveTextContent('Service Fee: 500 aUEC · Total Cost: 100.500 aUEC');
+    expect(screen.getByLabelText('Transfer total cost 1')).toHaveTextContent('Service Fee: 500 aUEC · Gesamtkosten: 100.500 aUEC');
     expect(screen.queryByText(/Bezahlte Gebühr|Netto erhalten/)).not.toBeInTheDocument();
   });
 
@@ -51,7 +51,7 @@ describe('PaidTransfersEditor service fee', () => {
     const onChange = vi.fn();
     render(<PaidTransfersEditor session={{ ...base, paidTransfers: [transfer({ feeAmount: 100, feeIncluded: undefined })] }} lang="de" onChange={onChange} />);
     expect(screen.getByLabelText('Transfer service fee 1')).toBeChecked();
-    expect(screen.getByLabelText('Transfer total cost 1')).toHaveTextContent('Service Fee: 100 aUEC · Total Cost: 100.100 aUEC');
+    expect(screen.getByLabelText('Transfer total cost 1')).toHaveTextContent('Service Fee: 100 aUEC · Gesamtkosten: 100.100 aUEC');
     expect(onChange).not.toHaveBeenCalled();
   });
 

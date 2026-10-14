@@ -7,7 +7,7 @@ import { TransfersList } from "./TransfersList";
 import { ExportPDFButton } from "./ExportPDFButton";
 import { ExportClipboardButton } from "./ExportClipboardButton";
 import { ExportCSVButton } from "./ExportCSVButton";
-import { buildArithmeticSections } from "@/lib/accounting";
+import { buildArithmeticSections, sessionTotals } from "@/lib/accounting";
 
 
 /**
@@ -66,10 +66,12 @@ export function ResultsDisplay({
   currency = "aUEC",
   className = "",
 }: ResultsDisplayProps) {
-  const totalRevenue = result?.members.reduce((sum, m) => sum + m.revenue, 0) ?? 0;
-  const totalInvestment = result?.members.reduce((sum, m) => sum + m.investment, 0) ?? 0;
-  const totalExpenses = result?.members.reduce((sum, m) => sum + m.expenses, 0) ?? 0;
-  const totalFees = result?.suggestedTransfers.reduce((sum, tr) => sum + tr.feeAmount, 0) ?? 0;
+  // Fees of transfers already made count too, not only the suggested ones.
+  const totals = result ? sessionTotals(session, result) : null;
+  const totalRevenue = totals?.revenue ?? 0;
+  const totalInvestment = totals?.investment ?? 0;
+  const totalExpenses = totals?.expenses ?? 0;
+  const totalFees = totals?.serviceFees ?? 0;
 
   return (
     <div className={`glass p-6 space-y-4 ${className}`}>

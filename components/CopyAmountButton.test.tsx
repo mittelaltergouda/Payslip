@@ -68,9 +68,9 @@ describe('TransfersList copy buttons', () => {
       />
     );
     expect(screen.getByText('262.687 aUEC')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Amount kopieren Player 1 → Player 2' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Betrag kopieren Player 1 → Player 2' }));
     await waitFor(() => expect(writeText).toHaveBeenCalledWith('262687'));
-    fireEvent.click(screen.getByRole('button', { name: 'Amount kopieren Player 1 → Player 3' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Betrag kopieren Player 1 → Player 3' }));
     await waitFor(() => expect(writeText).toHaveBeenLastCalledWith('1000'));
   });
 });

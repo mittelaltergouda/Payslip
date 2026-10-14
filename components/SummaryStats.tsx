@@ -87,7 +87,7 @@ export interface SummaryStatsProps {
  * ```
  */
 export function SummaryStats({
-  result,
+  result: _result,
   totalRevenue,
   totalInvestment,
   totalExpenses,
@@ -97,7 +97,9 @@ export function SummaryStats({
   currency = "aUEC",
   className = "",
 }: SummaryStatsProps) {
-  const netAfterTax = totalRevenue - totalInvestment - totalExpenses - totalFees;
+  // Gross is before any service fee; net subtracts all of them.
+  const grossProfit = totalRevenue - totalInvestment - totalExpenses;
+  const netAfterTax = grossProfit - totalFees;
 
   return (
     <div className={`space-y-2 ${className}`}>
@@ -116,7 +118,7 @@ export function SummaryStats({
         <span className="text-white/70">{t.expensesLabel}</span>
         <span>{format(totalExpenses, lang)} {currency}</span>
         <span className="text-white/70">{t.netProfit}</span>
-        <span>{format(result.netProfit, lang)} {currency}</span>
+        <span>{format(grossProfit, lang)} {currency}</span>
         <span className="text-white/70">{t.taxesLabel}</span>
         <span>{format(totalFees, lang)} {currency}</span>
         <span className="text-white/70">{t.netProfitLabel}</span>

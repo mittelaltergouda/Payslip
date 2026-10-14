@@ -33,3 +33,28 @@ export function withServiceFee(netAmount: number, feeIncluded: boolean, taxRate:
 export function distributionColumns(mode: DistributionMode): { percentShare: boolean; fixedAmounts: boolean } {
   return { percentShare: mode !== "EQUAL", fixedAmounts: mode === "ADJUSTABLE" };
 }
+
+export type SessionTotals = {
+  revenue: number;
+  investment: number;
+  expenses: number;
+  /** Revenue − investments − costs, before any service fee. */
+  grossProfit: number;
+  /** Every service fee of the session: transfers already made and suggested ones. */
+  serviceFees: number;
+  /** Gross profit after all service fees: what the crew really keeps. */
+  netProfit: number;
+};
+
+/** Totals for the summary (UI and PDF), so both always count the same fees. */
+export function sessionTotals(session: SessionInput, result: PayslipResult): SessionTotals {
+  const sum = (values: number[]) => values.reduce((total, value) => total + value, 0);
+  const revenue = sum(result.members.map((m) => m.revenue));
+  const investment = sum(result.members.map((m) => m.investment));
+  const expenses = sum(result.members.map((m) => m.expenses));
+  const serviceFees =
+    sum((session.paidTransfers ?? []).map((t) => t.feeAmount)) +
+    sum(result.suggestedTransfers.map((t) => t.feeAmount));
+  const grossProfit = revenue - investment - expenses;
+  return { revenue, investment, expenses, grossProfit, serviceFees, netProfit: grossProfit - serviceFees };
+}

@@ -123,7 +123,7 @@ describe('generatePDF', () => {
     };
     generatePDF(session, calculatePayslip(session), { lang: 'de' });
     expect(pageTextCalls.find(call => call.text === 'Bereits erfolgte Überweisungen')?.page).toBe(1);
-    const recorded = vi.mocked(autoTable).mock.calls.find(call => (call[1]?.head?.[0] as string[] | undefined)?.includes('Art') && (call[1]?.head?.[0] as string[]).includes('Total Cost'));
+    const recorded = vi.mocked(autoTable).mock.calls.find(call => (call[1]?.head?.[0] as string[] | undefined)?.includes('Art') && (call[1]?.head?.[0] as string[]).includes('Gesamtkosten'));
     expect(recorded?.[1]?.body).toEqual([['A', 'B', 'Ausgleich / Auszahlung · Vorschuss', '100.000', '500', '100.500']]);
     expect(textCalls).not.toContain('Offene Restbeträge');
   });

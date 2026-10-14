@@ -21,6 +21,10 @@ export type ArithmeticSection = { title: string; lines: string[]; rows: Arithmet
 
 const note = (text: string): ArithmeticRow => ({ text });
 
+/** In-game terms; German uses translations, "Service Fee" stays a proper name. */
+const amountTerm = (de: boolean) => (de ? "Betrag" : "Amount");
+const totalCostTerm = (de: boolean) => (de ? "Gesamtkosten" : "Total Cost");
+
 /** A calculation row; the text defaults to "label: expression = result". */
 function calc(label: string, expression: string, result: string, text = `${label}: ${expression} = ${result}`, emphasis = false, joiner?: string): ArithmeticRow {
   return { text, label, expression, result, ...(emphasis ? { emphasis } : {}), ...(joiner !== undefined ? { joiner } : {}) };
@@ -169,10 +173,11 @@ function distributionSection(ctx: Ctx): ArithmeticSection {
 function recordedTransfers(ctx: Ctx, memberId: string) {
   const paid = (ctx.session.paidTransfers ?? []).filter((t) => t.kind !== "COST_CONTRIBUTION");
   const outgoing = paid.filter((t) => t.fromMemberId === memberId).reduce((sum, t) => sum + t.netAmount + t.feeAmount, 0);
-  const incoming = paid
-    .filter((t) => t.toMemberId === memberId)
-    .reduce((sum, t) => sum + t.netAmount + (t.kind === "SESSION_CASH" ? 0 : t.feeAmount), 0);
-  return { outgoing, incoming };
+  const received = paid.filter((t) => t.toMemberId === memberId);
+  // What actually arrived, and the settlement fees the recipient bears on top.
+  const incomingNet = received.reduce((sum, t) => sum + t.netAmount, 0);
+  const incomingFee = received.reduce((sum, t) => sum + (t.kind === "SESSION_CASH" ? 0 : t.feeAmount), 0);
+  return { outgoing, incomingNet, incomingFee, incoming: incomingNet + incomingFee };
 }
 
 function targetSection(ctx: Ctx): ArithmeticSection {
@@ -194,10 +199,13 @@ function targetSection(ctx: Ctx): ArithmeticSection {
     ? "Abgleich mit dem Geld, das jeder gerade hält:"
     : "Compared with the money each player currently holds:"));
   for (const m of result.members) {
-    const { outgoing, incoming } = recordedTransfers(ctx, m.memberId);
+    const { outgoing, incoming, incomingNet, incomingFee } = recordedTransfers(ctx, m.memberId);
     const remaining = m.finalNet - m.revenue + outgoing - incoming;
+    const feeBorne = incomingFee > 0
+      ? (de ? ` (+ ${num(incomingFee)} Service Fee, die ${m.handle} trägt)` : ` (+ ${num(incomingFee)} service fee borne by ${m.handle})`)
+      : "";
     const paid = outgoing || incoming
-      ? `, ${de ? "bereits gezahlt" : "already paid"} ${num(outgoing)}, ${de ? "bereits erhalten" : "already received"} ${num(incoming)}`
+      ? `, ${de ? "bereits gezahlt" : "already paid"} ${num(outgoing)}, ${de ? "bereits erhalten" : "already received"} ${num(incomingNet)}${feeBorne}`
       : "";
     const outcome = remaining > 0
       ? `${de ? "bekommt noch" : "still receives"} ${num(remaining)}`
@@ -206,6 +214,11 @@ function targetSection(ctx: Ctx): ArithmeticSection {
         : (de ? "ist ausgeglichen" : "is settled");
     const holds = `${de ? "hält" : "holds"} ${num(m.revenue)}${paid}`;
     lines.push(calc(m.handle, holds, outcome, `${m.handle} ${holds} → ${outcome}`, true, "→"));
+    if (remaining < 0 && incomingNet > 0) {
+      lines.push(note(de
+        ? `${m.handle} hat mehr erhalten, als ihm zusteht, und überweist ${num(-remaining)} zurück. Eine passend bemessene erste Überweisung hätte diese Rücküberweisung samt Service Fee gespart.`
+        : `${m.handle} received more than their due and pays ${num(-remaining)} back. A correctly sized first transfer would have saved this return transfer and its service fee.`));
+    }
   }
   return section(de ? "3. Ziel je Spieler" : "3. Target per player", lines);
 }
@@ -235,8 +248,8 @@ function recordedSection(ctx: Ctx): ArithmeticSection | null {
     const kind = kinds[t.kind ?? "SETTLEMENT"];
     const label = t.label ? ` (${t.label})` : "";
     const route = `${name(t.fromMemberId)} → ${name(t.toMemberId)}`;
-    const expression = `Amount ${num(t.netAmount)} + Service Fee ${num(t.feeAmount)}`;
-    const total = `Total Cost ${num(t.netAmount + t.feeAmount)}`;
+    const expression = `${amountTerm(de)} ${num(t.netAmount)} + Service Fee ${num(t.feeAmount)}`;
+    const total = `${totalCostTerm(de)} ${num(t.netAmount + t.feeAmount)}`;
     lines.push(calc(`${route}\n${kind.label}${label}`, expression, total, `${kind.label}${label}: ${route}: ${expression} = ${total}`));
   }
   for (const kind of new Set(paid.map((t) => t.kind ?? "SETTLEMENT"))) {
@@ -252,7 +265,7 @@ function transferSection(ctx: Ctx): ArithmeticSection {
   if (result.taxRateApplied > 0) {
     const rate = num(result.taxRateApplied * 100);
     lines.push(note(de
-      ? `Service Fee = ${rate} % vom Amount (kommt beim Empfänger an), aufgerundet. Amount + Service Fee = Total Cost passt ins Budget des Absenders.`
+      ? `Service Fee = ${rate} % vom Betrag (kommt beim Empfänger an), aufgerundet. Betrag + Service Fee = Gesamtkosten passt ins Budget des Absenders.`
       : `Service Fee = ${rate} % of the amount (what the recipient gets), rounded up. Amount + Service Fee = Total Cost fits the sender's budget.`));
   }
   lines.push(note(de
@@ -262,7 +275,7 @@ function transferSection(ctx: Ctx): ArithmeticSection {
     lines.push(note(de ? "Keine Überweisungen nötig." : "No transfers needed."));
   }
   for (const transfer of transfers) {
-    lines.push(calc(`${name(transfer.fromMemberId)} → ${name(transfer.toMemberId)}`, `Amount ${num(transfer.netAmount)} + Service Fee ${num(transfer.feeAmount)}`, `Total Cost ${num(transfer.grossAmount)}`, undefined, true));
+    lines.push(calc(`${name(transfer.fromMemberId)} → ${name(transfer.toMemberId)}`, `${amountTerm(de)} ${num(transfer.netAmount)} + Service Fee ${num(transfer.feeAmount)}`, `${totalCostTerm(de)} ${num(transfer.grossAmount)}`, undefined, true));
     if (isSettlementDetail(transfer) && transfer.exactBudget !== transfer.budgetAmount) {
       const expression = `${num(transfer.exactBudget)} → ${de ? "ganzzahlig" : "whole"} ${num(transfer.budgetAmount)}`;
       const remainder = `${de ? "Rest" : "remainder"} ${num(transfer.roundingRemainder)}`;
