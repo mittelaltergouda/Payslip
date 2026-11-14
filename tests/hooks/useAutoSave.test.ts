@@ -248,6 +248,24 @@ describe('useAutoSave - Manual Save', () => {
     expect(result.current.saveStatus).toBe('saved');
   });
 
+  it('should save the latest session through an existing manual-save callback', async () => {
+    const initialSession = createTestSession();
+    const { result, rerender } = renderHook(
+      ({ session }) => useAutoSave(session),
+      { initialProps: { session: initialSession } }
+    );
+    const existingManualSave = result.current.manualSave;
+    const updatedSession = createTestSession({ name: 'Latest Session' });
+
+    rerender({ session: updatedSession });
+
+    await act(async () => {
+      await existingManualSave();
+    });
+
+    expect(sessionStorage.save).toHaveBeenCalledWith(updatedSession);
+  });
+
   it('should cancel pending debounced save on manual save', async () => {
     const session = createTestSession();
     const { result, rerender } = renderHook(

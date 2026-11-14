@@ -1,29 +1,31 @@
-import type { NextRequest} from "next/server";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { generateCsrfToken } from "./lib/csrf";
 
 export function middleware(request: NextRequest) {
-  // Generate a unique nonce for this request
-  const nonce = crypto.randomUUID();
-
-  // Reuse an existing CSRF token so mutating requests don't break across navigations.
-  const csrfToken = request.cookies.get("csrf-token")?.value || generateCsrfToken();
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  const isDevelopment = process.env.NODE_ENV === "development";
+  const forwardedProtocol = request.headers.get("x-forwarded-proto")
+    ?.split(",")[0]
+    .trim();
+  const isHttpsRequest =
+    forwardedProtocol === "https" || request.nextUrl.protocol === "https:";
 
   // Create Content-Security-Policy header with nonce
   const cspHeader = [
     `default-src 'self'`,
-    // Next.js app-router emits inline hydration/runtime scripts in production.
-    `script-src 'self' 'unsafe-inline'`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDevelopment ? " 'unsafe-eval'" : ""}`,
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' data: blob:`,
     `font-src 'self' data:`,
     `connect-src 'self'`,
+    `object-src 'none'`,
     `frame-ancestors 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,
+    ...(isDevelopment || !isHttpsRequest ? [] : [`upgrade-insecure-requests`]),
   ].join("; ");
 
-  // Clone the request headers and add CSP nonce (NOT CSRF token - security requirement)
+  // Clone the request headers and add the request nonce.
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", cspHeader);
@@ -38,15 +40,6 @@ export function middleware(request: NextRequest) {
   // Set CSP header on response
   response.headers.set("Content-Security-Policy", cspHeader);
   response.headers.set("x-nonce", nonce);
-  response.headers.set("x-csrf-token", csrfToken);
-
-  // Set CSRF token in HTTP-only cookie (double-submit cookie pattern)
-  response.cookies.set('csrf-token', csrfToken, {
-    httpOnly: true,
-    sameSite: 'strict',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/'
-  });
 
   // Set static security headers (also in next.config.mjs for production)
   // These are duplicated here to ensure they work in development mode
@@ -55,6 +48,12 @@ export function middleware(request: NextRequest) {
   response.headers.set("Referrer-Policy", "origin-when-cross-origin");
   response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+
+  // Test deployments (e.g. payslip-test) are public but must stay out of search
+  // engines. Only the systemd unit of the test instance sets this flag.
+  if (process.env.SC_PAYSLIP_NOINDEX === "1") {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
 
   return response;
 }

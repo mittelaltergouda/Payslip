@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { generateCSV, generateCSVFilename } from './export';
+import { calculatePayslip } from '@/lib/calc';
 import type { SessionInput, PayslipResult } from '@/lib/types';
 
 // ============================================================================
@@ -167,7 +168,7 @@ describe('generateCSV', () => {
 
     // English CSV should use comma delimiter
     // Check that the member header row uses commas
-    expect(csv).toContain('Handle,Revenue,Investment,Expenses,Taxes,Profit Share,Net Payout');
+    expect(csv).toContain('Handle,Revenue,Investment,Expenses,Service Fees,Profit Share,Net Payout');
   });
 
   it('should use semicolon as delimiter for German', () => {
@@ -178,7 +179,7 @@ describe('generateCSV', () => {
 
     // German CSV should use semicolon delimiter
     // Check that the member header row uses semicolons
-    expect(csv).toContain('Handle;Umsatz;Investment;Ausgaben;Steuern;Gewinnanteil;Netto Auszahlung');
+    expect(csv).toContain('Handle;Umsatz;Investment;Ausgaben;Service Fees;Gewinnanteil;Netto Auszahlung');
   });
 
   it('should use English translations by default', () => {
@@ -442,9 +443,7 @@ describe('generateCSV', () => {
     // Should contain transfer table headers
     expect(csv).toContain('From');
     expect(csv).toContain('To');
-    expect(csv).toContain('Net Amount');
-    expect(csv).toContain('Gross Amount');
-    expect(csv).toContain('Fee');
+    expect(csv).toContain('From,To,Amount,Total Cost,Service Fee');
 
     // Should contain member handles in transfer
     expect(csv).toContain('Alice');
@@ -475,9 +474,7 @@ describe('generateCSV', () => {
 
     expect(csv).toContain('Von');
     expect(csv).toContain('An');
-    expect(csv).toContain('Netto Betrag');
-    expect(csv).toContain('Brutto Betrag');
-    expect(csv).toContain('Gebühr');
+    expect(csv).toContain('Von;An;Betrag;Gesamtkosten;Service Fee');
   });
 
   it('should handle multiple transfers', () => {
@@ -749,8 +746,8 @@ describe('generateCSV', () => {
 
     const csv = generateCSV(session, result);
 
-    // CSV should contain the Taxes column header
-    expect(csv).toContain('Taxes');
+    // CSV should identify the deducted amounts as transfer fees.
+    expect(csv).toContain('Service Fees');
   });
 
   it('should handle zero values correctly', () => {
@@ -879,6 +876,64 @@ describe('generateCSV', () => {
 
     expect(typeof csv).toBe('string');
     expect(csv).toContain('Rich');
+  });
+});
+
+describe('current transfer-budget export', () => {
+  it('exports amount, fee, total cost, the fee share and the full payout consistently', () => {
+    const session = createTestSession({
+      members: [
+        { id: 'player-1', handle: 'Player 1', revenue: 1_000_000, investment: 500_000 },
+        { id: 'player-2', handle: 'Player 2', revenue: 0, investment: 0 },
+      ],
+    });
+    const result = createTestResult({
+      members: [
+        {
+          memberId: 'player-1', handle: 'Player 1', revenue: 1_000_000,
+          investment: 500_000, expenses: 0, sharedExpenses: 0,
+          individualExpenses: 0, profitShare: 249_376.5, serviceFeeShare: 623.5, finalNet: 749_376.5,
+        },
+        {
+          memberId: 'player-2', handle: 'Player 2', revenue: 0,
+          investment: 0, expenses: 0, sharedExpenses: 0,
+          individualExpenses: 0, profitShare: 249_376.5, serviceFeeShare: 623.5, finalNet: 249_376.5,
+        },
+      ],
+      suggestedTransfers: [{
+        fromMemberId: 'player-1', toMemberId: 'player-2',
+        netAmount: 249_376, feeAmount: 1_247, grossAmount: 250_623,
+      }],
+    });
+
+    const csv = generateCSV(session, result, { lang: 'de' });
+
+    // Both bear half of the fee; the recipient gets the whole amount.
+    expect(csv).toContain('Player 2;0;0;0;624;249.377;249.376');
+    expect(csv).toContain(
+      'Player 1;Player 2;249.376;250.623;1.247'
+    );
+  });
+
+  it('should not list tiny rounding residuals as a separate section', () => {
+    const session: SessionInput = {
+      name: 'Minimum fee residual',
+      type: 'TRADING',
+      distributionMode: 'ADJUSTABLE',
+      taxEnabled: true,
+      taxRate: 0.005,
+      members: [
+        { id: 'd1', handle: 'D1', active: true, revenue: 201, fixedPayout: 0 },
+        { id: 'd2', handle: 'D2', active: true, revenue: 800, fixedPayout: 0 },
+        { id: 'c1', handle: 'C1', active: true, revenue: 0, fixedPayout: 1000 },
+        { id: 'c2', handle: 'C2', active: true, revenue: 0, fixedPayout: 1 },
+      ],
+    };
+    const csv = generateCSV(session, calculatePayslip(session), { lang: 'en' });
+
+    expect(csv).toContain('Service Fees');
+    expect(csv).not.toContain('Unsettled balances');
+    expect(csv).not.toContain('Excess retained');
   });
 });
 

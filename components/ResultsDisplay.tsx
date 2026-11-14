@@ -7,6 +7,7 @@ import { TransfersList } from "./TransfersList";
 import { ExportPDFButton } from "./ExportPDFButton";
 import { ExportClipboardButton } from "./ExportClipboardButton";
 import { ExportCSVButton } from "./ExportCSVButton";
+import { buildArithmeticSections, sessionTotals } from "@/lib/accounting";
 
 
 /**
@@ -65,10 +66,12 @@ export function ResultsDisplay({
   currency = "aUEC",
   className = "",
 }: ResultsDisplayProps) {
-  const totalRevenue = session.members.reduce((sum, m) => sum + (m.revenue ?? 0), 0);
-  const totalInvestment = session.members.reduce((sum, m) => sum + (m.investment ?? 0), 0);
-  const totalExpenses = result?.members.reduce((sum, m) => sum + m.expenses, 0) ?? 0;
-  const totalFees = result?.suggestedTransfers.reduce((sum, tr) => sum + tr.feeAmount, 0) ?? 0;
+  // Fees of transfers already made count too, not only the suggested ones.
+  const totals = result ? sessionTotals(session, result) : null;
+  const totalRevenue = totals?.revenue ?? 0;
+  const totalInvestment = totals?.investment ?? 0;
+  const totalExpenses = totals?.expenses ?? 0;
+  const totalFees = totals?.serviceFees ?? 0;
 
   return (
     <div className={`glass p-6 space-y-4 ${className}`}>
@@ -103,6 +106,17 @@ export function ResultsDisplay({
           </div>
         )}
       </div>
+
+      {result && (result.fixedAmountsStatus === "SUSPENDED_FOR_LOSS" || result.fixedAmountsStatus === "SCALED_TO_PROFIT") && (
+        <p
+          role="note"
+          className="rounded-xl border border-sky-400/30 bg-sky-400/10 p-4 text-sm text-sky-100"
+        >
+          {result.fixedAmountsStatus === "SUSPENDED_FOR_LOSS" ? t.fixedAmountsSuspended : t.fixedAmountsScaled}
+        </p>
+      )}
+
+      {result && <details className="rounded-xl border border-white/10 p-4"><summary className="cursor-pointer font-semibold">{lang === "de" ? "Rechnung nachvollziehen" : "Calculation explained"}</summary><div className="mt-3 space-y-4 text-sm break-words">{buildArithmeticSections(session, result, lang).map((section) => <section key={section.title}><h4 className="font-semibold">{section.title}</h4><ul className="mt-1 space-y-1">{section.lines.map((line, index) => <li key={index}>{line}</li>)}</ul></section>)}</div></details>}
 
       {result && (
         <div className="grid gap-6 lg:grid-cols-2">

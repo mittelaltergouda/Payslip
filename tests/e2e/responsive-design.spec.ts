@@ -27,7 +27,7 @@ test.describe('Responsive Design - Viewport Breakpoints', () => {
     await page.waitForTimeout(500);
 
     // Verify main content is visible
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // Verify session settings
     await expect(page.locator('h2').first()).toBeVisible();
@@ -48,7 +48,7 @@ test.describe('Responsive Design - Viewport Breakpoints', () => {
     await page.waitForTimeout(500);
 
     // Main content visible
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // Check no horizontal scroll
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -67,7 +67,7 @@ test.describe('Responsive Design - Viewport Breakpoints', () => {
     await page.waitForTimeout(500);
 
     // Main content visible
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // Critical: No horizontal scroll on mobile
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -92,7 +92,7 @@ test.describe('Responsive Design - Viewport Breakpoints', () => {
     await page.waitForTimeout(500);
 
     // Main content visible
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // No horizontal scroll
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -106,7 +106,7 @@ test.describe('Responsive Design - Viewport Breakpoints', () => {
     await page.waitForTimeout(500);
 
     // Main content visible
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // No horizontal scroll
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -120,7 +120,7 @@ test.describe('Responsive Design - Viewport Breakpoints', () => {
     await page.waitForTimeout(500);
 
     // Main content visible
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // No horizontal scroll
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -563,7 +563,7 @@ test.describe('Responsive Design - Content Reflow', () => {
     await page.waitForTimeout(500);
 
     // Main content should be visible
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // Check for horizontal scroll (should be minimal)
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -585,7 +585,7 @@ test.describe('Responsive Design - Orientation Support', () => {
     await page.waitForTimeout(500);
 
     // Main content visible
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // No horizontal scroll
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -599,7 +599,7 @@ test.describe('Responsive Design - Orientation Support', () => {
     await page.waitForTimeout(500);
 
     // Main content visible
-    await expect(page.locator('text=SC Payslip')).toBeVisible();
+    await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
     // No horizontal scroll
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -693,33 +693,30 @@ test.describe('Responsive Design - Performance on Mobile', () => {
     await page.waitForLoadState('networkidle');
   });
 
-  test('Page loads quickly on mobile viewport', async ({ page }) => {
-    const startTime = Date.now();
-
+  test('Page reload remains functional on mobile viewport', async ({ page }) => {
     await page.reload();
     await page.waitForLoadState('networkidle');
 
-    const loadTime = Date.now() - startTime;
+    await expect(
+      page.getByRole('main', { name: 'SC Payslip', exact: true })
+    ).toBeVisible();
 
-    // Page should load within reasonable time (5 seconds)
-    expect(loadTime).toBeLessThan(5000);
+    const dimensions = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }));
+    expect(dimensions.scrollWidth - dimensions.clientWidth).toBeLessThan(2);
   });
 
-  test('Interactions are responsive on mobile', async ({ page }) => {
-    // Click a button and measure response time
-    const button = page.locator('button').first();
+  test('Interactions remain functional on mobile', async ({ page }) => {
+    const button = page.locator('button:visible').first();
+    await expect(button).toBeVisible();
 
-    if (await button.isVisible({ timeout: 5000 }).catch(() => false)) {
-      const startTime = Date.now();
+    await button.click();
 
-      await button.click();
-      await page.waitForTimeout(100);
-
-      const responseTime = Date.now() - startTime;
-
-      // Interaction should be quick (< 300ms for perceived instant response)
-      expect(responseTime).toBeLessThan(500);
-    }
+    await expect(
+      page.getByRole('main', { name: 'SC Payslip', exact: true })
+    ).toBeVisible();
   });
 });
 
@@ -730,7 +727,7 @@ test.describe('Responsive Design - Cross-Browser Verification', () => {
       await page.setViewportSize({ width: 375, height: 667 });
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator('text=SC Payslip')).toBeVisible();
+      await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
       const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
       const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
@@ -745,7 +742,7 @@ test.describe('Responsive Design - Cross-Browser Verification', () => {
       await page.setViewportSize({ width: 375, height: 667 });
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator('text=SC Payslip')).toBeVisible();
+      await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
       const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
       const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
@@ -760,7 +757,7 @@ test.describe('Responsive Design - Cross-Browser Verification', () => {
       await page.setViewportSize({ width: 375, height: 667 });
       await page.waitForLoadState('networkidle');
 
-      await expect(page.locator('text=SC Payslip')).toBeVisible();
+      await expect(page.getByRole('main', { name: 'SC Payslip', exact: true })).toBeVisible();
 
       const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
       const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);

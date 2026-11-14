@@ -74,7 +74,7 @@ export function save(session: SessionInput, options?: SaveOptions): StorageResul
     }
 
     // Save to localStorage
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(sessions));
+    writeSessions(sessions);
 
     if (recordDraft) {
       setCurrentDraftId(savedSession.id);
@@ -115,6 +115,38 @@ export function getAll(): SavedSession[] {
 /**
  * Internal function to get all sessions with validation
  */
+const UNREADABLE_BACKUP_KEY = 'sc-payslip-sessions-unreadable-backup';
+
+/**
+ * Writes the readable sessions without losing anything else that is stored.
+ * Entries the schema cannot read (older or damaged data) are written back
+ * unchanged; completely unreadable storage is backed up before it is replaced.
+ */
+function writeSessions(sessions: SavedSession[]): void {
+  const raw = localStorage.getItem(HISTORY_KEY);
+  let unreadable: unknown[] = [];
+  if (raw) {
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        unreadable = parsed.filter((item) => !savedSessionSchema.safeParse(item).success);
+      } else {
+        backupUnreadable(raw);
+      }
+    } catch {
+      backupUnreadable(raw);
+    }
+  }
+  localStorage.setItem(HISTORY_KEY, JSON.stringify([...sessions, ...unreadable]));
+}
+
+function backupUnreadable(raw: string): void {
+  // Keep the first backup: it holds the original data before any overwrite.
+  if (localStorage.getItem(UNREADABLE_BACKUP_KEY) === null) {
+    localStorage.setItem(UNREADABLE_BACKUP_KEY, raw);
+  }
+}
+
 function getAllInternal(): SavedSession[] {
   try {
     const data = localStorage.getItem(HISTORY_KEY);
@@ -203,7 +235,7 @@ export function deleteSession(sessionId: string): StorageResult<void> {
     const updatedSessions = sessions.filter((s) => s.id !== sessionId);
 
     // Save updated list
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(updatedSessions));
+    writeSessions(updatedSessions);
 
     if (sessionId === getCurrentDraftId()) {
       clearCurrentDraftId();
@@ -286,7 +318,7 @@ export function importAll(jsonData: string): StorageResult<{ count: number }> {
     const allSessions = [...existingSessions, ...validSessions];
 
     // Save to localStorage
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(allSessions));
+    writeSessions(allSessions);
 
     return {
       success: true,
@@ -366,7 +398,7 @@ export function duplicate(
       if (member.id) {
         memberIdMap.set(member.id, newMemberId);
       }
-      return { ...member, id: newMemberId };
+      return { ...member, id: newMemberId, revenues: member.revenues?.map(item => ({ ...item, id: generateId() })), investments: member.investments?.map(item => ({ ...item, id: generateId() })) };
     });
 
     // Copy expenses if requested
@@ -407,6 +439,7 @@ export function duplicate(
       members: newMembers,
       sharedExpenses: newSharedExpenses,
       individualExpenses: newIndividualExpenses,
+      paidTransfers: original.paidTransfers?.filter(t => copyExpenses || t.kind !== "COST_CONTRIBUTION").map(t => ({ ...t, id: generateId(), fromMemberId: memberIdMap.get(t.fromMemberId)!, toMemberId: memberIdMap.get(t.toMemberId)! })),
     };
 
     // Save the duplicated session
@@ -420,7 +453,7 @@ export function duplicate(
     sessions.push(savedSession);
 
     // Save to localStorage
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(sessions));
+    writeSessions(sessions);
 
     return {
       success: true,

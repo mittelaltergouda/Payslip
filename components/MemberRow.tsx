@@ -1,4 +1,7 @@
 "use client";
+import { MoneyItemsEditor } from "./MoneyItemsEditor";
+import { ExpenseItemsEditor } from "./ExpenseItemsEditor";
+import { distributionColumns } from "@/lib/accounting";
 
 import type { DistributionMode, IndividualExpenseInput, MemberBreakdown, MemberInput } from "@/lib/types";
 import { NumericInput } from "@/components/ui/numeric-input";
@@ -67,7 +70,7 @@ interface MemberRowProps {
   /**
    * Callback to add a new individual expense for this member.
    */
-  addIndividualExpense: (memberId: string) => void;
+  addIndividualExpense: (memberId: string, init?: Partial<IndividualExpenseInput>) => void;
 
   /**
    * Callback to update an individual expense.
@@ -135,9 +138,7 @@ export function MemberRow({
   removeIndividualExpense,
   rowIndex
 }: MemberRowProps) {
-  // individualExpenses is now pre-filtered by MembersTable, no need to filter again
-  const exp = individualExpenses;
-  const expSum = exp.reduce((s, e) => s + e.amount, 0);
+  const columns = distributionColumns(distributionMode);
 
   return (
     <tr key={member.id} className="align-top">
@@ -162,88 +163,62 @@ export function MemberRow({
         </td>
       )}
       <td className="py-3 px-3 w-[300px]">
-        <NumericInput
-          className="input w-full"
-          data-nav-col="revenue"
-          data-nav-row={rowIndex}
-          value={member.revenue ?? 0}
-          onValueChange={(v) => updateMember(member.id!, { revenue: v })}
-          lang={lang}
-        />
+        <MoneyItemsEditor member={member} kind="revenue" lang={lang} onChange={patch => updateMember(member.id!, patch)} rowIndex={rowIndex} />
       </td>
       <td className="py-3 px-3 w-[300px]">
-        <NumericInput
-          className="input w-full"
-          data-nav-col="investment"
-          data-nav-row={rowIndex}
-          value={member.investment ?? 0}
-          onValueChange={(v) => updateMember(member.id!, { investment: v })}
+        <MoneyItemsEditor member={member} kind="investment" lang={lang} onChange={patch => updateMember(member.id!, patch)} rowIndex={rowIndex} />
+      </td>
+      <td className="py-3 px-3 w-[300px]">
+        {/* individualExpenses is pre-filtered by MembersTable */}
+        <ExpenseItemsEditor
+          memberId={member.id!}
+          handle={member.handle}
+          expenses={individualExpenses}
           lang={lang}
+          t={t}
+          format={format}
+          addIndividualExpense={addIndividualExpense}
+          updateIndividualExpense={updateIndividualExpense}
+          removeIndividualExpense={removeIndividualExpense}
+          rowIndex={rowIndex}
         />
       </td>
-      <td className="py-3 px-3">
-        <div className="flex flex-col gap-1 min-w-[220px]">
-          {exp.map((e) => (
-            <div key={e.id} className="flex gap-2 items-center">
-              <input
-                className="input flex-1"
-                value={e.label}
-                onChange={(ev) => updateIndividualExpense(e.id!, { label: ev.target.value })}
-              />
-              <NumericInput
-                className="input w-24"
-                value={e.amount}
-                onValueChange={(v) => updateIndividualExpense(e.id!, { amount: v })}
-                lang={lang}
-              />
-              <button
-                className="text-red-400 text-xl leading-none"
-                onClick={() => removeIndividualExpense(e.id!)}
-                title={t.remove}
-              >
-                🗑
-              </button>
-            </div>
-          ))}
-          <button className="btn text-xs" onClick={() => addIndividualExpense(member.id!)}>
-            {t.addExpense}
-          </button>
-          <div className="text-xs text-white/60">Σ {format(expSum, lang)}</div>
-        </div>
-      </td>
-      <td className="py-3 px-3 w-[160px]">
-        <NumericInput
-          className="input w-full"
-          data-nav-col="percentShare"
-          data-nav-row={rowIndex}
-          value={member.percentShare ?? 0}
-          onValueChange={(v) => updateMember(member.id!, { percentShare: v })}
-          lang={lang}
-          disabled={distributionMode === "EQUAL"}
-        />
-      </td>
-      <td className="py-3 px-3 w-[240px]">
-        <NumericInput
-          className="input w-full"
-          data-nav-col="fixedBonus"
-          data-nav-row={rowIndex}
-          value={(member as any).fixedBonus ?? 0}
-          onValueChange={(v) => updateMember(member.id!, { fixedBonus: v as any })}
-          lang={lang}
-          disabled={distributionMode !== "ADJUSTABLE"}
-        />
-      </td>
-      <td className="py-3 px-3 w-[240px]">
-        <NumericInput
-          className="input w-full"
-          data-nav-col="fixedPayout"
-          data-nav-row={rowIndex}
-          value={member.fixedPayout ?? 0}
-          onValueChange={(v) => updateMember(member.id!, { fixedPayout: v })}
-          lang={lang}
-          disabled={distributionMode !== "ADJUSTABLE"}
-        />
-      </td>
+      {columns.percentShare && (
+        <td className="py-3 px-3 w-[160px]">
+          <NumericInput
+            className="input w-full"
+            data-nav-col="percentShare"
+            data-nav-row={rowIndex}
+            value={member.percentShare ?? 0}
+            onValueChange={(v) => updateMember(member.id!, { percentShare: v })}
+            lang={lang}
+          />
+        </td>
+      )}
+      {columns.fixedAmounts && (
+        <td className="py-3 px-3 w-[240px]">
+          <NumericInput
+            className="input w-full"
+            data-nav-col="fixedBonus"
+            data-nav-row={rowIndex}
+            value={(member as any).fixedBonus ?? 0}
+            onValueChange={(v) => updateMember(member.id!, { fixedBonus: v as any })}
+            lang={lang}
+          />
+        </td>
+      )}
+      {columns.fixedAmounts && (
+        <td className="py-3 px-3 w-[240px]">
+          <NumericInput
+            className="input w-full"
+            data-nav-col="fixedPayout"
+            data-nav-row={rowIndex}
+            value={member.fixedPayout ?? 0}
+            onValueChange={(v) => updateMember(member.id!, { fixedPayout: v })}
+            lang={lang}
+          />
+        </td>
+      )}
       <td className="py-3 px-3 text-right">
         <button
           className="text-red-400 text-xl leading-none"

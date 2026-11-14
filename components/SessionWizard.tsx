@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { calculatePayslip } from "@/lib/calc";
 import type { DistributionMode, IndividualExpenseInput, MemberInput, SessionInput, SavedSession } from "@/lib/types";
 import { calculateModePreviews } from "@/lib/modePreview";
@@ -8,6 +8,7 @@ import type { Lang } from "@/lib/i18n/translations";
 import { translations } from "@/lib/i18n/translations";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { SessionSettings } from "./SessionSettings";
+import { PaidTransfersEditor } from "./PaidTransfersEditor";
 import { MembersTable } from "./MembersTable";
 import { ResultsDisplay } from "./ResultsDisplay";
 import { useAutoSave } from "@/hooks/useAutoSave";
@@ -28,14 +29,20 @@ import { DuplicateSessionDialog } from "./DuplicateSessionDialog";
 import { Button } from "./ui/button";
 import { FormField } from "./ui/form-field";
 import type { PresetMember } from "@/lib/types";
-import { clearCsrfToken, getCsrfHeaders } from "@/lib/csrf-client";
+import { SERVICE_FEE_RATE } from "@/lib/calc/tax";
+import { registerTitleTap } from "@/lib/theme";
+import { useThemePrefs } from "@/hooks/useThemePrefs";
+import { ThemeSwitcher } from "./ThemeSwitcher";
+import { SinisterAccessTerminal } from "./SinisterAccessTerminal";
+import { SinisterTagline } from "./SinisterTagline";
+
 
 const rndId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : `id-${Math.random().toString(16).slice(2)}`;
 
-const taxFixed = 0.005;
+const taxFixed = SERVICE_FEE_RATE;
 
 function format(amount: number, lang: Lang) {
   return Math.round(amount).toLocaleString(lang === "de" ? "de-DE" : "en-US");
@@ -50,8 +57,8 @@ function buildInitialSession(): SessionInput {
     taxEnabled: true,
     taxRate: taxFixed,
     members: [
-      { id: rndId(), handle: "Player 1", role: "Pilot", revenue: 0, investment: 0, active: true },
-      { id: rndId(), handle: "Player 2", role: "Crew", revenue: 0, investment: 0, active: true }
+      { id: "initial-player-1", handle: "Player 1", role: "Pilot", revenue: 0, investment: 0, active: true },
+      { id: "initial-player-2", handle: "Player 2", role: "Crew", revenue: 0, investment: 0, active: true }
     ],
     individualExpenses: [],
     sharedExpenses: []
@@ -62,28 +69,30 @@ type Props = { initialLang?: Lang };
 
 export function SessionWizard({ initialLang = "de" }: Props) {
   const [lang, setLang] = useState<Lang>(initialLang);
-  const t = translations[lang];
-  const [session, setSession] = useState<SessionInput>(() => {
-    if (typeof window === "undefined") {
-      return buildInitialSession();
+  const [terminalOpen, setTerminalOpen] = useState(false);
+  const openTerminal = useCallback(() => setTerminalOpen(true), []);
+  const { unlocked: themeUnlocked, theme, unlock: unlockTheme, lock: lockTheme, setTheme } = useThemePrefs(openTerminal);
+  const titleTaps = useRef<number[]>([]);
+  const handleTitleTap = () => {
+    const { taps, open } = registerTitleTap(titleTaps.current, Date.now());
+    titleTaps.current = taps;
+    if (open) {
+      setTerminalOpen(true);
     }
-    const draft = getCurrentDraft();
-    return draft ? draft.session : buildInitialSession();
-  });
+  };
+  const t = translations[lang];
+  const [session, setSession] = useState<SessionInput>(buildInitialSession);
   const updateSession = setSession;
   const [error, setError] = useState<string | null>(null);
   const [showRole, setShowRole] = useState(false);
+  const [isAppReady, setIsAppReady] = useState(false);
+  const [isStorageHydrated, setIsStorageHydrated] = useState(false);
 
   // Session management state
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isPresetManagerOpen, setIsPresetManagerOpen] = useState(false);
   const [savedSessions, setSavedSessions] = useState<SavedSession[]>([]);
-  const [currentDraftId, setCurrentDraftIdState] = useState<string | null>(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
-    return getCurrentDraftId();
-  });
+  const [currentDraftId, setCurrentDraftIdState] = useState<string | null>(null);
   const [duplicateDialogSession, setDuplicateDialogSession] = useState<SavedSession | null>(null);
   const [isSavingSession, setIsSavingSession] = useState(false);
   const { showToast } = useToast();
@@ -117,7 +126,13 @@ export function SessionWizard({ initialLang = "de" }: Props) {
 
   const handleDraftSaved = useCallback(
     (savedSession: SavedSession) => {
-      setSession(savedSession.session);
+      setSession((currentSession) => {
+        if (currentSession.id && currentSession.id !== savedSession.id) {
+          return currentSession;
+        }
+
+        return { ...currentSession, id: savedSession.id };
+      });
       setStoredCurrentDraftId(savedSession.id);
       setCurrentDraftIdState(savedSession.id);
       refreshSessionList();
@@ -127,13 +142,18 @@ export function SessionWizard({ initialLang = "de" }: Props) {
 
   const { saveStatus, manualSave, error: saveError } = useAutoSave(
     session,
-    true,
+    isStorageHydrated,
     { onSaveSuccess: handleDraftSaved }
   );
 
-  // Load saved sessions on mount
+  // Read browser-only state after hydration so server and client markup match.
   useEffect(() => {
+    const currentDraft = getCurrentDraft();
+    if (currentDraft) {
+      setSession(currentDraft.session);
+    }
     refreshSessionList();
+    setIsStorageHydrated(true);
   }, [refreshSessionList]);
 
   // Show toast on save error
@@ -167,6 +187,10 @@ export function SessionWizard({ initialLang = "de" }: Props) {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [manualSave, showToast, t.sessionSaved]);
+
+  useEffect(() => {
+    setIsAppReady(true);
+  }, []);
 
   // Unsaved changes warning
   useEffect(() => {
@@ -242,31 +266,6 @@ export function SessionWizard({ initialLang = "de" }: Props) {
     try {
       await manualSave();
       refreshSessionList();
-
-      const headers = await getCsrfHeaders({
-        "Content-Type": "application/json",
-      });
-
-      const response = await fetch("/api/sessions", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          name: session.name,
-          type: session.type,
-          taxEnabled: session.taxEnabled,
-          distribution: session.distributionMode,
-          members: session.members,
-        }),
-      });
-
-      if (!response.ok) {
-        if (response.status === 403) {
-          clearCsrfToken();
-        }
-        throw new Error(t.sessionSaveFailed || "Failed to save session");
-      }
-
-      refreshSessionList();
       showToast(t.sessionSaved || "Session saved", "success");
     } catch (err) {
       const message = err instanceof Error ? err.message : t.sessionSaveFailed || "Failed to save session";
@@ -274,7 +273,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
     } finally {
       setIsSavingSession(false);
     }
-  }, [manualSave, refreshSessionList, session, showToast, t.sessionSaveFailed, t.sessionSaved]);
+  }, [manualSave, refreshSessionList, showToast, t.sessionSaveFailed, t.sessionSaved]);
 
   // Handle session name update
   const handleSessionNameChange = (name: string) => {
@@ -302,6 +301,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
         distributionMode: distributionMode ?? prev.distributionMode,
         // Clear individual expenses since members changed
         individualExpenses: [],
+        paidTransfers: [],
       }));
 
       showToast(t.presetLoaded || "Crew preset loaded", "success");
@@ -329,12 +329,12 @@ export function SessionWizard({ initialLang = "de" }: Props) {
     });
   };
 
-  const addIndividualExpense = (memberId: string) => {
+  const addIndividualExpense = (memberId: string, init?: Partial<IndividualExpenseInput>) => {
     setSession((prev) => ({
       ...prev,
       individualExpenses: [
         ...(prev.individualExpenses ?? []),
-        { id: rndId(), memberId, label: t.expenses, amount: 0 }
+        { id: rndId(), memberId, label: t.expenses, amount: 0, ...init }
       ]
     }));
   };
@@ -359,6 +359,7 @@ export function SessionWizard({ initialLang = "de" }: Props) {
     setSession((prev) => ({
       ...prev,
       members: prev.members.filter((m) => m.id !== id),
+      paidTransfers: (prev.paidTransfers ?? []).filter(t => t.fromMemberId !== id && t.toMemberId !== id),
       individualExpenses: (prev.individualExpenses ?? []).filter((exp) => exp.memberId !== id)
     }));
   };
@@ -380,15 +381,42 @@ export function SessionWizard({ initialLang = "de" }: Props) {
   };
 
   return (
-    <div className="space-y-8" role="main" aria-label={t.appName}>
-      {/* Header with app name and language switcher */}
+    <div
+      className="space-y-8"
+      role="main"
+      aria-label={t.appName}
+      data-app-ready={isAppReady ? "true" : "false"}
+    >
+      {/* Header with app name, language switcher and (once unlocked) theme switch */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <p className="text-sm uppercase text-neon/80 font-semibold">{t.appName}</p>
-          <p className="text-white/70 max-w-2xl text-sm">{t.heroSubtitle}</p>
+          {/* Tapping the title five times opens the hidden access terminal. */}
+          <p
+            className="text-sm uppercase text-neon/80 font-semibold sinister-glitch select-none"
+            data-text={t.appName}
+            onClick={handleTitleTap}
+          >
+            {t.appName}
+          </p>
+          {theme === "sinister" ? (
+            <SinisterTagline lang={lang} />
+          ) : (
+            <p className="text-white/70 max-w-2xl text-sm">{t.heroSubtitle}</p>
+          )}
         </div>
-        <LanguageSwitcher lang={lang} onLangChange={setLang} />
+        <div className="flex items-center gap-2 flex-wrap">
+          {themeUnlocked && (
+            <ThemeSwitcher
+              theme={theme}
+              onThemeChange={setTheme}
+              label={t.themeLabel}
+              defaultLabel={t.themeDefault}
+            />
+          )}
+          <LanguageSwitcher lang={lang} onLangChange={setLang} />
+        </div>
       </div>
+      <SinisterAccessTerminal open={terminalOpen} lang={lang} unlocked={themeUnlocked} onOpenChange={setTerminalOpen} onUnlock={unlockTheme} onLock={lockTheme} />
 
       {/* Session name and management controls */}
       <div className="glass p-6 space-y-4" role="region" aria-label={t.sessionSettings || "Session Settings"}>
@@ -490,6 +518,8 @@ export function SessionWizard({ initialLang = "de" }: Props) {
         removeIndividualExpense={removeIndividualExpense}
         onOpenPresetManager={() => setIsPresetManagerOpen(true)}
       />
+
+      <PaidTransfersEditor session={session} lang={lang} onChange={paidTransfers => setSession(prev => ({ ...prev, paidTransfers }))} />
 
       <ResultsDisplay
         result={result}

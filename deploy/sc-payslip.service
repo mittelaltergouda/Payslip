@@ -1,0 +1,38 @@
+[Unit]
+Description=SC Payslip public local-only web application
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sc-payslip
+Group=sc-payslip
+WorkingDirectory=/opt/sc-payslip
+Environment=NODE_ENV=production
+Environment=HOSTNAME=127.0.0.1
+Environment=PORT=58412
+ExecStart=/usr/bin/node /opt/sc-payslip/server.js
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=15s
+
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateTmp=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHome=true
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictSUIDSGID=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+LockPersonality=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

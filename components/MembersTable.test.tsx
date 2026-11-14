@@ -171,7 +171,7 @@ describe('MembersTable - Initial Rendering', () => {
         individualExpenses={sampleIndividualExpenses}
         result={sampleResult}
         showRole={false}
-        distributionMode="EQUAL"
+        distributionMode="ADJUSTABLE"
         feeByPayer={{}}
         lang="en"
         t={mockTranslationsEN}
@@ -192,6 +192,36 @@ describe('MembersTable - Initial Rendering', () => {
     expect(screen.queryByText('Taxes')).not.toBeInTheDocument();
     expect(screen.queryByText('Profit Share')).not.toBeInTheDocument();
     expect(screen.queryByText('Net After Fees')).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['EQUAL', [], ['% Share', 'Fixed Bonus', 'Fixed Payout']],
+    ['PERCENT', ['% Share'], ['Fixed Bonus', 'Fixed Payout']],
+    ['ADJUSTABLE', ['% Share', 'Fixed Bonus', 'Fixed Payout'], []],
+  ] as const)('shows only the distribution columns usable in %s mode', (mode, shown, hidden) => {
+    render(
+      <MembersTable
+        members={sampleMembers}
+        individualExpenses={sampleIndividualExpenses}
+        result={sampleResult}
+        showRole={false}
+        distributionMode={mode}
+        feeByPayer={{}}
+        lang="en"
+        t={mockTranslationsEN}
+        format={mockFormat}
+        {...mockCallbacks}
+      />
+    );
+
+    for (const name of shown) {
+      expect(screen.getByRole('columnheader', { name })).toBeInTheDocument();
+    }
+    for (const name of hidden) {
+      expect(screen.queryByRole('columnheader', { name })).not.toBeInTheDocument();
+      // mobile cards hide the same inputs
+      expect(screen.queryByText(name)).not.toBeInTheDocument();
+    }
   });
 
   it('should render role column header when showRole is true', () => {
@@ -522,5 +552,40 @@ describe('MembersTable - Enter Navigation', () => {
     fireEvent.keyDown(firstHandle, { key: 'Enter', code: 'Enter' });
 
     expect(document.activeElement).toBe(secondHandle);
+  });
+
+  it('keeps Enter navigation when the next row uses itemized positions', () => {
+    const members: MemberInput[] = [
+      sampleMembers[0],
+      {
+        ...sampleMembers[1],
+        revenues: [
+          { id: 'rev-1', label: 'Cargo', amount: 3000 },
+          { id: 'rev-2', label: 'Bounty', amount: 2000 },
+        ],
+      },
+    ];
+    render(
+      <MembersTable
+        members={members}
+        individualExpenses={sampleIndividualExpenses}
+        result={sampleResult}
+        showRole={false}
+        distributionMode="EQUAL"
+        feeByPayer={{}}
+        lang="en"
+        t={mockTranslationsEN}
+        format={mockFormat}
+        {...mockCallbacks}
+      />
+    );
+
+    const pilotRevenue = screen.getAllByLabelText('revenue Pilot', { selector: 'input' })[0];
+    const escortFirstItemAmount = screen.getAllByLabelText('revenue amount 1', { selector: 'input' })[0];
+    pilotRevenue.focus();
+
+    fireEvent.keyDown(pilotRevenue, { key: 'Enter', code: 'Enter' });
+
+    expect(document.activeElement).toBe(escortFirstItemAmount);
   });
 });

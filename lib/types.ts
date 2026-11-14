@@ -10,6 +10,28 @@ export type SessionType =
   | "BOUNTY"
   | "OTHER";
 
+export type MoneyItemInput = {
+  id?: string;
+  label: string;
+  amount: number;
+};
+
+export type PaidTransferInput = {
+  id?: string;
+  fromMemberId: string;
+  toMemberId: string;
+  netAmount: number;
+  feeAmount: number;
+  /**
+   * Whether the in-game service fee was paid on top of netAmount. feeAmount is
+   * derived from it in the editor; missing on older sessions (then feeAmount > 0).
+   */
+  feeIncluded?: boolean;
+  /** Legacy transfers default to SETTLEMENT. Every kind's fee is a shared session cost. */
+  label?: string;
+  kind?: "SETTLEMENT" | "SESSION_CASH" | "COST_CONTRIBUTION";
+};
+
 export type MemberInput = {
   id?: string;
   handle: string;
@@ -17,6 +39,10 @@ export type MemberInput = {
   active?: boolean;
   revenue?: number;
   investment?: number;
+  /** Itemized values replace, rather than add to, the legacy scalar. */
+  revenues?: MoneyItemInput[];
+  /** Itemized values replace, rather than add to, the legacy scalar. */
+  investments?: MoneyItemInput[];
   percentShare?: number | null;
   fixedBonus?: number | null;
   fixedPayout?: number | null;
@@ -48,6 +74,7 @@ export type SessionInput = {
   members: MemberInput[];
   sharedExpenses?: SharedExpenseInput[];
   individualExpenses?: IndividualExpenseInput[];
+  paidTransfers?: PaidTransferInput[];
 };
 
 export type MemberBreakdown = {
@@ -61,7 +88,10 @@ export type MemberBreakdown = {
   sharedExpenses: number;
   individualExpenses: number;
   profitShare: number;
+  /** Part of all transfers' service fees this member bears (already inside profitShare). */
+  serviceFeeShare?: number;
   finalNet: number;
+  fundingAdjustment?: number;
 };
 
 export type Transfer = {
@@ -72,16 +102,39 @@ export type Transfer = {
   feeAmount: number;
 };
 
+export type SettlementDetail = Transfer & {
+  exactBudget: number;
+  budgetAmount: number;
+  roundingRemainder: number;
+};
+
+export type UnsettledBalance = {
+  memberId: string;
+  /** Positive = still to receive, negative = excess cash still retained. */
+  amount: number;
+};
+
 export type PayslipResult = {
   saleRevenue: number;
   netProfit: number;
   taxRateApplied: number;
   members: MemberBreakdown[];
   suggestedTransfers: Transfer[];
+  unsettledBalances?: UnsettledBalance[];
+  /** Service fees of transfers already made; a shared cost inside netProfit. */
+  paidTransferFees?: number;
+  /** Service fees of the suggested transfers; a shared cost inside netProfit. */
+  suggestedTransferFees?: number;
+  settlementDetails?: SettlementDetail[];
+  /** ADJUSTABLE only: how fixed payouts/bonuses were treated (loss, low profit). */
+  fixedAmountsStatus?: 'APPLIED' | 'SCALED_TO_PROFIT' | 'SUSPENDED_FOR_LOSS';
+  /** Transfers recorded as already paid; exports need them for final payouts. */
+  paidTransfers?: PaidTransferInput[];
 };
 
 // Zod schemas for localStorage session management
 
+const moneySchema = z.number().finite().min(0).max(Number.MAX_SAFE_INTEGER);
 const memberInputSchema = z.object({
   id: z.string().optional(),
   handle: z.string(),
@@ -89,6 +142,8 @@ const memberInputSchema = z.object({
   active: z.boolean().optional(),
   revenue: z.number().optional(),
   investment: z.number().optional(),
+  revenues: z.array(z.object({ id: z.string().optional(), label: z.string(), amount: moneySchema })).optional(),
+  investments: z.array(z.object({ id: z.string().optional(), label: z.string(), amount: moneySchema })).optional(),
   percentShare: z.number().nullable().optional(),
   fixedBonus: z.number().nullable().optional(),
   fixedPayout: z.number().nullable().optional(),
@@ -108,6 +163,17 @@ const individualExpenseInputSchema = z.object({
   amount: z.number(),
 });
 
+const paidTransferInputSchema = z.object({
+  id: z.string().optional(),
+  fromMemberId: z.string(),
+  toMemberId: z.string(),
+  netAmount: moneySchema,
+  feeAmount: moneySchema,
+  feeIncluded: z.boolean().optional(),
+  label: z.string().optional(),
+  kind: z.enum(["SETTLEMENT", "SESSION_CASH", "COST_CONTRIBUTION"]).optional(),
+});
+
 const sessionInputSchema = z.object({
   id: z.string().optional(),
   name: z.string(),
@@ -116,10 +182,23 @@ const sessionInputSchema = z.object({
   totalRevenue: z.number().optional(),
   distributionMode: z.enum(["EQUAL", "PERCENT", "ADJUSTABLE"]),
   taxEnabled: z.boolean().optional(),
-  taxRate: z.number().optional(),
+  taxRate: z.number().min(0).lt(1).optional(),
   members: z.array(memberInputSchema),
   sharedExpenses: z.array(sharedExpenseInputSchema).optional(),
   individualExpenses: z.array(individualExpenseInputSchema).optional(),
+  paidTransfers: z.array(paidTransferInputSchema).optional(),
+}).superRefine((session, ctx) => {
+  const ids = session.members.map(m => m.id).filter((id): id is string => !!id);
+  // Only recorded transfers need unambiguous member references. Older
+  // sessions with duplicate IDs stayed valid and must not be dropped on load.
+  if ((session.paidTransfers ?? []).length > 0 && new Set(ids).size !== ids.length) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Duplicate member IDs" });
+  }
+  for (const transfer of session.paidTransfers ?? []) {
+    if (!ids.includes(transfer.fromMemberId) || !ids.includes(transfer.toMemberId) || transfer.fromMemberId === transfer.toMemberId || transfer.netAmount + transfer.feeAmount > Number.MAX_SAFE_INTEGER) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Invalid recorded transfer" });
+    }
+  }
 });
 
 export const savedSessionSchema = z.object({

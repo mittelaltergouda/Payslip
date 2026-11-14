@@ -1,4 +1,4 @@
-import { format, formatCurrency, formatPercent, formatCompact, formatCurrencyCompact, formatInteger, parseFormattedInteger } from './format';
+import { format, formatCurrency, formatPercent, formatCompact, formatCurrencyCompact, formatInteger, parseFormattedInteger, formatPlainAmount } from './format';
 
 // Test cases for format() - Basic number formatting with thousand separators
 
@@ -722,5 +722,23 @@ describe('parseFormattedInteger', () => {
       expect(parseFormattedInteger('100000')).toBe(100000);
       expect(parseFormattedInteger('999999999')).toBe(999999999);
     });
+  });
+});
+
+describe('formatPlainAmount', () => {
+  it('returns whole aUEC as plain digits, ready for the in-game wallet', () => {
+    expect(formatPlainAmount(262_687)).toBe('262687');
+    expect(formatPlainAmount(1_234_567)).toBe('1234567');
+    expect(formatPlainAmount(0)).toBe('0');
+  });
+
+  it('has no thousand separators or decimals and rounds like the display', () => {
+    expect(formatPlainAmount(10_000.4)).toBe('10000');
+    expect(formatPlainAmount(10_000.5)).toBe('10001');
+    expect(formatPlainAmount(9_007_199_254_740_991)).toMatch(/^\d+$/);
+  });
+
+  it('never copies a negative amount', () => {
+    expect(formatPlainAmount(-5)).toBe('0');
   });
 });

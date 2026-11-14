@@ -6,7 +6,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ToastProvider } from './Toast';
 import * as sessionStorage from '@/lib/storage/sessionStorage';
 import * as useAutoSaveModule from '@/hooks/useAutoSave';
-import * as csrfClient from '@/lib/csrf-client';
 import type { SavedSession } from '@/lib/types';
 
 // Helper function to interact with custom distribution mode dropdown
@@ -132,7 +131,7 @@ describe('SessionWizard - Initial Rendering', () => {
     renderWithToast(<SessionWizard />);
 
     const taxCheckbox = screen.getByRole('checkbox', {
-      name: /Transfer Tax berücksichtigen/i
+      name: /Service Fee berücksichtigen/i
     });
     expect(taxCheckbox).toBeChecked();
   });
@@ -220,17 +219,23 @@ describe('SessionWizard - Distribution Mode', () => {
     expect(percentInputs.length).toBeGreaterThan(0);
   });
 
-  it('should disable percent share inputs in EQUAL mode', () => {
-    renderWithToast(<SessionWizard />);
+  it('should hide percent share and fixed amount columns in EQUAL mode', () => {
+    const { container } = renderWithToast(<SessionWizard />);
 
-    const allInputs = screen.getAllByRole('textbox');
-    const percentShareInputs = allInputs.slice(-6);
+    expect(screen.queryByRole('columnheader', { name: 'Anteil %' })).not.toBeInTheDocument();
+    expect(container.querySelector('input[data-nav-col="percentShare"]')).toBeNull();
+    expect(container.querySelector('input[data-nav-col="fixedPayout"]')).toBeNull();
+  });
 
-    const disabledPercentInputs = percentShareInputs.filter(input =>
-      (input as HTMLInputElement).disabled
-    );
+  it('should show only the percent share column in PERCENT mode', () => {
+    const { container } = renderWithToast(<SessionWizard />);
 
-    expect(disabledPercentInputs.length).toBeGreaterThan(0);
+    selectDistributionMode('Prozent');
+
+    expect(screen.getByRole('columnheader', { name: 'Anteil %' })).toBeInTheDocument();
+    expect(container.querySelectorAll('input[data-nav-col="percentShare"]').length).toBeGreaterThan(0);
+    expect(container.querySelector('input[data-nav-col="fixedBonus"]')).toBeNull();
+    expect(container.querySelector('input[data-nav-col="fixedPayout"]')).toBeNull();
   });
 
   it('should enable fixed payout inputs only in ADJUSTABLE mode', () => {
@@ -520,7 +525,7 @@ describe('SessionWizard - Tax Toggle', () => {
     renderWithToast(<SessionWizard />);
 
     const taxCheckbox = screen.getByRole('checkbox', {
-      name: /Transfer Tax berücksichtigen/i
+      name: /Service Fee berücksichtigen/i
     }) as HTMLInputElement;
 
     expect(taxCheckbox.checked).toBe(true);
@@ -534,7 +539,7 @@ describe('SessionWizard - Tax Toggle', () => {
     renderWithToast(<SessionWizard />);
 
     const taxCheckbox = screen.getByRole('checkbox', {
-      name: /Transfer Tax berücksichtigen/i
+      name: /Service Fee berücksichtigen/i
     }) as HTMLInputElement;
 
     fireEvent.click(taxCheckbox);
@@ -577,7 +582,7 @@ describe('SessionWizard - Reset Functionality', () => {
     renderWithToast(<SessionWizard />);
 
     const taxCheckbox = screen.getByRole('checkbox', {
-      name: /Transfer Tax berücksichtigen/i
+      name: /Service Fee berücksichtigen/i
     }) as HTMLInputElement;
 
     fireEvent.click(taxCheckbox);
@@ -806,7 +811,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
 
       const checkboxes = screen.getAllByRole('checkbox').filter(checkbox => {
         const label = (checkbox as HTMLInputElement).getAttribute('aria-label');
-        return !label || (!label.includes('Transfer Tax') && !label.includes('Rollen'));
+        return !label || (!label.includes('Service Fee') && !label.includes('Rollen'));
       });
 
       checkboxes.forEach(checkbox => {
@@ -1055,7 +1060,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       renderWithToast(<SessionWizard />);
 
       const taxCheckbox = screen.getByRole('checkbox', {
-        name: /Transfer Tax berücksichtigen/i
+        name: /Service Fee berücksichtigen/i
       });
 
       for (let i = 0; i < 5; i++) {
@@ -1164,7 +1169,7 @@ describe('SessionWizard - Error Handling and Edge Cases', () => {
       selectDistributionMode('Prozent');
 
       const taxCheckbox = screen.getByRole('checkbox', {
-        name: /Transfer Tax berücksichtigen/i
+        name: /Service Fee berücksichtigen/i
       });
       fireEvent.click(taxCheckbox);
 
@@ -1254,9 +1259,6 @@ let fetchMock: ReturnType<typeof vi.fn>;
 
     fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: 'server-session' }) });
     vi.stubGlobal('fetch', fetchMock);
-
-    vi.spyOn(csrfClient, 'getCsrfHeaders').mockResolvedValue(new Headers({ 'Content-Type': 'application/json' }));
-    vi.spyOn(csrfClient, 'clearCsrfToken').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -1349,29 +1351,17 @@ let fetchMock: ReturnType<typeof vi.fn>;
       expect(saveButton).toBeInTheDocument();
     });
 
-    it('calls the API and manual save when clicked', async () => {
+    it('saves only in the browser and never calls the server API', async () => {
       renderWithToast(<SessionWizard />);
 
       const saveButton = screen.getByRole('button', { name: /Session speichern|Save session/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(fetchMock).toHaveBeenCalled();
         expect(mockManualSave).toHaveBeenCalled();
       });
 
-      const url = fetchMock.mock.calls[0][0];
-      const options = fetchMock.mock.calls[0][1] as RequestInit;
-      expect(url).toBe('/api/sessions');
-      expect(options.method).toBe('POST');
-      expect(options.headers).toBeDefined();
-      expect(options.body).toBeDefined();
-      const payload = JSON.parse(options.body as string);
-      expect(payload).toMatchObject({
-        name: 'SC Session',
-        distribution: 'EQUAL',
-        members: expect.any(Array),
-      });
+      expect(fetchMock).not.toHaveBeenCalled();
     });
   });
 
@@ -1572,14 +1562,18 @@ let fetchMock: ReturnType<typeof vi.fn>;
   });
 
   describe('Auto-Save Integration', () => {
-    it('should call useAutoSave with session data', () => {
+    it('should enable auto-save only after browser storage hydration', async () => {
       renderWithToast(<SessionWizard />);
 
       expect(mockUseAutoSave).toHaveBeenCalled();
-      const callArgs = mockUseAutoSave.mock.calls[0];
-      expect(callArgs[0]).toHaveProperty('name');
-      expect(callArgs[0]).toHaveProperty('members');
-      expect(callArgs[1]).toBe(true); // enabled
+      const initialCallArgs = mockUseAutoSave.mock.calls[0];
+      expect(initialCallArgs[0]).toHaveProperty('name');
+      expect(initialCallArgs[0]).toHaveProperty('members');
+      expect(initialCallArgs[1]).toBe(false);
+
+      await waitFor(() => {
+        expect(mockUseAutoSave.mock.calls.some((call) => call[1] === true)).toBe(true);
+      });
     });
 
     it('should update auto-save when session changes', () => {
@@ -1774,5 +1768,77 @@ let fetchMock: ReturnType<typeof vi.fn>;
 
       expect(screen.getByRole('textbox', { name: /Session Name/i })).toBeInTheDocument();
     });
+  });
+});
+
+describe('SessionWizard - hidden Sinister theme', () => {
+  afterEach(() => {
+    window.localStorage.removeItem('sc-payslip-theme');
+    delete document.documentElement.dataset.theme;
+  });
+
+  it('shows no theme switch to regular users', () => {
+    renderWithToast(<SessionWizard />);
+    expect(screen.queryByRole('radiogroup', { name: 'Design' })).not.toBeInTheDocument();
+    expect(document.documentElement.dataset.theme).toBeUndefined();
+  });
+
+  it('opens the access terminal after five quick taps on the title', () => {
+    renderWithToast(<SessionWizard />);
+    const title = screen.getByText('SC Payslip', { selector: 'p' });
+    for (let i = 0; i < 4; i++) {fireEvent.click(title);}
+    expect(screen.queryByText('Sinister Terminal')).not.toBeInTheDocument();
+    fireEvent.click(title);
+    expect(screen.getByText('Sinister Terminal')).toBeInTheDocument();
+  });
+
+  it('opens the access terminal with the Konami code', () => {
+    renderWithToast(<SessionWizard />);
+    for (const key of ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a']) {
+      fireEvent.keyDown(window, { key });
+    }
+    expect(screen.getByText('Sinister Terminal')).toBeInTheDocument();
+  });
+
+  it('unlocks the theme with the code and shows the switch next to DE/EN', async () => {
+    renderWithToast(<SessionWizard />);
+    const title = screen.getByText('SC Payslip', { selector: 'p' });
+    for (let i = 0; i < 5; i++) {fireEvent.click(title);}
+    fireEvent.change(screen.getByRole('textbox', { name: 'ZUGANGSKENNUNG' }), { target: { value: 'S1NISTER' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Bestätigen' }));
+    await waitFor(() => expect(screen.getByRole('radiogroup', { name: 'Design' })).toBeInTheDocument(), { timeout: 3000 });
+    expect(screen.getByRole('radio', { name: 'Sinister' })).toBeChecked();
+    expect(document.documentElement.dataset.theme).toBe('sinister');
+    expect(JSON.parse(window.localStorage.getItem('sc-payslip-theme') ?? '{}')).toEqual({ unlocked: true, theme: 'sinister' });
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Standard' }));
+    expect(document.documentElement.dataset.theme).toBeUndefined();
+    expect(screen.getByRole('radiogroup', { name: 'Design' })).toBeInTheDocument();
+  });
+
+  it('revokes the access from the terminal: switch gone, default design, stored as locked', async () => {
+    window.localStorage.setItem('sc-payslip-theme', JSON.stringify({ unlocked: true, theme: 'sinister' }));
+    renderWithToast(<SessionWizard />);
+    expect(await screen.findByRole('radiogroup', { name: 'Design' })).toBeInTheDocument();
+    await waitFor(() => expect(document.documentElement.dataset.theme).toBe('sinister'));
+
+    const title = screen.getByText('SC Payslip', { selector: 'p' });
+    for (let i = 0; i < 5; i++) {fireEvent.click(title);}
+    fireEvent.click(screen.getByRole('button', { name: 'Zugang entfernen' }));
+
+    await waitFor(() => expect(screen.queryByRole('radiogroup', { name: 'Design' })).not.toBeInTheDocument());
+    expect(document.documentElement.dataset.theme).toBeUndefined();
+    expect(JSON.parse(window.localStorage.getItem('sc-payslip-theme') ?? '{}')).toEqual({ unlocked: false, theme: 'default' });
+
+    // Locked again: the terminal asks for the code once more.
+    for (let i = 0; i < 5; i++) {fireEvent.click(title);}
+    expect(screen.getByRole('textbox', { name: 'ZUGANGSKENNUNG' })).toBeInTheDocument();
+  });
+
+  it('remembers an earlier unlock', async () => {
+    window.localStorage.setItem('sc-payslip-theme', JSON.stringify({ unlocked: true, theme: 'default' }));
+    renderWithToast(<SessionWizard />);
+    expect(await screen.findByRole('radiogroup', { name: 'Design' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Standard' })).toBeChecked();
   });
 });

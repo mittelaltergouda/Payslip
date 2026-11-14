@@ -107,7 +107,7 @@ describe('duplicate', () => {
         totalRevenue: 5000,
         distributionMode: 'PERCENT',
         taxEnabled: true,
-        taxRate: 10,
+        taxRate: 0.01,
       });
       const saveResult = save(original);
       const originalId = saveResult.data!.id;
@@ -121,7 +121,7 @@ describe('duplicate', () => {
       expect(duplicated.totalRevenue).toBe(5000);
       expect(duplicated.distributionMode).toBe('PERCENT');
       expect(duplicated.taxEnabled).toBe(true);
-      expect(duplicated.taxRate).toBe(10);
+      expect(duplicated.taxRate).toBe(0.01);
     });
 
     it('should set new createdAt and updatedAt timestamps', () => {

@@ -157,8 +157,9 @@ describe('TransfersList - Transfer Details', () => {
       />
     );
 
-    // Check for SVG arrow icons (there should be 2 transfers = 2 arrows)
-    const svgElements = container.querySelectorAll('svg');
+    // Check for SVG arrow icons (there should be 2 transfers = 2 arrows);
+    // the copy buttons carry their own icon.
+    const svgElements = Array.from(container.querySelectorAll('svg')).filter(svg => !svg.closest('button'));
     expect(svgElements.length).toBe(2);
 
     // Verify SVG attributes
@@ -168,7 +169,7 @@ describe('TransfersList - Transfer Details', () => {
     });
   });
 
-  it('should display gross amount with currency', () => {
+  it('should display the amount to enter in the game', () => {
     render(
       <TransfersList
         transfers={mockTransfers}
@@ -178,11 +179,11 @@ describe('TransfersList - Transfer Details', () => {
       />
     );
 
-    expect(screen.getByText(/1,005 aUEC/)).toBeInTheDocument();
-    expect(screen.getByText(/503 aUEC/)).toBeInTheDocument();
+    expect(screen.getByText(/^1,000 aUEC$/)).toBeInTheDocument();
+    expect(screen.getByText(/^500 aUEC$/)).toBeInTheDocument();
   });
 
-  it('should display net amount in parentheses', () => {
+  it('should display the fee and total sender charge', () => {
     render(
       <TransfersList
         transfers={mockTransfers}
@@ -192,8 +193,8 @@ describe('TransfersList - Transfer Details', () => {
       />
     );
 
-    expect(screen.getByText(/\(net 1,000\)/)).toBeInTheDocument();
-    expect(screen.getByText(/\(net 500\)/)).toBeInTheDocument();
+    expect(screen.getByText('Service Fee: 5 aUEC · Total Cost: 1,005 aUEC')).toBeInTheDocument();
+    expect(screen.getByText('Service Fee: 3 aUEC · Total Cost: 503 aUEC')).toBeInTheDocument();
   });
 
   it('should display fee when feeAmount is greater than 0', () => {
@@ -206,8 +207,8 @@ describe('TransfersList - Transfer Details', () => {
       />
     );
 
-    expect(screen.getByText('Fee: 5 aUEC')).toBeInTheDocument();
-    expect(screen.getByText('Fee: 3 aUEC')).toBeInTheDocument();
+    expect(screen.getByText(/Fee: 5 aUEC/)).toBeInTheDocument();
+    expect(screen.getByText(/Fee: 3 aUEC/)).toBeInTheDocument();
   });
 
   it('should not display fee when feeAmount is 0', () => {
@@ -270,8 +271,8 @@ describe('TransfersList - Number Formatting', () => {
     );
 
     // German locale uses periods as thousand separators
-    expect(screen.getByText(/10\.050 aUEC/)).toBeInTheDocument();
-    expect(screen.getByText(/\(net 10\.000\)/)).toBeInTheDocument();
+    expect(screen.getByText(/^10\.000 aUEC$/)).toBeInTheDocument();
+    expect(screen.getByText(/Gesamtkosten: 10\.050 aUEC/)).toBeInTheDocument();
   });
 
   it('should format numbers with English locale', () => {
@@ -295,8 +296,8 @@ describe('TransfersList - Number Formatting', () => {
     );
 
     // English locale uses commas as thousand separators
-    expect(screen.getByText(/10,050 aUEC/)).toBeInTheDocument();
-    expect(screen.getByText(/\(net 10,000\)/)).toBeInTheDocument();
+    expect(screen.getByText(/^10,000 aUEC$/)).toBeInTheDocument();
+    expect(screen.getByText(/Total Cost: 10,050 aUEC/)).toBeInTheDocument();
   });
 
   it('should round numbers correctly', () => {
@@ -320,8 +321,8 @@ describe('TransfersList - Number Formatting', () => {
     );
 
     // Numbers should be rounded to nearest integer
-    expect(screen.getByText(/1,005 aUEC/)).toBeInTheDocument();
-    expect(screen.getByText(/\(net 1,001\)/)).toBeInTheDocument();
+    expect(screen.getByText(/^1,001 aUEC$/)).toBeInTheDocument();
+    expect(screen.getByText(/Total Cost: 1,005 aUEC/)).toBeInTheDocument();
     expect(screen.getByText(/Fee: 5 aUEC/)).toBeInTheDocument();
   });
 });
@@ -412,7 +413,6 @@ describe('TransfersList - Edge Cases', () => {
     );
 
     expect(screen.getByText(/0 aUEC/)).toBeInTheDocument();
-    expect(screen.getByText(/\(net 0\)/)).toBeInTheDocument();
     expect(screen.queryByText(/Fee:/)).not.toBeInTheDocument();
   });
 
@@ -472,7 +472,7 @@ describe('TransfersList - Edge Cases', () => {
       />
     );
 
-    expect(screen.getByText(/10,000,000 aUEC/)).toBeInTheDocument();
-    expect(screen.getByText(/\(net 9,999,999\)/)).toBeInTheDocument();
+    expect(screen.getByText(/^9,999,999 aUEC$/)).toBeInTheDocument();
+    expect(screen.getByText(/Total Cost: 10,000,000 aUEC/)).toBeInTheDocument();
   });
 });
