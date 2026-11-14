@@ -51,9 +51,9 @@
     "eslint-config-next": "^14.2.35",
     "jest-axe": "^10.0.0",
     "jsdom": "^27.4.0",
-    "postcss": "^8.5.10",
+    "postcss": "^8.5.33",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.4.5",
-    "vitest": "^4.0.17"
+    "vitest": "^5.1.0"
   }
 }
