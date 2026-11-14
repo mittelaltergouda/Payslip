@@ -4,7 +4,8 @@
   "private": true,
   "overrides": {
     "browserslist": "^4.28.7",
-    "glob": "^10.4.5"
+    "glob": "^10.4.5",
+    "dompurify": "3.4.17"
   },
   "scripts": {
     "dev": "next dev",
@@ -26,7 +27,7 @@
     "clsx": "^2.1.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
-    "next": "^16.3.8",
+    "next": "^16.4.6",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "tailwind-merge": "^3.4.0",
